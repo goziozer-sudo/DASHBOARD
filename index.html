@@ -4248,7 +4248,10 @@ async function loadNakitData() {
 async function loadGFsData() {
     try {
         console.log('Fetching GFs data (Apps Script üzerinden, korumalı)');
-        const csvText = await fetchSheetCSV('GFs');
+        // limit=60: sadece son 60 satır + başlık okunuyor (günlük/haftalık/aylık değişim
+        // hesapları en fazla 31 satır geriye bakıyor, +buffer); 2405 satırın tamamını okumak
+        // gereksiz yere yavaşlatıyordu — bkz. fetchSheetCSV() ve backend'deki "limit" desteği.
+        const csvText = await fetchSheetCSV('GFs', 60);
         console.log('GFs CSV received, length:', csvText.length);
         
         gfsData = parseCSV(csvText);
@@ -4550,9 +4553,12 @@ function parseCSV(csvText) {
 // (aynı anda) ayrı ayrı istemek toplamda ~6 saniyede bitiyor (en yavaş sayfa kadar sürüyor,
 // toplamları değil) ve sayfalar ekrana teker teker dolduğu için daha "canlı" hissettiriyor.
 // Bu yüzden tekil paralel yönteme geri dönüldü.
-async function fetchSheetCSV(sheetAdi) {
+async function fetchSheetCSV(sheetAdi, limit) {
     const timestamp = new Date().getTime();
-    const url = `${APPS_SCRIPT_URL}?action=getSheetCSV&sheet=${encodeURIComponent(sheetAdi)}&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&_=${timestamp}`;
+    let url = `${APPS_SCRIPT_URL}?action=getSheetCSV&sheet=${encodeURIComponent(sheetAdi)}&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&_=${timestamp}`;
+    if (limit) {
+        url += `&limit=${encodeURIComponent(limit)}`;
+    }
     const response = await fetch(url, { method: 'GET', cache: 'no-store' });
     if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

@@ -4543,7 +4543,56 @@ function parseCSV(csvText) {
 // olan ilişkisi değişmiyor, sadece verinin KAYNAĞI değişti (eskiden doğrudan Sheet'in genel CSV
 // export'u, artık Apps Script'in korumalı "getSheetCSV" action'ı). Böylece Sheet paylaşımı
 // "Kısıtlı" olsa bile (Gökhan'ın güvenlik için yaptığı gibi) dashboard veriye erişmeye devam eder.
+
+// (28.10.2026 eklendi — HIZ OPTİMİZASYONU) 11 ayrı getSheetCSV çağrısının her biri kendi Apps
+// Script çalıştırmasını başlattığı için (özellikle mobilde) gözle görülür yavaşlığa yol
+// açıyordu. Bunun yerine tüm sekmeleri TEK bir "getMultiSheetCSV" isteğiyle, bir kerede
+// çekiyoruz; aşağıdaki fetchSheetCSV() fonksiyonu bu toplu önbelleği kullanıyor, sadece o
+// başarısız olursa (ör. ağ hatası) eski tekil yönteme geri düşüyor — hiçbir çağıran fonksiyon
+// (loadViopData, loadOzetSheetData, vb.) değişmedi.
+const TUM_SHEET_ADLARI = ['VIOPKONTRATLAR', 'TOPLAM BÜTÇE', 'VIOPNAKIT', 'GFs', 'OZET', 'ŞAHSİ', 'NASDAQ', 'FONŞIRKET', 'FONŞAHSİ', 'DATABASE', 'MKK_YABANCIORAN'];
+let _sheetBatchCache = null;
+let _sheetBatchPromise = null;
+
+function _izgaraVeriyiCsvYap(izgara) {
+    return izgara.map(function(row) {
+        return row.map(function(hucre) {
+            return '"' + String(hucre).replace(/"/g, '""') + '"';
+        }).join(',');
+    }).join('\n');
+}
+
+async function preloadAllSheetsCSV() {
+    if (_sheetBatchPromise) return _sheetBatchPromise;
+    _sheetBatchPromise = (async () => {
+        try {
+            const timestamp = new Date().getTime();
+            const sheetsParam = TUM_SHEET_ADLARI.map(encodeURIComponent).join(',');
+            const url = `${APPS_SCRIPT_URL}?action=getMultiSheetCSV&sheets=${sheetsParam}&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&_=${timestamp}`;
+            const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const result = await response.json();
+            if (result.status !== 'success') {
+                throw new Error(result.message || 'Toplu veri alınamadı');
+            }
+            _sheetBatchCache = result.data;
+            console.log('✅ Toplu sheet verisi TEK istekle yüklendi:', Object.keys(_sheetBatchCache));
+        } catch (err) {
+            console.warn('⚠️ Toplu sheet yükleme başarısız, tek tek çekme yöntemine geri dönülüyor:', err);
+            _sheetBatchCache = null;
+        }
+    })();
+    return _sheetBatchPromise;
+}
+
 async function fetchSheetCSV(sheetAdi) {
+    await preloadAllSheetsCSV();
+    if (_sheetBatchCache && _sheetBatchCache[sheetAdi]) {
+        return _izgaraVeriyiCsvYap(_sheetBatchCache[sheetAdi]);
+    }
+    // Fallback: toplu önbellekte yoksa veya toplu istek başarısız olduysa, eski tekil yöntem.
     const timestamp = new Date().getTime();
     const url = `${APPS_SCRIPT_URL}?action=getSheetCSV&sheet=${encodeURIComponent(sheetAdi)}&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&_=${timestamp}`;
     const response = await fetch(url, { method: 'GET', cache: 'no-store' });
@@ -4556,11 +4605,7 @@ async function fetchSheetCSV(sheetAdi) {
     }
     // Apps Script'ten gelen ızgara (array of arrays) veriyi, parseCSV()'nin beklediği AYNI
     // formatta (çift tırnaklı, virgülle ayrılmış) bir CSV metnine geri çeviriyoruz.
-    return result.data.map(function(row) {
-        return row.map(function(hucre) {
-            return '"' + String(hucre).replace(/"/g, '""') + '"';
-        }).join(',');
-    }).join('\n');
+    return _izgaraVeriyiCsvYap(result.data);
 }
 
 // Render VIOP ŞAHSİ data

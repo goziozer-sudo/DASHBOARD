@@ -7202,9 +7202,11 @@ function startAutoRefresh() {
         clearInterval(refreshIntervalId);
     }
     
-    // 1 dakika (60 saniye) auto-refresh başlat
-    refreshIntervalId = setInterval(loadAllData, 60 * 1000);
-    console.log('Auto-refresh started: 60 seconds');
+    // 3 dakika (180 saniye) auto-refresh başlat — (28.10.2026 değiştirildi: 60sn çok sık Apps
+    // Script çağrısı tetikleyip mobil veri/pil kullanımını artırıyordu, piyasa verisi için
+    // 3 dakika yeterli)
+    refreshIntervalId = setInterval(loadAllData, 180 * 1000);
+    console.log('Auto-refresh started: 180 seconds (3 dakika)');
 }
 
 // ==================== ÖZET SEKMESİ FONKSİYONLARI ====================

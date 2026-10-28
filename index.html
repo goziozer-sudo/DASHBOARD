@@ -3739,6 +3739,12 @@ console.log('✅ SHEET_ID tanımlandı:', SHEET_ID);
 
 // Google Apps Script Web App URL (Deploy edilmiş) - GÜNCELLEME: 01.02.2026
 const APPS_SCRIPT_URL_VARSAYILAN = 'https://script.google.com/macros/s/AKfycbwiWzwUq9m03ebNLKSwIaoYuf3uRzHeadGtJyWJGlXTRSbHvmGXRk1WL13uG8oe361m/exec';
+// (28.10.2026 eklendi) GİZLİ VERİ ERİŞİM ANAHTARI — Google Sheet artık herkese açık DEĞİL
+// (Gökhan "Kısıtlı" yaptı), bu yüzden eskiden doğrudan Sheet'in genel CSV export'undan (gviz)
+// çekilen sekmeler (VIOPKONTRATLAR, OZET, ŞAHSİ, FON, vb.) artık Apps Script üzerinden, bu
+// anahtarla korunarak çekiliyor — bkz. fetchSheetCSV(). Anahtar Code.gs'teki ile BİREBİR aynı
+// olmalı, aksi halde veri gelmez.
+const VERI_ERISIM_ANAHTARI = 'Ygoaw6TLmzOTx3vlH_N3seUm4z5GmBUz';
 const APPS_SCRIPT_URL = (function() {
     // localStorage'daki eski/bozuk bir değer (ör. "undefined", "null", boş, ya da geçersiz bir URL)
     // fetch() içinde "The string did not match the expected pattern" hatasına yol açabiliyor.
@@ -4163,22 +4169,8 @@ async function loadAllData() {
 // Load VIOP data
 async function loadViopData() {
     try {
-        // Add timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=VIOPKONTRATLAR&_=${timestamp}`;
-        
-        console.log('Fetching VIOP data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('Fetching VIOP data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('VIOPKONTRATLAR');
         console.log('VIOP CSV received, length:', csvText.length);
         
         viopData = parseCSV(csvText);
@@ -4208,22 +4200,8 @@ async function loadViopData() {
 // Load Budget data
 async function loadBudgetData() {
     try {
-        // Add timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=TOPLAM%20B%C3%9CT%C3%87E&_=${timestamp}`;
-        
-        console.log('Fetching BUDGET data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('Fetching BUDGET data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('TOPLAM BÜTÇE');
         console.log('BUDGET CSV received, length:', csvText.length);
         
         budgetData = parseCSV(csvText);
@@ -4245,22 +4223,8 @@ async function loadBudgetData() {
 // Load NAKIT data
 async function loadNakitData() {
     try {
-        // Add timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=VIOPNAKIT&_=${timestamp}`;
-        
-        console.log('Fetching NAKIT data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('Fetching NAKIT data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('VIOPNAKIT');
         console.log('NAKIT CSV received, length:', csvText.length);
         
         nakitData = parseCSV(csvText);
@@ -4283,21 +4247,8 @@ async function loadNakitData() {
 // Load GFs data (Geçmiş veriler)
 async function loadGFsData() {
     try {
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=GFs&_=${timestamp}`;
-        
-        console.log('Fetching GFs data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('Fetching GFs data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('GFs');
         console.log('GFs CSV received, length:', csvText.length);
         
         gfsData = parseCSV(csvText);
@@ -4320,21 +4271,8 @@ async function loadGFsData() {
 // Load OZET Sheet Data (for Y2 Toplam Portföy)
 async function loadOzetSheetData() {
     try {
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=OZET&_=${timestamp}`;
-        
-        console.log('📊 Fetching OZET sheet data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('📊 Fetching OZET sheet data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('OZET');
         console.log('✅ OZET Sheet CSV received, length:', csvText.length);
         
         window.ozetSheetData = parseCSV(csvText);
@@ -4371,21 +4309,8 @@ async function loadOzetSheetData() {
 // Load ŞAHSİ Sheet Data (for S18 Hisse Total)
 async function loadSahsiSheetData() {
     try {
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=ŞAHSİ&_=${timestamp}`;
-        
-        console.log('📊 Fetching ŞAHSİ sheet data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('📊 Fetching ŞAHSİ sheet data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('ŞAHSİ');
         console.log('✅ ŞAHSİ Sheet CSV received, length:', csvText.length);
         
         window.sahsiSheetData = parseCSV(csvText);
@@ -4431,21 +4356,8 @@ function updateSahsiHisseFromSheet() {
 // Load NASDAQ data (Hisseler & Varlıklar)
 async function loadNasdaqData() {
     try {
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=NASDAQ&_=${timestamp}`;
-        
-        console.log('🔄 Fetching NASDAQ data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('🔄 Fetching NASDAQ data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('NASDAQ');
         console.log('✅ NASDAQ CSV received, length:', csvText.length);
         
         nasdaqData = parseCSV(csvText);
@@ -4482,14 +4394,9 @@ async function loadFonData() {
     try {
         const timestamp = new Date().getTime();
         
-        // FONŞIRKET sayfasından FON verilerini çek (A2:D3)
-        const fonUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=FONŞIRKET&_=${timestamp}`;
-        console.log('📡 FON URL:', fonUrl);
-        
-        const fonResponse = await fetch(fonUrl);
-        console.log('✅ FONŞIRKET Response alındı:', fonResponse.status);
-        
-        const fonCsvText = await fonResponse.text();
+        // FONŞIRKET sayfasından FON verilerini çek (A2:D3) — Apps Script üzerinden, korumalı
+        console.log('📡 FONŞIRKET verisi isteniyor (Apps Script üzerinden)');
+        const fonCsvText = await fetchSheetCSV('FONŞIRKET');
         console.log('📄 FONŞIRKET CSV uzunluğu:', fonCsvText.length);
         console.log('📄 FONŞIRKET CSV ilk 200 karakter:', fonCsvText.substring(0, 200));
         
@@ -4525,14 +4432,9 @@ async function loadFonDataSahsi() {
     try {
         const timestamp = new Date().getTime();
         
-        // FONŞAHSİ sayfasından FON verilerini çek
-        const fonUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=FONŞAHSİ&_=${timestamp}`;
-        console.log('📡 FONŞAHSİ URL:', fonUrl);
-        
-        const fonResponse = await fetch(fonUrl);
-        console.log('✅ FONŞAHSİ Response alındı:', fonResponse.status);
-        
-        const fonCsvText = await fonResponse.text();
+        // FONŞAHSİ sayfasından FON verilerini çek — Apps Script üzerinden, korumalı
+        console.log('📡 FONŞAHSİ verisi isteniyor (Apps Script üzerinden)');
+        const fonCsvText = await fetchSheetCSV('FONŞAHSİ');
         console.log('📄 FONŞAHSİ CSV uzunluğu:', fonCsvText.length);
         
         const fonData = parseCSV(fonCsvText);
@@ -4562,21 +4464,8 @@ async function loadFonDataSahsi() {
 // Load DATABASE data (XAUUSD, XAGUSD, BTCUSDT)
 async function loadDatabaseData() {
     try {
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=DATABASE&_=${timestamp}`;
-        
-        console.log('Fetching DATABASE data from:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
+        console.log('Fetching DATABASE data (Apps Script üzerinden, korumalı)');
+        const csvText = await fetchSheetCSV('DATABASE');
         console.log('DATABASE CSV received, length:', csvText.length);
         
         databaseData = parseCSV(csvText);
@@ -4647,6 +4536,31 @@ function parseCSV(csvText) {
     }
 
     return result;
+}
+
+// (28.10.2026 eklendi) Sheet'in bir sekmesini Apps Script üzerinden (gizli anahtarla korumalı)
+// çeker ve CSV METNİ olarak döndürür — yani aşağıdaki 11 fonksiyonun hiçbirinin parseCSV() ile
+// olan ilişkisi değişmiyor, sadece verinin KAYNAĞI değişti (eskiden doğrudan Sheet'in genel CSV
+// export'u, artık Apps Script'in korumalı "getSheetCSV" action'ı). Böylece Sheet paylaşımı
+// "Kısıtlı" olsa bile (Gökhan'ın güvenlik için yaptığı gibi) dashboard veriye erişmeye devam eder.
+async function fetchSheetCSV(sheetAdi) {
+    const timestamp = new Date().getTime();
+    const url = `${APPS_SCRIPT_URL}?action=getSheetCSV&sheet=${encodeURIComponent(sheetAdi)}&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&_=${timestamp}`;
+    const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    const result = await response.json();
+    if (result.status !== 'success') {
+        throw new Error(result.message || ('Veri alınamadı: ' + sheetAdi));
+    }
+    // Apps Script'ten gelen ızgara (array of arrays) veriyi, parseCSV()'nin beklediği AYNI
+    // formatta (çift tırnaklı, virgülle ayrılmış) bir CSV metnine geri çeviriyoruz.
+    return result.data.map(function(row) {
+        return row.map(function(hucre) {
+            return '"' + String(hucre).replace(/"/g, '""') + '"';
+        }).join(',');
+    }).join('\n');
 }
 
 // Render VIOP ŞAHSİ data
@@ -14530,11 +14444,7 @@ function renderPozisyonlarBox(signal) {
 async function loadMkkYabanciOrani() {
     try {
         if (localStorage.getItem('mkk_popup_closed_' + new Date().toDateString())) return;
-        const timestamp = new Date().getTime();
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=MKK_YABANCIORAN&_=${timestamp}`;
-        const response = await fetch(url);
-        if (!response.ok) return;
-        const text = await response.text();
+        const text = await fetchSheetCSV('MKK_YABANCIORAN');
         const rows = text.trim().split("\n").map(r => { const cols = []; let inQ = false, cur = ""; for (let i = 0; i < r.length; i++) { if (r[i] === "\"") inQ = !inQ; else if (r[i] === "," && !inQ) { cols.push(cur.trim()); cur = ""; } else cur += r[i]; } cols.push(cur.trim()); return cols; });
         if (rows.length < 2) return;
         const son = rows[rows.length - 1];

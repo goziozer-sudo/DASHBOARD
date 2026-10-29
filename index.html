@@ -10227,7 +10227,10 @@ function teknikSkorKartOlustur(baslik, emoji, kisaEtiket, skorObj, ekRozetHtml) 
     // alan çalınıp Yorum'a verildi (0.75/1.25/1.1/0.5 → 0.6/1.15/1.65/0.45) ki tek satıra sığsın.
     // Hesaplama/puanlama mantığı DEĞİŞMEDİ — sadece sütun genişlik oranı.
     const kolonlar = 'grid-template-columns:0.6fr 1.15fr 1.65fr 0.45fr;';
-    const basliklar = detayVarMi ? '<div style="display:grid; ' + kolonlar + ' gap:8px; padding:0 0 4px;">' +
+    // (29.10.2026 güncellendi) Gökhan'ın isteğiyle satır/başlık padding'leri artık onaylanan
+    // Varyant 3 mockup'ındaki (.kriter-table th/td) değerlerle BİREBİR aynı: başlık 4px 4px,
+    // veri satırı 6px 4px.
+    const basliklar = detayVarMi ? '<div style="display:grid; ' + kolonlar + ' gap:8px; padding:4px 4px;">' +
         '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;">Kriter</span>' +
         '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;">Değer</span>' +
         '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; margin-left:2px;">Yorum</span>' +
@@ -10239,7 +10242,7 @@ function teknikSkorKartOlustur(baslik, emoji, kisaEtiket, skorObj, ekRozetHtml) 
         }
         var puanOran = (typeof d.max === 'number' && d.max > 0) ? (d.puan / d.max) : 0;
         var puanRenk = puanOran >= 0.65 ? '#4ade80' : (puanOran >= 0.4 ? '#fbbf24' : '#f87171');
-        return '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05); gap:8px;">' +
+        return '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:6px 4px; border-bottom:1px solid rgba(255,255,255,0.05); gap:8px;">' +
             '<div style="color:#fff; font-size:12.5px; font-weight:600; min-width:0;">' + d.kriter + '</div>' +
             '<div style="color:#fff; font-size:12px; font-weight:700; min-width:0; overflow-wrap:break-word; white-space:normal;">' + d.deger + '</div>' +
             '<div style="color:#fff; font-size:12px; min-width:0; margin-left:2px;">' + d.yorum + '</div>' +
@@ -10560,7 +10563,7 @@ function pozisyonKutusuOlustur_(hesapAdi, maliyetMetin, adet, kzMetin) {
 function pozisyonTablosuOlustur_(satirlar) {
     if (!satirlar || satirlar.length === 0) return '';
     var kolonlar = 'grid-template-columns:0.9fr 1fr 0.7fr 1fr;';
-    var basliklar = '<div style="display:grid; ' + kolonlar + ' gap:8px; padding:0 0 4px;">' +
+    var basliklar = '<div style="display:grid; ' + kolonlar + ' gap:8px; padding:4px 4px;">' +
         '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;">&nbsp;</span>' +
         '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Maliyet</span>' +
         '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Adet</span>' +
@@ -10571,7 +10574,7 @@ function pozisyonTablosuOlustur_(satirlar) {
         var s = satirlar[i];
         var kzRenk = (typeof s.kzMetin === 'string' && s.kzMetin.indexOf('-') === 0) ? '#f87171' : '#4ade80';
         var sonSatirMi = (i === satirlar.length - 1);
-        satirHtml += '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:4px 0; gap:8px;' + (sonSatirMi ? '' : ' border-bottom:1px solid rgba(255,255,255,0.05);') + '">' +
+        satirHtml += '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:6px 4px; gap:8px;' + (sonSatirMi ? '' : ' border-bottom:1px solid rgba(255,255,255,0.05);') + '">' +
             '<div style="color:#fff; font-size:12.5px; font-weight:600;">' + s.hesapAdi + '</div>' +
             '<div style="color:#fff; font-size:12px; font-weight:700; text-align:center;">' + s.maliyetMetin + '</div>' +
             '<div style="color:#fff; font-size:12px; font-weight:700; text-align:center;">' + s.adet + '</div>' +

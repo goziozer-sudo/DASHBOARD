@@ -11090,22 +11090,135 @@ function teknikAnalizGecmisListesiRenderla(filtreMetni) {
     listeDiv.innerHTML = html;
 }
 
+// (29.10.2026 eklendi) Gökhan'ın isteğiyle: "📜 Geçmiş Analizler" listesinden bir kayda
+// tıklandığında artık modal içindeki TEK sonuç alanı değiştirilmiyor — bunun yerine her tıklama
+// sayfanın üzerinde yüzen, sürüklenebilir, kendi ✕'i olan AYRI bir kart açıyor. Böylece aynı anda
+// istediğin kadar geçmiş analiz yan yana açık kalabiliyor (karşılaştırma için). Popup/modal kapansa
+// bile bu kartlar ekranda kalmaya devam eder (doğrudan <body>'e ekleniyor, modal'ın İÇİNDE değil).
+// AL/SAT/TUT/EKLE kararı, skorlar, hiçbir hesap mantığı DEĞİŞMEDİ — bu tamamen görsel/etkileşim katmanı.
+var gecmisKartSayaci = 0; // yeni kart konumu (çakışmasın diye kademeli) + öne getirme (z-index) için
+
+// Bir kartın içindeki "▼ Başlık" / detay çiftini aç-kapa yapar (ok işareti ▼/▲ olarak değişir).
+// Hem "▼ Trend / İşlem Skoru" hem "▼ Tüm Detay" aynı genel fonksiyonu kullanıyor.
+function gecmisKartBolumToggle(baslikEl) {
+    var icerik = baslikEl.nextElementSibling;
+    if (!icerik) return;
+    var acikMi = icerik.style.display !== 'none';
+    icerik.style.display = acikMi ? 'none' : 'block';
+    baslikEl.textContent = (acikMi ? '▼ ' : '▲ ') + baslikEl.textContent.slice(2);
+}
+
+// Yeni kartların yerleşimi için takip edilen "sıradaki boş nokta" — satırı doldur, sığmayınca
+// alt satıra geç (basit grid/akış yerleşimi). Dikey alan da dolarsa (çok sayıda kart açılırsa)
+// başa dönülür — o noktadan sonra hafif üst üste binme olabilir, bu beklenen/kabul edilen durum.
+var gecmisYerlesimSol = 16;
+var gecmisYerlesimUst = 70;
+var gecmisYerlesimSatirYuksekligi = 0;
+
+// Tek bir geçmiş analiz kartını sayfanın üzerinde yüzen, sürüklenebilir bir pencere olarak açar.
+// anaHtml: HER ZAMAN görünen özet (karar rozeti + hero fiyat/skor satırı + ŞAHSİ/ŞİRKET/Hedef-Stop
+// tablosu). skorHtml: "▼ Trend / İşlem Skoru" okuyla açılır (boşsa o satır hiç eklenmez).
+// detayHtml: "▼ Tüm Detay" okuyla açılır (Gemini'nin madde madde gerekçeleri + Pine Script).
+function gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml) {
+    gecmisKartSayaci++;
+    var genislik = Math.min(340, window.innerWidth - 32);
+
+    // Satıra sığmıyorsa alt satıra geç.
+    if (gecmisYerlesimSol + genislik > window.innerWidth - 8) {
+        gecmisYerlesimSol = 16;
+        gecmisYerlesimUst += gecmisYerlesimSatirYuksekligi + 14;
+        gecmisYerlesimSatirYuksekligi = 0;
+    }
+    // Dikey alan da bittiyse (ekran kartlarla dolduysa) başa dön — her dönüşte biraz kaydırarak,
+    // böylece tamamen aynı noktaya denk gelmez.
+    if (gecmisYerlesimUst > window.innerHeight - 140) {
+        var kaydirma = (gecmisKartSayaci * 22) % 100;
+        gecmisYerlesimUst = 70 + kaydirma;
+        gecmisYerlesimSol = 16 + kaydirma;
+        gecmisYerlesimSatirYuksekligi = 0;
+    }
+    var sol = gecmisYerlesimSol;
+    var ust = gecmisYerlesimUst;
+    gecmisYerlesimSol += genislik + 14; // bir sonraki kart bu satırda yanına açılsın
+
+    var kart = document.createElement('div');
+    kart.style.cssText = 'position:fixed; top:' + ust + 'px; left:' + sol + 'px; width:' + genislik + 'px; max-width:92vw; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.45); z-index:' + (100000 + gecmisKartSayaci) + '; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;';
+
+    // Üst çubuk — ticker + tarih başlığı (sürükleme tutamacı) + ✕ kapat butonu.
+    var baslikCubugu = document.createElement('div');
+    baslikCubugu.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; cursor:grab; background:rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.12); user-select:none;';
+    baslikCubugu.innerHTML = '<span style="font-size:11px; font-weight:700; color:#FAF884; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📜 ' + kayit.ticker + ' — ' + kayit.zaman + '</span>' +
+        '<span style="cursor:pointer; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">✕</span>';
+
+    var govde = document.createElement('div');
+    govde.style.cssText = 'padding:12px; max-height:75vh; overflow-y:auto;';
+    var govdeHtml = anaHtml;
+    var togglSatirStil = 'cursor:pointer; text-align:center; margin-top:10px; font-size:11px; color:#94a3b8; user-select:none;';
+    if (skorHtml) {
+        govdeHtml += '<div onclick="gecmisKartBolumToggle(this)" style="' + togglSatirStil + '">▼ Trend / İşlem Skoru</div>' +
+            '<div style="display:none; margin-top:4px;">' + skorHtml + '</div>';
+    }
+    if (detayHtml) {
+        govdeHtml += '<div onclick="gecmisKartBolumToggle(this)" style="' + togglSatirStil + '">▼ Tüm Detay</div>' +
+            '<div style="display:none; margin-top:4px; font-size:12.5px; line-height:1.6;">' + detayHtml + '</div>';
+    }
+    govde.innerHTML = govdeHtml;
+
+    kart.appendChild(baslikCubugu);
+    kart.appendChild(govde);
+    document.body.appendChild(kart);
+    // Gerçek yüksekliği DOM'a eklendikten sonra ölçülüyor — bir sonraki kartın alt satıra ne
+    // zaman geçeceğini buna göre hesaplıyoruz (içerik uzunluğuna göre kart boyu değişebiliyor).
+    gecmisYerlesimSatirYuksekligi = Math.max(gecmisYerlesimSatirYuksekligi, kart.offsetHeight);
+
+    // Kapatma (✕)
+    var kapatBtn = baslikCubugu.lastElementChild;
+    kapatBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        kart.remove();
+    });
+
+    // Herhangi bir yerine tıklayınca öne getir (en üstte görünsün).
+    kart.addEventListener('pointerdown', function() {
+        gecmisKartSayaci++;
+        kart.style.zIndex = 100000 + gecmisKartSayaci;
+    });
+
+    // Sürükleme (mouse) — üst çubuktan tutup sayfanın her yerine bırakabilirsin. Kartlar
+    // birbirini İTMEZ/engellemez — istersen elinle birini diğerinin üstüne de bırakabilirsin.
+    var suruklemeAktif = false, baslX = 0, baslY = 0, kartBaslSol = 0, kartBaslUst = 0;
+    baslikCubugu.addEventListener('pointerdown', function(e) {
+        // (29.10.2026 düzeltildi) ✕ butonuna basınca sürükleme BAŞLAMASIN — setPointerCapture
+        // çağrılırsa sonraki "click" olayı ✕'e değil üst çubuğa gittiği için kapatma çalışmıyordu.
+        if (e.target === kapatBtn || kapatBtn.contains(e.target)) return;
+        suruklemeAktif = true;
+        baslikCubugu.setPointerCapture(e.pointerId);
+        baslikCubugu.style.cursor = 'grabbing';
+        baslX = e.clientX; baslY = e.clientY;
+        var dikdortgen = kart.getBoundingClientRect();
+        kartBaslSol = dikdortgen.left; kartBaslUst = dikdortgen.top;
+        e.preventDefault();
+    });
+    baslikCubugu.addEventListener('pointermove', function(e) {
+        if (!suruklemeAktif) return;
+        var yeniSol = kartBaslSol + (e.clientX - baslX);
+        var yeniUst = kartBaslUst + (e.clientY - baslY);
+        yeniSol = Math.max(-kart.offsetWidth + 60, Math.min(window.innerWidth - 60, yeniSol));
+        yeniUst = Math.max(0, Math.min(window.innerHeight - 40, yeniUst));
+        kart.style.left = yeniSol + 'px';
+        kart.style.top = yeniUst + 'px';
+    });
+    function suruklemeBirak() { suruklemeAktif = false; baslikCubugu.style.cursor = 'grab'; }
+    baslikCubugu.addEventListener('pointerup', suruklemeBirak);
+    baslikCubugu.addEventListener('pointercancel', suruklemeBirak);
+
+    return kart;
+}
+
 function teknikAnalizGecmisTikla(idx) {
     const kayit = teknikAnalizGecmisVerisi[idx];
     if (!kayit) return;
-    const statusDiv = document.getElementById('teknik-analiz-status');
-    const resultDiv = document.getElementById('teknik-analiz-result');
 
-    // (29.10.2026 güncellendi) Gökhan'ın isteğiyle: "📜 Geçmiş Analizler" linki ile arşiv
-    // tarih bilgisi artık AYRI/ALT ALTA iki satır değil, linkin yanında TEK satırda
-    // gösteriliyor — kaynak etiketi ((MANUEL)/(AUTO)) kaldırıldı, sadece ticker+tarih kalıyor.
-    // statusDiv'e YAZILMIYOR (statusDiv diğer durumlarda — yükleniyor/hazır/hata — kullanılıyor,
-    // onlara dokunulmadı); bunun yerine #teknik-analiz-gecmis-tarih span'ı dolduruluyor.
-    statusDiv.innerHTML = '';
-    const gecmisTarihSpan = document.getElementById('teknik-analiz-gecmis-tarih');
-    if (gecmisTarihSpan) {
-        gecmisTarihSpan.innerHTML = ' · <span style="color: #4ade80;">📜 ' + kayit.ticker + ' — ' + kayit.zaman + ' tarihli geçmiş analiz</span>';
-    }
     // (27.10.2026 eklendi) POZİSYON ANLIK GÖRÜNTÜSÜ — Code.gs tarafında arşive J sütunu olarak
     // eklendi (bkz. analizSheeteKaydet/teknikAnalizGecmisiGetir). SADECE bu tarihten SONRA
     // kaydedilen satırlarda dolu olur; eski kayıtlarda kayit.piyasaSinyali/pozisyonBazliKararEtiketi
@@ -11113,15 +11226,15 @@ function teknikAnalizGecmisTikla(idx) {
     // eski kayıt/davranış değişmedi. Yeni kayıtlarda ise canlı analizdeki AYNI
     // sonucVeYonlendirmeBolumuOlustur() kullanılır; 3. parametre (kayit.zaman) verildiği için
     // kart BUGÜNÜN değil O ANALİZİN tarihini gösterir — güncel pozisyonla karıştırılmaz.
-    var gecmisSonucKartiHtml;
+    var anaHtml, skorHtml;
     if (kayit.piyasaSinyali !== undefined || kayit.pozisyonBazliKararEtiketi) {
         // (29.10.2026 eklendi) Canlı analiz ekranıyla TUTARLI olsun diye teknikSkorBolumuOlustur
         // çağrısı eklendi — önceden burada EKSİKTİ, bu yüzden geçmiş/otomatik (AUTO) kayıtları
         // açtığında İşlem Skoru (Risk/Ödül Kalitesi) hiç görünmüyordu. kayit.teknikSkor.islem
         // SADECE bu tarihten SONRA kaydedilen kayıtlarda dolu olur (bkz. Code.gs analizSheeteKaydet/
         // teknikAnalizGecmisiGetir); eski kayıtlarda teknikSkorKartOlustur sessizce boş döner.
-        gecmisSonucKartiHtml = sonucVeYonlendirmeBolumuOlustur(kayit, kayit.ticker, kayit.zaman) +
-            teknikSkorBolumuOlustur(kayit.teknikSkor);
+        anaHtml = sonucVeYonlendirmeBolumuOlustur(kayit, kayit.ticker, kayit.zaman);
+        skorHtml = teknikSkorBolumuOlustur(kayit.teknikSkor);
     } else {
         // Arşivde sadece Trend Skoru saklanıyordu (İşlem Skoru/detay kırılımı yok, sadece o an
         // üretilen canlı sonuçta gösterilir) — eski kayıtlar için bu tek sayı rozet olarak kalır.
@@ -11130,14 +11243,13 @@ function teknikAnalizGecmisTikla(idx) {
         // açıklama cümlesi değil, kısa bir etiket (bkz. fonksiyon yorumu) — buradaki eski uzun
         // cümle kısa "TREND GÜCÜ (ARŞİV)" etiketiyle değiştirildi, taze analiz kartlarıyla
         // tutarlı olsun diye. Mantık/veri DEĞİŞMEDİ, sadece bu etiket metni.
-        gecmisSonucKartiHtml = gecmisTrendSkoru ? '<div style="margin-top:14px;">' + teknikSkorKartOlustur('TREND SKORU (ARŞİV)', '📈', 'TREND GÜCÜ (ARŞİV)', gecmisTrendSkoru) + '</div>' : '';
+        anaHtml = gecmisTrendSkoru ? teknikSkorKartOlustur('TREND SKORU (ARŞİV)', '📈', 'TREND GÜCÜ (ARŞİV)', gecmisTrendSkoru) : '';
+        skorHtml = '';
     }
-    resultDiv.innerHTML = gecmisSonucKartiHtml +
-        '<div style="font-size:13.5px; line-height:1.7; margin-top:10px;">' + formatTeknikAnalizSonucu(kayit.analiz) + '</div>' +
-        pineScriptBolumuOlustur(kayit.analiz, kayit.ticker, kayit.zaman) +
-        '<div style="text-align:center; margin-top:16px;"><a href="#" onclick="teknikAnalizGecmisiGoster(); return false;" style="color:#94a3b8; font-size:11px; text-decoration:underline;">◀ Listeye dön</a></div>';
-    resultDiv.style.display = 'block';
-    teknikAnalizDurum = 'tamamlandi';
+    // "▼ Tüm Detay" — Gemini'nin madde madde gerekçeleri (1-5 bölüm) + Pine Script, kart içinde
+    // kapalı başlar, okuyla açılır. Eski/yeni kayıt ayrımı yok — ikisinde de kayit.analiz var.
+    var detayHtml = formatTeknikAnalizSonucu(kayit.analiz) + pineScriptBolumuOlustur(kayit.analiz, kayit.ticker, kayit.zaman);
+    gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml);
 }
 
 // (28.10.2026 eklendi) Popup'ın "bugün kapatıldı mı" hafızası artık BASİT bir evet/hayır

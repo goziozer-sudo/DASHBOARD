@@ -2025,8 +2025,15 @@ function sifreKontrol() {
         </div>
 
         <!-- TEKNİK ANALİZ (GEMİNİ) POPUP -->
-        <div id="teknikAnalizModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); pointer-events: auto;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 30px; max-width: 640px; width: 92%; max-height: 82vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+        <!-- (29.10.2026 güncellendi — MOBİL SCROLL DÜZELTMESİ) Önceden pencere ekranın ortasına
+        top:50%+transform ile "yüzdürülüyordu" ve SADECE #teknik-analiz-result kendi içinde
+        kayıyordu (başlık/input hep sabit kalıyordu) — mobilde pencere ekranın tamamını
+        kullanamıyor, içerik taştığında üçüncü sütun (Karlılık) kesiliyordu. Şimdi dış sarmalayıcı
+        (#teknikAnalizModal) kendisi kayıyor (overflow-y:auto) ve iç kutu normal akışta, böylece
+        başlık dahil HER ŞEY TEK PARÇA halinde birlikte kayıyor. Mantık/veri DEĞİŞMEDİ — sadece
+        konumlandırma/scroll davranışı. -->
+        <div id="teknikAnalizModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); pointer-events: auto; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+            <div style="position: relative; margin: 24px auto; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 30px; max-width: 640px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
                 <button onclick="closeTeknikAnalizModal()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: all 0.3s;">✕</button>
                 <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 20px; text-align: center;">🕯️ TEKNİK ANALİZ</h2>
 
@@ -2041,7 +2048,7 @@ function sifreKontrol() {
 
                 <div id="teknik-analiz-status" style="font-size: 12px; text-align: center; min-height: 18px; margin-bottom: 8px;"></div>
 
-                <div id="teknik-analiz-result" style="display:none; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 16px; overflow-y: auto; flex: 1; color: #e2e8f0; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap;"></div>
+                <div id="teknik-analiz-result" style="display:none; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 16px; color: #e2e8f0; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap;"></div>
             </div>
         </div>
 
@@ -10487,7 +10494,11 @@ function sonucKutusuOlustur_(baslik, deger, altYazi) {
 // Hem ŞAHSİ hem ŞİRKET hesabı için AYNI kalıp kullanılıyor.
 function pozisyonKutusuOlustur_(hesapAdi, maliyetMetin, adet, kzMetin) {
     var kzRenk = (typeof kzMetin === 'string' && kzMetin.indexOf('-') === 0) ? '#f87171' : '#4ade80';
-    return '<div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:12px; position:relative; overflow:hidden;">' +
+    // (29.10.2026 eklendi) grid-column:1/-1 — önceden bu kutu dış 2 sütunlu grid'in İÇİNDE
+    // yarım genişlikte gösteriliyordu; mobilde 3 iç sütun (Maliyet/Adet/Karlılık) o dar alana
+    // sığmıyor, kutunun overflow:hidden'ı yüzünden Karlılık sütunu kesiliyordu. Artık
+    // planKutusuOlustur_ ile aynı desende TAM GENİŞLİK — üç sütuna rahat yer açılıyor.
+    return '<div style="grid-column:1 / -1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:12px; position:relative; overflow:hidden;">' +
         '<div style="position:absolute; top:0; left:0; right:0; height:2px; background:rgba(255,255,255,0.08);"></div>' +
         '<div style="text-align:center; font-size:13px; font-weight:800; letter-spacing:0.5px; color:#fff; margin-bottom:10px;">💼 ' + hesapAdi + '</div>' +
         '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center;">' +

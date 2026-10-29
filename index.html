@@ -2052,7 +2052,13 @@ function sifreKontrol() {
 
                 <div id="teknik-analiz-status" style="font-size: 12px; text-align: center; min-height: 18px; margin-bottom: 8px;"></div>
 
-                <div id="teknik-analiz-result" style="display:none; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 16px; color: #e2e8f0; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap;"></div>
+                <!-- (29.10.2026 güncellendi) Gökhan'ın isteğiyle: bu container'ın KENDİ border/
+                     background/padding'i kaldırıldı — içindeki her kutunun (ana kart, süreklilik
+                     banner'ı, Trend/İşlem Skoru, analiz başlıkları) zaten kendi çerçevesi var;
+                     bunun dışında bir de bu DIŞ kutunun çerçevesi olması "kutu içinde kutu"
+                     görüntüsü yaratıyordu (Gökhan'ın kırmızı ile işaretlediği dış çerçeve).
+                     İçerik/mantık DEĞİŞMEDİ — sadece bu dış sarmalayıcının görsel kutu stili. -->
+                <div id="teknik-analiz-result" style="display:none; color: #e2e8f0; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap;"></div>
             </div>
         </div>
 

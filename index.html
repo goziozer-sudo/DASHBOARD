@@ -9678,6 +9678,10 @@ function formatTeknikAnalizSonucu(text) {
         // (ör. "(Smart Money Concepts)") rozetten kaldırıldı — tek satıra sığması için. Başlığın
         // kendisi/sırası/mantığı DEĞİŞMEDİ, sadece gösterimden parantezli kısım siliniyor.
         var baslikParantezsiz = acikBolum.baslik.replace(/\s*\([^)]*\)\s*$/, '');
+        // (29.10.2026 eklendi) Gökhan'ın isteğiyle: 1. bölümün başlığı tek satıra sığması için
+        // kısaltılmış gösteriliyor ("ÇOKLU ZAMAN DİLİMİ MUM YAPISI VE MARKET STRUCTURE" →
+        // "MUM VE MARKET YAPISI"). Sadece GÖSTERİM metni — ham analiz/mantık DEĞİŞMEDİ.
+        if (acikBolum.no === '1') { baslikParantezsiz = 'MUM VE MARKET YAPISI'; }
         var baslikMetniGosterim = (acikBolum.no ? (acikBolum.no + '. ') : '') + baslikParantezsiz;
         html += '<details style="margin-top:' + (html ? '10px' : '0') + '; border:1px solid rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.03);">' +
             '<summary style="cursor:pointer; padding:8px 10px;">' +

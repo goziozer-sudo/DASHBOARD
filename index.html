@@ -2037,7 +2037,7 @@ function sifreKontrol() {
                  genişliği (max-width) 640px'ten 480px'e düşürüldü — cm ile ölçüp karşılaştırdı,
                  asıl "büyük durma" hissinin iç padding'lerden değil, modalin kendi genişliğinden
                  kaynaklandığını tespit etti. İçerik/mantık DEĞİŞMEDİ — sadece modalin dış genişliği. -->
-            <div style="position: relative; margin: 24px auto; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 30px; max-width: 480px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <div style="position: relative; margin: 24px auto; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 8px 15px 15px 15px; max-width: 480px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
                 <button onclick="closeTeknikAnalizModal()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: all 0.3s;">✕</button>
                 <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 20px; text-align: center;">🕯️ TEKNİK ANALİZ</h2>
 
@@ -2046,8 +2046,8 @@ function sifreKontrol() {
                     <button onclick="submitTeknikAnaliz()" id="teknik-analiz-submit-btn" style="padding: 12px 18px; border-radius: 8px; border: none; background: #FAF884; color: #1e3a8a; cursor: pointer; font-weight: 700; font-size: 14px; white-space: nowrap;">Analiz Et</button>
                 </div>
 
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <a href="#" onclick="teknikAnalizGecmisiGoster(); return false;" style="color: #94a3b8; font-size: 11.5px; text-decoration: underline; cursor: pointer;">📜 Geçmiş Analizler</a>
+                <div style="text-align: center; margin-bottom: 10px; font-size: 11.5px;">
+                    <a href="#" onclick="teknikAnalizGecmisiGoster(); return false;" style="color: #94a3b8; text-decoration: underline; cursor: pointer;">📜 Geçmiş Analizler</a><span id="teknik-analiz-gecmis-tarih"></span>
                 </div>
 
                 <div id="teknik-analiz-status" style="font-size: 12px; text-align: center; min-height: 18px; margin-bottom: 8px;"></div>
@@ -9616,6 +9616,10 @@ function closeTeknikAnalizModal() {
     document.getElementById('teknikAnalizModal').style.display = 'none';
     // Not: fetch isteği kapatılınca İPTAL OLMAZ, arka planda devam eder.
     // Sonuç geldiğinde header'daki rozet güncellenir, dashboard'u kullanmaya devam edebilirsiniz.
+    // (29.10.2026 eklendi) Arşivden açılan "TICKER — tarih" bilgisi modal kapanınca sıfırlanıyor,
+    // bir dahaki açılışta eski/yanlış tarih görünmesin diye.
+    const gecmisTarihSpan = document.getElementById('teknik-analiz-gecmis-tarih');
+    if (gecmisTarihSpan) gecmisTarihSpan.innerHTML = '';
 }
 
 // Gemini'den gelen "1. BAŞLIK / 👉 Bu bulgudan dolayı: AL / 📊 GENEL ÖZET" formatındaki
@@ -10901,6 +10905,10 @@ async function submitTeknikAnaliz() {
     statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ Gemini analiz yapıyor, birkaç saniye sürebilir... <span style="opacity:0.8;">(bu pencereyi kapatıp dashboard\'u kullanmaya devam edebilirsiniz — sonuç header\'daki rozette görünecek)</span></span>';
     resultDiv.style.display = 'none';
     resultDiv.innerHTML = '';
+    // (29.10.2026 eklendi) Yeni canlı analiz başlayınca, önceki arşiv görüntülemesinden
+    // kalmış olabilecek "TICKER — tarih" bilgisi sıfırlanıyor.
+    const gecmisTarihSpanYeni = document.getElementById('teknik-analiz-gecmis-tarih');
+    if (gecmisTarihSpanYeni) gecmisTarihSpanYeni.innerHTML = '';
     teknikAnalizDurum = 'yukleniyor';
     teknikAnalizRozetGuncelle('yukleniyor');
 
@@ -11067,9 +11075,16 @@ function teknikAnalizGecmisTikla(idx) {
     const statusDiv = document.getElementById('teknik-analiz-status');
     const resultDiv = document.getElementById('teknik-analiz-result');
 
-    // (26.10.2026 eklendi) Detay görünümünde de kaynak etiketi görünsün.
-    const kayitKaynakMetni = kayit.kaynak === 'AUTO' ? 'AUTO' : (kayit.kaynak === 'MANUAL' ? 'MANUEL' : '?');
-    statusDiv.innerHTML = '<span style="color: #4ade80;">📜 ' + kayit.ticker + ' — ' + kayit.zaman + ' tarihli geçmiş analiz</span> <span style="color:#94a3b8; font-size:11px;">(' + kayitKaynakMetni + ')</span>';
+    // (29.10.2026 güncellendi) Gökhan'ın isteğiyle: "📜 Geçmiş Analizler" linki ile arşiv
+    // tarih bilgisi artık AYRI/ALT ALTA iki satır değil, linkin yanında TEK satırda
+    // gösteriliyor — kaynak etiketi ((MANUEL)/(AUTO)) kaldırıldı, sadece ticker+tarih kalıyor.
+    // statusDiv'e YAZILMIYOR (statusDiv diğer durumlarda — yükleniyor/hazır/hata — kullanılıyor,
+    // onlara dokunulmadı); bunun yerine #teknik-analiz-gecmis-tarih span'ı dolduruluyor.
+    statusDiv.innerHTML = '';
+    const gecmisTarihSpan = document.getElementById('teknik-analiz-gecmis-tarih');
+    if (gecmisTarihSpan) {
+        gecmisTarihSpan.innerHTML = ' · <span style="color: #4ade80;">📜 ' + kayit.ticker + ' — ' + kayit.zaman + ' tarihli geçmiş analiz</span>';
+    }
     // (27.10.2026 eklendi) POZİSYON ANLIK GÖRÜNTÜSÜ — Code.gs tarafında arşive J sütunu olarak
     // eklendi (bkz. analizSheeteKaydet/teknikAnalizGecmisiGetir). SADECE bu tarihten SONRA
     // kaydedilen satırlarda dolu olur; eski kayıtlarda kayit.piyasaSinyali/pozisyonBazliKararEtiketi

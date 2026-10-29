@@ -14945,21 +14945,67 @@ function renderPozisyonlarSekmesi() {
             '</div>';
         }
 
+        // Bir TL tutarini K/Z kutusundaki renkli (+yesil/-kirmizi) span'e cevirir — hem yeni
+        // etiket-arama yontemi hem eski sabit-satir fallback'i ayni formati kullaniyor.
+        function kzSpanOlustur(toplam) {
+            var renk = toplam >= 0 ? '#4ade80' : '#f87171';
+            var prefix = toplam >= 0 ? '+' : '';
+            return '<span style="color:' + renk + ';font-weight:700;">' + prefix + toplam.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' \u20ba</span>';
+        }
+
+        // (29.10.2026 duzeltildi) Gokhan'in bildirdigi hata: K/Z kutusu her zaman \u20ba0,00
+        // gosteriyordu. Sebep: kod OZET sayfasinin SABIT 4./5. satirindan (I sutunu) okuyordu,
+        // ama o satirlar artik BOS — gercek "TOPLAM KAR ZARAR" verisi sayfanin ALT kisimindaki
+        // ayri bir mini tabloda (HESAP / TEMINAT USD / TEMINAT TL / POZISYON TL / TOPLAM KAR
+        // ZARAR baslikli), ve o tablonun satir/sutun konumu da sheet'e satir eklenip
+        // cikarildikca KAYABILIYOR. Ayni siniftaki hata daha once VIOP verisinde de yasanmis,
+        // "sabit satira guvenme, ETIKETI ARA" yontemiyle cozulmustu (bkz. viopToplamHesapBul) —
+        // ayni yontem burada da uygulandi. "TOPLAM KAR ZARAR" metni sheette baska bir yerde de
+        // gecebilecegi icin (Gokhan'in uyarisi) SADECE o metni degil, ayni satirda "HESAP"
+        // basliginin da bulunmasini (bu mini tabloya ozgu, daha spesifik bir imza) sart
+        // kosuyoruz; birden fazla eslesme olursa sayfanin EN ALTTAKI (en guncel) tablosu
+        // tercih edilir.
         function toplamKZ(liste) {
-            // OZET sheet'inden doğru TL değeri al
             var ozetData = window.ozetSheetData;
             var isSirket = liste.length > 0 && (liste[0].hesap.indexOf('SIRKET') !== -1 || liste[0].hesap.indexOf('ŞİRKET') !== -1);
-            if (ozetData && ozetData.length > 4) {
-                var rowIndex = isSirket ? 4 : 3;
-                var kzRaw = (ozetData[rowIndex][8] || '').toString();
-                var kzSign = kzRaw.indexOf('-') !== -1 ? -1 : 1;
-                var kzClean = kzRaw.replace(/[^0-9,\.]/g, '').replace(/\./g, '').replace(',', '.');
-                var toplam = (parseFloat(kzClean) || 0) * kzSign;
-                var renk = toplam >= 0 ? '#4ade80' : '#f87171';
-                var prefix = toplam >= 0 ? '+' : '';
-                return '<span style="color:' + renk + ';font-weight:700;">' + prefix + toplam.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' \u20ba</span>';
+            var hedefEtiket = isSirket ? 'ŞİRKET' : 'ŞAHSİ';
+
+            if (ozetData && ozetData.length > 0) {
+                var enSonSonuc = null;
+                for (var hi = 0; hi < ozetData.length; hi++) {
+                    var baslikSatiri = ozetData[hi];
+                    if (!baslikSatiri) continue;
+                    var hesapSutunuVarMi = baslikSatiri.some(function(h) { return (h || '').toString().trim().toUpperCase() === 'HESAP'; });
+                    if (!hesapSutunuVarMi) continue;
+                    var kzSutunu = -1;
+                    for (var hj = 0; hj < baslikSatiri.length; hj++) {
+                        if ((baslikSatiri[hj] || '').toString().trim().toUpperCase().indexOf('TOPLAM KAR') !== -1) { kzSutunu = hj; break; }
+                    }
+                    if (kzSutunu === -1) continue;
+
+                    for (var ri = hi + 1; ri < Math.min(hi + 12, ozetData.length); ri++) {
+                        var veriSatiri = ozetData[ri];
+                        if (!veriSatiri) continue;
+                        var etiketEslesti = veriSatiri.some(function(hucre) { return (hucre || '').toString().trim().toUpperCase() === hedefEtiket; });
+                        if (!etiketEslesti) continue;
+                        var kzRaw = (veriSatiri[kzSutunu] || '').toString();
+                        var kzSign = kzRaw.indexOf('-') !== -1 ? -1 : 1;
+                        var kzClean = kzRaw.replace(/[^0-9,\.]/g, '').replace(/\./g, '').replace(',', '.');
+                        if (kzClean === '') continue;
+                        enSonSonuc = (parseFloat(kzClean) || 0) * kzSign;
+                        break;
+                    }
+                }
+                if (enSonSonuc !== null) return kzSpanOlustur(enSonSonuc);
+
+                if (ozetData.length > 4) {
+                    var rowIndex = isSirket ? 4 : 3;
+                    var kzRaw2 = (ozetData[rowIndex][8] || '').toString();
+                    var kzSign2 = kzRaw2.indexOf('-') !== -1 ? -1 : 1;
+                    var kzClean2 = kzRaw2.replace(/[^0-9,\.]/g, '').replace(/\./g, '').replace(',', '.');
+                    if (kzClean2 !== '') return kzSpanOlustur((parseFloat(kzClean2) || 0) * kzSign2);
+                }
             }
-            // Fallback: direkt hesapla
             var toplam = 0;
             var gecerli = false;
             liste.forEach(function(k) {
@@ -14968,9 +15014,7 @@ function renderPozisyonlarSekmesi() {
                 if (!isNaN(num)) { toplam += num; gecerli = true; }
             });
             if (!gecerli) return '-';
-            var renk = toplam >= 0 ? '#4ade80' : '#f87171';
-            var prefix = toplam >= 0 ? '+' : '';
-            return '<span style="color:' + renk + ';font-weight:700;">' + prefix + toplam.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' \u20ba</span>';
+            return kzSpanOlustur(toplam);
         }
 
         // Ana wrapper - her şey yatayda ortalı

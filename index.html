@@ -14947,10 +14947,21 @@ function renderPozisyonlarSekmesi() {
 
         // Bir TL tutarini K/Z kutusundaki renkli (+yesil/-kirmizi) span'e cevirir — hem yeni
         // etiket-arama yontemi hem eski sabit-satir fallback'i ayni formati kullaniyor.
-        function kzSpanOlustur(toplam) {
-            var renk = toplam >= 0 ? '#4ade80' : '#f87171';
-            var prefix = toplam >= 0 ? '+' : '';
-            return '<span style="color:' + renk + ';font-weight:700;">' + prefix + toplam.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' \u20ba</span>';
+        // (29.10.2026 guncellendi) Gokhan'in istegiyle: K/Z kutusu artik TL degil USD
+        // gosteriyor. OZET sayfasindaki "TOPLAM KAR ZARAR" TL cinsinden geliyor; "DATABASE'den
+        // USDTRY" (marketData['USDTRY'] — sitenin her yerde kullandigi canli kur, bkz. diger
+        // TL->USD cevrimleri) ile USD'ye cevriliyor. Pozisyon kartlarindan gelen son-care fallback
+        // (asagida) zaten USD (VIOP sheet'i dolar bazli) oldugu icin TEKRAR cevrilmiyor — sadece
+        // $ ile formatlaniyor. Hesap/mantik DEGISMEDI, sadece gosterim para birimi.
+        function tlToUsdCevir(tl) {
+            var kur = (typeof marketData !== 'undefined' && marketData && marketData['USDTRY']) ? marketData['USDTRY'] : 42.84;
+            return tl / kur;
+        }
+
+        function kzSpanOlustur(usdToplam) {
+            var renk = usdToplam >= 0 ? '#4ade80' : '#f87171';
+            var prefix = usdToplam >= 0 ? '+$' : '-$';
+            return '<span style="color:' + renk + ';font-weight:700;">' + prefix + Math.abs(usdToplam).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</span>';
         }
 
         // (29.10.2026 duzeltildi) Gokhan'in bildirdigi hata: K/Z kutusu her zaman \u20ba0,00
@@ -14996,14 +15007,14 @@ function renderPozisyonlarSekmesi() {
                         break;
                     }
                 }
-                if (enSonSonuc !== null) return kzSpanOlustur(enSonSonuc);
+                if (enSonSonuc !== null) return kzSpanOlustur(tlToUsdCevir(enSonSonuc));
 
                 if (ozetData.length > 4) {
                     var rowIndex = isSirket ? 4 : 3;
                     var kzRaw2 = (ozetData[rowIndex][8] || '').toString();
                     var kzSign2 = kzRaw2.indexOf('-') !== -1 ? -1 : 1;
                     var kzClean2 = kzRaw2.replace(/[^0-9,\.]/g, '').replace(/\./g, '').replace(',', '.');
-                    if (kzClean2 !== '') return kzSpanOlustur((parseFloat(kzClean2) || 0) * kzSign2);
+                    if (kzClean2 !== '') return kzSpanOlustur(tlToUsdCevir((parseFloat(kzClean2) || 0) * kzSign2));
                 }
             }
             var toplam = 0;
@@ -15014,7 +15025,7 @@ function renderPozisyonlarSekmesi() {
                 if (!isNaN(num)) { toplam += num; gecerli = true; }
             });
             if (!gecerli) return '-';
-            return kzSpanOlustur(toplam);
+            return kzSpanOlustur(toplam); // zaten USD (VIOP pozisyon verisi dolar bazli)
         }
 
         // Ana wrapper - her şey yatayda ortalı

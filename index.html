@@ -10956,7 +10956,13 @@ function teknikAnalizGecmisTikla(idx) {
     // kart BUGÜNÜN değil O ANALİZİN tarihini gösterir — güncel pozisyonla karıştırılmaz.
     var gecmisSonucKartiHtml;
     if (kayit.piyasaSinyali !== undefined || kayit.pozisyonBazliKararEtiketi) {
-        gecmisSonucKartiHtml = sonucVeYonlendirmeBolumuOlustur(kayit, kayit.ticker, kayit.zaman);
+        // (29.10.2026 eklendi) Canlı analiz ekranıyla TUTARLI olsun diye teknikSkorBolumuOlustur
+        // çağrısı eklendi — önceden burada EKSİKTİ, bu yüzden geçmiş/otomatik (AUTO) kayıtları
+        // açtığında İşlem Skoru (Risk/Ödül Kalitesi) hiç görünmüyordu. kayit.teknikSkor.islem
+        // SADECE bu tarihten SONRA kaydedilen kayıtlarda dolu olur (bkz. Code.gs analizSheeteKaydet/
+        // teknikAnalizGecmisiGetir); eski kayıtlarda teknikSkorKartOlustur sessizce boş döner.
+        gecmisSonucKartiHtml = sonucVeYonlendirmeBolumuOlustur(kayit, kayit.ticker, kayit.zaman) +
+            teknikSkorBolumuOlustur(kayit.teknikSkor);
     } else {
         // Arşivde sadece Trend Skoru saklanıyordu (İşlem Skoru/detay kırılımı yok, sadece o an
         // üretilen canlı sonuçta gösterilir) — eski kayıtlar için bu tek sayı rozet olarak kalır.

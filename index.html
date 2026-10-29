@@ -10411,29 +10411,58 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
                 kzPctGosterilecek = parseFloat((fark / pz.maliyet * 100).toFixed(2));
             }
             var kzMetin = (kzPctGosterilecek !== undefined && kzPctGosterilecek !== null) ? ((kzPctGosterilecek >= 0 ? '+' : '') + kzPctGosterilecek + '%') : '-';
-            // (29.10.2026 güncellendi) hesap adı yoksa (eski/tek hesaplı kayıt) pozisyon yönü
-            // (LONG/SHORT) satır etiketi olarak kullanılır — sessizce geriye dönük uyumlu.
-            pozisyonSatirlari.push({ hesapAdi: pz.hesap || pzYon, maliyetMetin: formatNumberTeknik(pz.maliyet, ondalik), adet: Math.abs(pz.adet), kzMetin: kzMetin });
+            // (29.10.2026 güncellendi) Gökhan onaylı Varyant 3 mockup'ındaki ORİJİNAL hale
+            // (başlıksız/sütunsuz, düz metin satırı: "ŞAHSİ  53.75$ · 12 adet · +1.39%") dönüldü —
+            // daha önce denenen "4 sütun başlıklı tablo" hali Gökhan'ın onayladığı mockup
+            // ekran görüntüsüyle TUTARSIZ bulundu, bu yüzden geri alındı (29.10.2026).
+            // hesap adı yoksa (eski/tek hesaplı kayıt) pozisyon yönü (LONG/SHORT) etiket olarak
+            // kullanılır — sessizce geriye dönük uyumlu.
+            var kzRenkV3 = (typeof kzMetin === 'string' && kzMetin.indexOf('-') === 0) ? '#fca5a5' : '#4ade80';
+            pozisyonSatirlari.push({
+                sol: pz.hesap || pzYon,
+                sag: '<b style="color:#fff;">' + formatNumberTeknik(pz.maliyet, ondalik) + '</b> · ' + Math.abs(pz.adet) + ' adet · <b style="color:' + kzRenkV3 + ';">' + kzMetin + '</b>'
+            });
         }
     }
-    var pozisyonTablosuHtml = pozisyonTablosuOlustur_(pozisyonSatirlari);
 
-    var planHtml = '';
+    // (29.10.2026 güncellendi) Hedef/Stop artık AYRI bir "SHORT PLANI" kutusu değil, mockup'taki
+    // gibi ŞAHSİ/ŞİRKET ile AYNI düz satır listesinin bir parçası ("Hedef / Stop  46.81$ / 54.58$").
+    // planKutusuOlustur_'e (büyük rakamlı, ayrı kutulu eski görünüm) ARTIK BURADAN ÇAĞRI YAPILMIYOR
+    // — fonksiyonun kendisi SİLİNMEDİ, başka yerde kullanılmıyor, geriye dönük uyumluluk için duruyor.
+    // GİRİŞ FİYATI bilgisi (daha önce ayrı sarı kapsül) kaybolmasın diye aynı düz satır formatında
+    // EK bir satır olarak korundu. Mantık/veri/hesaplama DEĞİŞMEDİ — sadece gösterim formatı.
     if (result.yapisalSeviyeler && typeof result.yapisalSeviyeler.hedefOnerisi === 'number') {
         var ys = result.yapisalSeviyeler;
-        var planYon = ys.trendYonu === 'bullish' ? 'LONG' : 'SHORT';
-        // (28.10.2026 güncellendi) Gökhan'ın isteğiyle: R/R metni ve "stop referansı" eki
-        // kaldırıldı, Hedef/Stop artık planKutusuOlustur_ ile tam genişlik, yan yana, büyük
-        // rakamlarla (Güncel Fiyat ile aynı stil) gösteriliyor. Mantık/veri DEĞİŞMEDİ.
         var stopMetinYeni = (typeof ys.stopOnerisi === 'number') ? formatNumberTeknik(ys.stopOnerisi, ondalik) : '-';
-        // (28.10.2026 eklendi) GİRİŞ FİYATI — sadece aksiyon gerektiren kararlarda (icraPlaniGosterilsinMi_)
-        // VE Code.gs'in zaten hesapladığı yapisalSeviyeler.girisFiyati mevcutsa gösterilir.
+        pozisyonSatirlari.push({
+            sol: 'Hedef / Stop',
+            sag: '<b style="color:#fff;">' + formatNumberTeknik(ys.hedefOnerisi, ondalik) + '</b> / <b style="color:#fca5a5;">' + stopMetinYeni + '</b>'
+        });
+        // (28.10.2026 eklendi, 29.10.2026 gösterim formatı güncellendi) GİRİŞ FİYATI — sadece
+        // aksiyon gerektiren kararlarda (icraPlaniGosterilsinMi_) VE Code.gs'in zaten hesapladığı
+        // yapisalSeviyeler.girisFiyati mevcutsa gösterilir.
         var girisFiyatiMetni = (typeof ys.girisFiyati === 'number' && icraPlaniGosterilsinMi_(etiket))
             ? formatNumberTeknik(ys.girisFiyati, ondalik) : null;
-        // (29.10.2026 güncellendi) planKutusuOlustur_ artık eski 2 sütunlu grid'in İÇİNDE değil,
-        // tek sütun sıralı akışta — kendi üst boşluğunu burada manuel olarak taşıyor.
-        planHtml = '<div style="margin-top:10px;">' + planKutusuOlustur_(planYon, formatNumberTeknik(ys.hedefOnerisi, ondalik), stopMetinYeni, girisFiyatiMetni) + '</div>';
+        if (girisFiyatiMetni) {
+            pozisyonSatirlari.push({ sol: 'Giriş Fiyatı', sag: '<b style="color:#fde68a;">' + girisFiyatiMetni + '</b>' });
+        }
     }
+
+    // (29.10.2026 eklendi) pozisyonSatirlari artık ŞAHSİ/ŞİRKET + Hedef/Stop (+ varsa Giriş
+    // Fiyatı) satırlarının TÜMÜNÜ içeriyor — mockup'taki .v3-table ile birebir aynı: tek kutu,
+    // background rgba(255,255,255,.05), border-radius:10px, padding:8px 12px, satırlar arası
+    // ince çizgi (son satırda yok).
+    var pozisyonTablosuHtml = '';
+    if (pozisyonSatirlari.length > 0) {
+        var v3SatirHtml = pozisyonSatirlari.map(function(r, idx) {
+            var sonMu = (idx === pozisyonSatirlari.length - 1);
+            return '<div style="display:flex; justify-content:space-between; padding:5px 0; font-size:11.5px; color:#cbd5e1;' + (sonMu ? '' : ' border-bottom:1px solid rgba(255,255,255,0.06);') + '">' +
+                '<span>' + r.sol + '</span><span>' + r.sag + '</span>' +
+            '</div>';
+        }).join('');
+        pozisyonTablosuHtml = '<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:8px 12px; margin-top:8px;">' + v3SatirHtml + '</div>';
+    }
+    var planHtml = ''; // Hedef/Stop artık yukarıdaki pozisyonTablosuHtml'in içinde, ayrı kutu yok.
 
     // (27.10.2026 eklendi) AŞIRI ALIM/SATIM RİSK FİLTRESİ — Code.gs'teki asiriBolgeRiskiHesapla_
     // zaten hesaplayıp pozisyonBazliKararEtiketi'ni (EKLE→TUT, AL/SHORT AÇ→BEKLE) KODDAN
@@ -10499,12 +10528,13 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // DOKUNULMADI; burada sadece rozetin kendi sol boşluğu (sağa değil, container'ın soluna
     // taşmasın diye) bir dış span ile margin-right:8px ile dengelendi — net sonuç: küçük bir sol
     // girinti (zararsız) + rozet-başlık arası tutarlı 8px boşluk.
-    var topRowHtml = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-        '<div style="display:flex; align-items:center;">' +
-            (rozetHtml ? '<span style="margin-right:8px;">' + rozetHtml + '</span>' : '') +
-            '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' +
-        '</div>' +
-        (!tarihMetniOverride ? '<span style="font-size:11px; color:#94a3b8;">' + bugunTarih + '</span>' : '') +
+    // (29.10.2026 güncellendi) Tarih kartın İÇİNDEN TAMAMEN kaldırıldı — onaylanan Varyant 3
+    // mockup'ında (canlı ya da arşiv fark etmeksizin) tarih hiç kartın içinde gösterilmiyordu.
+    // bugunTarih değişkeni hâlâ hesaplanıyor (zararsız, kullanılmıyor) — ileride geri istenirse
+    // kolayca eklenebilir.
+    var topRowHtml = '<div style="display:flex; align-items:center;">' +
+        (rozetHtml ? '<span style="margin-right:8px;">' + rozetHtml + '</span>' : '') +
+        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' +
     '</div>';
     return '<div style="margin-bottom:10px; background:' + renk.arkaplan + '; border:1.5px solid ' + renk.kenar + '; border-radius:12px; padding:14px 16px;">' +
         topRowHtml +

@@ -1689,6 +1689,12 @@ select option:checked {
     font-weight: 500;
 }
 
+/* (29.10.2026 eklendi) Teknik Analiz popup'ındaki bölüm başlıkları artık flex satır —
+   native ▶ işareti bu yüzden JS tarafında elle ekleniyor; Safari/WebKit'te YİNE DE görünebilen
+   eski üçgen işaretçiyi burada kapatıyoruz. Sadece .taBolumSummary class'ına sahip <summary>
+   etkileniyor — sitedeki DİĞER <details>/<summary> öğeleri (native oklu) ETKİLENMEZ. */
+.taBolumSummary::-webkit-details-marker { display: none; }
+
     </style>
 <!-- ⚠️ parseUSD FIX - AVRUPA FORMAT DESTEĞİ -->
 <script src="parseUSD-fix.js"></script>
@@ -9683,10 +9689,17 @@ function formatTeknikAnalizSonucu(text) {
         // "MUM VE MARKET YAPISI"). Sadece GÖSTERİM metni — ham analiz/mantık DEĞİŞMEDİ.
         if (acikBolum.no === '1') { baslikParantezsiz = 'MUM VE MARKET YAPISI'; }
         var baslikMetniGosterim = (acikBolum.no ? (acikBolum.no + '. ') : '') + baslikParantezsiz;
+        // (29.10.2026 güncellendi) Gökhan'ın isteğiyle: EKLE rozeti artık başlığın hemen yanında
+        // değil, satırın SAĞ ucuna yaslı — başlık uzunluğu ne olursa olsun rozet hep aynı hizada.
+        // Bunu yapmak için <summary> flex satırına çevrildi; native ▶ işareti (display:flex ile
+        // kaybolduğundan) elle eklendi — aç/kapa davranışı/mantığı DEĞİŞMEDİ, sadece dizilim.
         html += '<details style="margin-top:' + (html ? '10px' : '0') + '; border:1px solid rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.03);">' +
-            '<summary style="cursor:pointer; padding:8px 10px;">' +
-                '<span style="display:inline-block; color:#fff; font-weight:400; font-size:11px; letter-spacing:0.2px;">' + baslikMetniGosterim + '</span>' +
-                acikBolum.kararHtml +
+            '<summary class="taBolumSummary" style="cursor:pointer; padding:8px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px; list-style:none;">' +
+                '<span style="display:flex; align-items:center; gap:6px; min-width:0; flex:1 1 auto;">' +
+                    '<span style="flex-shrink:0; font-size:9px; color:#94a3b8;">▶</span>' +
+                    '<span style="display:inline-block; color:#fff; font-weight:400; font-size:11px; letter-spacing:0.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + baslikMetniGosterim + '</span>' +
+                '</span>' +
+                (acikBolum.kararHtml ? '<span style="flex-shrink:0;">' + acikBolum.kararHtml + '</span>' : '') +
             '</summary>' +
             '<div style="padding:8px 14px 14px; font-size:12.5px; line-height:1.65; color:#e2e8f0; border-top:1px solid rgba(255,255,255,0.08); margin-top:2px;">' +
                 acikBolum.govde +

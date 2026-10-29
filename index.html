@@ -11252,6 +11252,61 @@ function teknikAnalizGecmisTikla(idx) {
     gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml);
 }
 
+// (29.10.2026 eklendi) Gökhan'ın isteğiyle: Pozisyonlar sekmesindeki her kontrat kartına eklenen
+// 🕯️ butonuna basınca, o pozisyonun (vade kodu silinmiş) temel ticker'ıyla popup'ı hiç açmadan
+// DOĞRUDAN Teknik Analiz çalışır ve sonuç — "Geçmiş Analizler" ile aynı sürüklenebilir/kapatılabilir
+// yüzen kart sisteminde (gecmisKartAc) gösterilir. Backend zaten verilen ticker'a ait ŞAHSİ/ŞİRKET
+// pozisyonlarını otomatik bulup gösterdiği için (bkz. sonucVeYonlendirmeBolumuOlustur'daki
+// mevcutPozisyonlar eşleşmesi) ekstra bir şey göndermeye gerek yok — sadece doğru ticker yeterli.
+function pozisyonDanAnalizYap(kontratAdi, btn) {
+    // XAGUSDZ2026 → XAGUSD (vade kodu: ay harfi + 4 haneli yıl, bkz. parseKontratVade'deki AYNI desen)
+    var temelTicker = (kontratAdi || '').toString().replace(/[FGHJKMNQUVXZ]\d{4}$/, '').trim();
+    if (!temelTicker) return;
+
+    var eskiIcerik = btn.innerHTML;
+    var eskiGenislik = btn.style.width;
+    btn.disabled = true;
+    btn.style.cursor = 'wait';
+    btn.style.width = 'auto';
+    btn.style.padding = '0 10px';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analiz yapılıyor...';
+
+    function btnEskiHaleGetir() {
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+        btn.style.width = eskiGenislik;
+        btn.style.padding = '';
+        btn.innerHTML = eskiIcerik;
+    }
+
+    var url = APPS_SCRIPT_URL + '?action=teknikAnaliz&ticker=' + encodeURIComponent(temelTicker) + '&_=' + Date.now();
+    fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(result) {
+            if (result.status === 'error' || result.success === false) {
+                console.error('Pozisyon analizi hatası:', result.message);
+                btn.innerHTML = '❌ Hata';
+                setTimeout(btnEskiHaleGetir, 2000);
+                return;
+            }
+            var anaHtml = sonucVeYonlendirmeBolumuOlustur(result, result.ticker || temelTicker);
+            var skorHtml = teknikSkorBolumuOlustur(result.teknikSkor);
+            var detayHtml = formatTeknikAnalizSonucu(result.analiz || '') + pineScriptBolumuOlustur(result.analiz, result.ticker || temelTicker, '');
+            var simdi = new Date();
+            var zamanStr = simdi.toLocaleDateString('tr-TR') + ' ' + simdi.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+            gecmisKartAc({ ticker: result.ticker || temelTicker, zaman: zamanStr }, anaHtml, skorHtml, detayHtml);
+            btnEskiHaleGetir();
+        })
+        .catch(function(err) {
+            console.error('Pozisyon analizi hatası:', err);
+            btn.innerHTML = '❌ Hata';
+            setTimeout(btnEskiHaleGetir, 2000);
+        });
+}
+
 // (28.10.2026 eklendi) Popup'ın "bugün kapatıldı mı" hafızası artık BASİT bir evet/hayır
 // bayrağı değil — HANGİ kayıtlarla (xau.zaman + xag.zaman) kapatıldığını saklıyor. Gökhan'ın
 // yaşadığı durum: XAUUSD hazır ama XAGUSD henüz hazır değilken popup açılıp kapatılmış, eski
@@ -14939,6 +14994,7 @@ function renderPozisyonlarSekmesi() {
                         '</div>' +
                     '</div>' +
                     (stopAsild ? '<span style="font-size:16px;flex-shrink:0;" title="Güncel fiyat stop seviyesini aştı!">❗</span>' : '') +
+                    '<button onclick="pozisyonDanAnalizYap(\'' + k.ad + '\', this)" title="Bu pozisyon için Teknik Analiz yap" style="background:rgba(250,248,132,0.14);border:1px solid rgba(250,248,132,0.4);color:#FAF884;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;flex-shrink:0;transition:all 0.2s;">🕯️</button>' +
                     '<button onclick="togglePozKart(\'' + kartId + '\')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#FAF884;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0;transition:all 0.2s;">' + (acik ? '&#9650;' : '&#9660;') + '</button>' +
                 '</div>' +
                 detayHTML +

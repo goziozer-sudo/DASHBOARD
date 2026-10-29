@@ -10345,16 +10345,22 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     var bugunTarih = tarihMetniOverride || new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
     var ondalik = (typeof result.fiyatOndalik === 'number') ? result.fiyatOndalik : 2;
 
-    var kutular = [];
-
+    // (29.10.2026 güncellendi) Gökhan'ın popup üst alanını sıkıştırma isteğiyle: GÜNCEL FİYAT ve
+    // TREND SKORU artık iki ayrı kutu değil, tek bir "hero" satırında (fiyat solda büyük, Trend%/
+    // İşlem% sağda küçük) gösteriliyor. Veri/mantık DEĞİŞMEDİ — sadece bu ikisinin gösterim şekli.
+    var heroHtml = '';
     if (typeof result.guncelFiyat === 'number') {
-        kutular.push(sonucKutusuOlustur_('💲 GÜNCEL FİYAT', formatNumberTeknik(result.guncelFiyat, ondalik), ''));
-    }
-
-    if (result.teknikSkor && result.teknikSkor.trend && typeof result.teknikSkor.trend.yuzde === 'number') {
-        var ts = result.teknikSkor.trend;
-        var guclulukMetni = ts.yuzde >= 65 ? 'Güçlü' : (ts.yuzde >= 40 ? 'Orta' : 'Zayıf');
-        kutular.push(sonucKutusuOlustur_('📈 TREND SKORU', ts.yuzde + '/100', (ts.yonTeyidi || '-') + ' · ' + guclulukMetni));
+        var heroSkorParcalari = [];
+        if (result.teknikSkor && result.teknikSkor.trend && typeof result.teknikSkor.trend.yuzde === 'number') {
+            heroSkorParcalari.push('Trend <b style="color:#fff;">' + result.teknikSkor.trend.yuzde + '%</b>');
+        }
+        if (result.teknikSkor && result.teknikSkor.islem && typeof result.teknikSkor.islem.yuzde === 'number') {
+            heroSkorParcalari.push('İşlem <b style="color:#fff;">' + result.teknikSkor.islem.yuzde + '%</b>');
+        }
+        heroHtml = '<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:10px 12px; margin-top:8px;">' +
+            '<div style="font-size:17px; font-weight:800; color:#fff;">' + formatNumberTeknik(result.guncelFiyat, ondalik) + '</div>' +
+            (heroSkorParcalari.length > 0 ? '<div style="font-size:11.5px; color:#cbd5e1;">' + heroSkorParcalari.join('&nbsp;·&nbsp;') + '</div>' : '') +
+        '</div>';
     }
 
     // (27.10.2026 düzeltildi) ÖNCEDEN sadece result.mevcutPozisyonlar[0] gösteriliyordu, ikinci
@@ -10363,6 +10369,12 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // "ŞİRKET hesabı ile ilgili bir yorum göremedim"). ÇÖZÜM: "+1 hesap daha" yerine HER hesap
     // için AYRI bir kutu basılıyor — ikisi de kendi yönü/maliyeti/K-Z%'siyle görünür. Alttaki
     // uzun anlatıdaki (POZİSYON DEĞERLENDİRMESİ) davranışla artık TUTARLI.
+    // (29.10.2026 güncellendi) Gökhan'ın isteğiyle: artık her hesap için ayrı büyük bir kutu
+    // (pozisyonKutusuOlustur_) basılmıyor — tüm hesaplar tek bir başlıklı (MALİYET/ADET/KARLILIK)
+    // mini tabloya satır olarak ekleniyor (bkz. pozisyonTablosuOlustur_). Hesaplanan değerler ve
+    // yön/kz% mantığı AYNEN KORUNDU — sadece son adımda pozisyonKutusuOlustur_ çağrısı yerine
+    // pozisyonSatirlari dizisine bir satır objesi push ediliyor.
+    var pozisyonSatirlari = [];
     if (result.mevcutPozisyonlar && result.mevcutPozisyonlar.length > 0) {
         for (var pzI = 0; pzI < result.mevcutPozisyonlar.length; pzI++) {
             var pz = result.mevcutPozisyonlar[pzI];
@@ -10384,14 +10396,14 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
                 kzPctGosterilecek = parseFloat((fark / pz.maliyet * 100).toFixed(2));
             }
             var kzMetin = (kzPctGosterilecek !== undefined && kzPctGosterilecek !== null) ? ((kzPctGosterilecek >= 0 ? '+' : '') + kzPctGosterilecek + '%') : '-';
-            // (28.10.2026 güncellendi) Gökhan'ın isteğiyle: eski tek-satır sonucKutusuOlustur_
-            // yerine, hesap adını başlık yapan ve Maliyet/Adet/Karlılık'ı üç sütun halinde
-            // gösteren pozisyonKutusuOlustur_ kullanılıyor. hesap adı yoksa (eski/tek hesaplı
-            // kayıt) pozisyon yönü (LONG/SHORT) başlık olarak kullanılır — sessizce geriye dönük uyumlu.
-            kutular.push(pozisyonKutusuOlustur_(pz.hesap || pzYon, formatNumberTeknik(pz.maliyet, ondalik), Math.abs(pz.adet), kzMetin));
+            // (29.10.2026 güncellendi) hesap adı yoksa (eski/tek hesaplı kayıt) pozisyon yönü
+            // (LONG/SHORT) satır etiketi olarak kullanılır — sessizce geriye dönük uyumlu.
+            pozisyonSatirlari.push({ hesapAdi: pz.hesap || pzYon, maliyetMetin: formatNumberTeknik(pz.maliyet, ondalik), adet: Math.abs(pz.adet), kzMetin: kzMetin });
         }
     }
+    var pozisyonTablosuHtml = pozisyonTablosuOlustur_(pozisyonSatirlari);
 
+    var planHtml = '';
     if (result.yapisalSeviyeler && typeof result.yapisalSeviyeler.hedefOnerisi === 'number') {
         var ys = result.yapisalSeviyeler;
         var planYon = ys.trendYonu === 'bullish' ? 'LONG' : 'SHORT';
@@ -10403,12 +10415,10 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
         // VE Code.gs'in zaten hesapladığı yapisalSeviyeler.girisFiyati mevcutsa gösterilir.
         var girisFiyatiMetni = (typeof ys.girisFiyati === 'number' && icraPlaniGosterilsinMi_(etiket))
             ? formatNumberTeknik(ys.girisFiyati, ondalik) : null;
-        kutular.push(planKutusuOlustur_(planYon, formatNumberTeknik(ys.hedefOnerisi, ondalik), stopMetinYeni, girisFiyatiMetni));
+        // (29.10.2026 güncellendi) planKutusuOlustur_ artık eski 2 sütunlu grid'in İÇİNDE değil,
+        // tek sütun sıralı akışta — kendi üst boşluğunu burada manuel olarak taşıyor.
+        planHtml = '<div style="margin-top:10px;">' + planKutusuOlustur_(planYon, formatNumberTeknik(ys.hedefOnerisi, ondalik), stopMetinYeni, girisFiyatiMetni) + '</div>';
     }
-
-    var kutularHtml = kutular.length > 0
-        ? '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">' + kutular.join('') + '</div>'
-        : '';
 
     // (27.10.2026 eklendi) AŞIRI ALIM/SATIM RİSK FİLTRESİ — Code.gs'teki asiriBolgeRiskiHesapla_
     // zaten hesaplayıp pozisyonBazliKararEtiketi'ni (EKLE→TUT, AL/SHORT AÇ→BEKLE) KODDAN
@@ -10451,10 +10461,15 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
         '</div>';
     }
 
-    // (28.10.2026 güncellendi) Gökhan'ın isteğiyle: ticker bu satırdan kaldırıldı (zaten modal
-    // başlığında var), tarih + yön rozeti sağ üst köşeye taşındı (justify-content:flex-end),
-    // başlık (BEKLE/AL/SAT AÇ vb.) ortalandı ve 19px'ten 22px'e büyütüldü, alt yazı satırı
-    // ("Piyasa sinyali: X" / "Analiz sonucu · ...") tamamen kaldırıldı.
+    // (29.10.2026 güncellendi) Gökhan'ın popup sıkıştırma isteğiyle üst alan yeniden kuruldu:
+    // başlık (BEKLE/AL/SAT AÇ vb.) + yön rozeti artık SOLDA tek satırda (17px), tarih ise SADECE
+    // CANLI sonuçlarda (tarihMetniOverride YOKKEN) sağda gösteriliyor — ARŞİV görünümünde
+    // (teknikAnalizGecmisTikla) tarih zaten dıştaki "📜 TICKER — TARİH tarihli geçmiş analiz"
+    // durum satırında bir kez gösterildiği için burada TEKRAR basılmıyor (Gökhan: "Tarih 2 kere
+    // tekrarlanıyor gerek yok!"). Eski GÜNCEL FİYAT/TREND SKORU kutuları ve ŞAHSİ/ŞİRKET'in ayrı
+    // büyük kutuları kaldırıldı — yerlerini heroHtml (fiyat + Trend%/İşlem% tek satır) ve
+    // pozisyonTablosuHtml (başlıklı mini tablo) aldı; eski 2 sütunlu grid sarmalayıcı da bu
+    // yüzden tamamen kaldırıldı (artık hepsi tam genişlikte, sıralı akıyor).
     // (28.10.2026 kaldırıldı) "⚠️ Aşırı bölge riski — SINIRDA/YÜKSEK" banner'ı Gökhan'ın
     // isteğiyle görüntüden kaldırıldı ("Bu RSI uyarısına artık gerek yok bence.."). ÖNEMLİ:
     // bu SADECE görsel bir kaldırma — asiriBolgeRiski'nin karar motoru üzerindeki gerçek etkisi
@@ -10462,12 +10477,15 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // dosyadan tamamen BAĞIMSIZ olarak hesaplanıyor — ona DOKUNULMADI, sadece NEDENİNİ açıklayan
     // bu bilgilendirme kutusu artık basılmıyor. asiriRiskHtml değişkeni/hesaplaması üstte hâlâ
     // duruyor (zararsız, kullanılmıyor) — ileride tekrar istenirse kolayca geri eklenebilir.
+    var topRowHtml = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+        '<div style="display:flex; align-items:center; gap:8px; font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + rozetHtml + '</div>' +
+        (!tarihMetniOverride ? '<span style="font-size:11px; color:#94a3b8;">' + bugunTarih + '</span>' : '') +
+    '</div>';
     return '<div style="margin-bottom:10px; background:' + renk.arkaplan + '; border:1.5px solid ' + renk.kenar + '; border-radius:12px; padding:14px 16px;">' +
-        '<div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; font-size:11px; color:#94a3b8;">' +
-            rozetHtml + '<span>' + bugunTarih + '</span>' +
-        '</div>' +
-        '<div style="font-size:19px; font-weight:800; color:' + renk.metin + '; margin-top:8px; text-align:center;">' + baslikMetni + '</div>' +
-        kutularHtml +
+        topRowHtml +
+        heroHtml +
+        pozisyonTablosuHtml +
+        planHtml +
     '</div>' +
     hacimTeyidiHtml;
 }
@@ -10506,6 +10524,33 @@ function pozisyonKutusuOlustur_(hesapAdi, maliyetMetin, adet, kzMetin) {
             '<div><div style="font-size:9px; font-weight:700; letter-spacing:0.4px; color:#fff; text-transform:uppercase;">Adet</div><div style="font-size:13.5px; font-weight:800; color:#fff; margin-top:4px;">' + adet + '</div></div>' +
             '<div><div style="font-size:9px; font-weight:700; letter-spacing:0.4px; color:#fff; text-transform:uppercase;">Karlılık</div><div style="font-size:13.5px; font-weight:800; color:' + kzRenk + '; margin-top:4px;">' + kzMetin + '</div></div>' +
         '</div>' +
+    '</div>';
+}
+
+// (29.10.2026 eklendi) ŞAHSİ/ŞİRKET hesaplarını eski ayrı büyük kutular (pozisyonKutusuOlustur_)
+// yerine tek, başlıklı (boş/MALİYET/ADET/KARLILIK), 4 sütunlu mini tabloda satır satır gösteren
+// yeni fonksiyon — Gökhan'ın popup üst alanını sıkıştırma isteği kapsamında (Varyant 3 + 4 sütun,
+// seçenek A: başlıklı). "Toplam Tutar" sütunu KASITLI OLARAK eklenmedi — Gökhan'la birlikte
+// gereksiz/tablonun yeri değil diye karar verildi. satirlar boşsa (pozisyon yok) boş string döner.
+function pozisyonTablosuOlustur_(satirlar) {
+    if (!satirlar || satirlar.length === 0) return '';
+    var satirHtml = '';
+    for (var i = 0; i < satirlar.length; i++) {
+        var s = satirlar[i];
+        var kzRenk = (typeof s.kzMetin === 'string' && s.kzMetin.indexOf('-') === 0) ? '#f87171' : '#4ade80';
+        var sonSatirMi = (i === satirlar.length - 1);
+        satirHtml += '<div style="display:grid; grid-template-columns:.8fr 1fr .8fr 1fr; align-items:center; padding:8px 2px;' + (sonSatirMi ? '' : ' border-bottom:1px solid rgba(255,255,255,0.06);') + '">' +
+            '<div style="text-align:left; font-weight:700; color:#fff; font-size:11.5px;">' + s.hesapAdi + '</div>' +
+            '<div style="text-align:center; font-weight:800; color:#fff; font-size:11.5px;">' + s.maliyetMetin + '</div>' +
+            '<div style="text-align:center; font-weight:800; color:#fff; font-size:11.5px;">' + s.adet + '</div>' +
+            '<div style="text-align:center; font-weight:800; color:' + kzRenk + '; font-size:11.5px;">' + s.kzMetin + '</div>' +
+        '</div>';
+    }
+    return '<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:4px 10px; margin-top:8px;">' +
+        '<div style="display:grid; grid-template-columns:.8fr 1fr .8fr 1fr; padding:2px 2px 6px; font-size:9.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.03em; border-bottom:1px solid rgba(255,255,255,0.12); margin-bottom:2px;">' +
+            '<div>&nbsp;</div><div style="text-align:center;">MALİYET</div><div style="text-align:center;">ADET</div><div style="text-align:center;">KARLILIK</div>' +
+        '</div>' +
+        satirHtml +
     '</div>';
 }
 

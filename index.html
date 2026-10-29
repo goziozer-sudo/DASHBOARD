@@ -10350,12 +10350,14 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // İşlem% sağda küçük) gösteriliyor. Veri/mantık DEĞİŞMEDİ — sadece bu ikisinin gösterim şekli.
     var heroHtml = '';
     if (typeof result.guncelFiyat === 'number') {
+        // (29.10.2026 güncellendi) Gökhan'ın onayladığı Varyant 3 mockup'ıyla pixel-pixel
+        // eşleşsin diye Trend/İşlem yüzdeleri artık BEYAZ değil, mockup'taki gibi YEŞİL (#4ade80).
         var heroSkorParcalari = [];
         if (result.teknikSkor && result.teknikSkor.trend && typeof result.teknikSkor.trend.yuzde === 'number') {
-            heroSkorParcalari.push('Trend <b style="color:#fff;">' + result.teknikSkor.trend.yuzde + '%</b>');
+            heroSkorParcalari.push('Trend <b style="color:#4ade80;">' + result.teknikSkor.trend.yuzde + '%</b>');
         }
         if (result.teknikSkor && result.teknikSkor.islem && typeof result.teknikSkor.islem.yuzde === 'number') {
-            heroSkorParcalari.push('İşlem <b style="color:#fff;">' + result.teknikSkor.islem.yuzde + '%</b>');
+            heroSkorParcalari.push('İşlem <b style="color:#4ade80;">' + result.teknikSkor.islem.yuzde + '%</b>');
         }
         heroHtml = '<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:10px 12px; margin-top:8px;">' +
             '<div style="font-size:17px; font-weight:800; color:#fff;">' + formatNumberTeknik(result.guncelFiyat, ondalik) + '</div>' +
@@ -10477,8 +10479,18 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // dosyadan tamamen BAĞIMSIZ olarak hesaplanıyor — ona DOKUNULMADI, sadece NEDENİNİ açıklayan
     // bu bilgilendirme kutusu artık basılmıyor. asiriRiskHtml değişkeni/hesaplaması üstte hâlâ
     // duruyor (zararsız, kullanılmıyor) — ileride tekrar istenirse kolayca geri eklenebilir.
+    // (29.10.2026 güncellendi) Gökhan'ın isteğiyle: rozet ile başlığın SIRASI mockup'a uyacak
+    // şekilde değiştirildi — ÖNCE rozet, SONRA başlık (mockup'ta "BEARISH  SHORT (TUT)" sırası).
+    // rozetHtml'in kendi margin-left:8px'i başka bir kullanım yerinde (teknikSkorBolumuOlustur'daki
+    // ekRozetHtml — metnin SONUNA eklenir) doğru çalıştığı için trendYonRozetiOlustur_'e
+    // DOKUNULMADI; burada sadece rozetin kendi sol boşluğu (sağa değil, container'ın soluna
+    // taşmasın diye) bir dış span ile margin-right:8px ile dengelendi — net sonuç: küçük bir sol
+    // girinti (zararsız) + rozet-başlık arası tutarlı 8px boşluk.
     var topRowHtml = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-        '<div style="display:flex; align-items:center; gap:8px; font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + rozetHtml + '</div>' +
+        '<div style="display:flex; align-items:center;">' +
+            (rozetHtml ? '<span style="margin-right:8px;">' + rozetHtml + '</span>' : '') +
+            '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' +
+        '</div>' +
         (!tarihMetniOverride ? '<span style="font-size:11px; color:#94a3b8;">' + bugunTarih + '</span>' : '') +
     '</div>';
     return '<div style="margin-bottom:10px; background:' + renk.arkaplan + '; border:1.5px solid ' + renk.kenar + '; border-radius:12px; padding:14px 16px;">' +
@@ -10527,30 +10539,39 @@ function pozisyonKutusuOlustur_(hesapAdi, maliyetMetin, adet, kzMetin) {
     '</div>';
 }
 
-// (29.10.2026 eklendi) ŞAHSİ/ŞİRKET hesaplarını eski ayrı büyük kutular (pozisyonKutusuOlustur_)
-// yerine tek, başlıklı (boş/MALİYET/ADET/KARLILIK), 4 sütunlu mini tabloda satır satır gösteren
-// yeni fonksiyon — Gökhan'ın popup üst alanını sıkıştırma isteği kapsamında (Varyant 3 + 4 sütun,
-// seçenek A: başlıklı). "Toplam Tutar" sütunu KASITLI OLARAK eklenmedi — Gökhan'la birlikte
+// (29.10.2026 güncellendi) Gökhan'ın isteğiyle: ŞAHSİ/ŞİRKET'in 4 sütunlu mini tablosu artık
+// teknikSkorKartOlustur()'daki "RİSK ÖDÜL KALİTESİ" kriter tablosuyla (KRİTER/DEĞER/YORUM/PUAN)
+// BİREBİR AYNI renk/font/grid dilini kullanıyor — Gökhan'ın isteği: "renkler fontlar ne
+// kullandıysan bunun aynısı". Kopyalanan değerler: başlık span'ları color:#fff, font-size:11px,
+// font-weight:800, letter-spacing:0.4px, uppercase; veri satırları ilk sütun font-weight:600
+// font-size:12.5px, diğer sütunlar font-weight:700/800 font-size:12-13px; satır arası
+// border-bottom:1px solid rgba(255,255,255,0.05); dış kutu background:rgba(255,255,255,0.06),
+// border:1px solid rgba(255,255,255,0.15), border-radius:10px, padding:12px 14px — teknikSkorKartOlustur
+// ile AYNI dış kutu stili. "Toplam Tutar" sütunu KASITLI OLARAK eklenmedi — Gökhan'la birlikte
 // gereksiz/tablonun yeri değil diye karar verildi. satirlar boşsa (pozisyon yok) boş string döner.
 function pozisyonTablosuOlustur_(satirlar) {
     if (!satirlar || satirlar.length === 0) return '';
+    var kolonlar = 'grid-template-columns:0.9fr 1fr 0.7fr 1fr;';
+    var basliklar = '<div style="display:grid; ' + kolonlar + ' gap:8px; padding:0 0 5px;">' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;">&nbsp;</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Maliyet</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Adet</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Karlılık</span>' +
+    '</div>';
     var satirHtml = '';
     for (var i = 0; i < satirlar.length; i++) {
         var s = satirlar[i];
         var kzRenk = (typeof s.kzMetin === 'string' && s.kzMetin.indexOf('-') === 0) ? '#f87171' : '#4ade80';
         var sonSatirMi = (i === satirlar.length - 1);
-        satirHtml += '<div style="display:grid; grid-template-columns:.8fr 1fr .8fr 1fr; align-items:center; padding:8px 2px;' + (sonSatirMi ? '' : ' border-bottom:1px solid rgba(255,255,255,0.06);') + '">' +
-            '<div style="text-align:left; font-weight:700; color:#fff; font-size:11.5px;">' + s.hesapAdi + '</div>' +
-            '<div style="text-align:center; font-weight:800; color:#fff; font-size:11.5px;">' + s.maliyetMetin + '</div>' +
-            '<div style="text-align:center; font-weight:800; color:#fff; font-size:11.5px;">' + s.adet + '</div>' +
-            '<div style="text-align:center; font-weight:800; color:' + kzRenk + '; font-size:11.5px;">' + s.kzMetin + '</div>' +
+        satirHtml += '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:6px 0; gap:8px;' + (sonSatirMi ? '' : ' border-bottom:1px solid rgba(255,255,255,0.05);') + '">' +
+            '<div style="color:#fff; font-size:12.5px; font-weight:600;">' + s.hesapAdi + '</div>' +
+            '<div style="color:#fff; font-size:12px; font-weight:700; text-align:center;">' + s.maliyetMetin + '</div>' +
+            '<div style="color:#fff; font-size:12px; font-weight:700; text-align:center;">' + s.adet + '</div>' +
+            '<div style="text-align:center; font-size:13px; font-weight:800; color:' + kzRenk + ';">' + s.kzMetin + '</div>' +
         '</div>';
     }
-    return '<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:4px 10px; margin-top:8px;">' +
-        '<div style="display:grid; grid-template-columns:.8fr 1fr .8fr 1fr; padding:2px 2px 6px; font-size:9.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.03em; border-bottom:1px solid rgba(255,255,255,0.12); margin-bottom:2px;">' +
-            '<div>&nbsp;</div><div style="text-align:center;">MALİYET</div><div style="text-align:center;">ADET</div><div style="text-align:center;">KARLILIK</div>' +
-        '</div>' +
-        satirHtml +
+    return '<div style="margin-top:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:12px 14px;">' +
+        basliklar + satirHtml +
     '</div>';
 }
 

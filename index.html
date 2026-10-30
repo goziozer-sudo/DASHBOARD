@@ -2613,10 +2613,18 @@ function sifreKontrol() {
     <div style="text-align:center;font-size:10px;color:#475569;margin-top:12px;">Kaynak: MKK — Tüm BIST Pay Senedi</div>
 </div>
 
-<!-- (30.10.2026 kaldırıldı) Günlük XAU/XAG (Altın/Gümüş) otomatik Gemini analizi özet popup'ı
-     Gökhan'ın isteğiyle kaldırıldı — artık her sabah 08:00/08:10 tetikleyicileri analiz
-     ürettiğinde, bu ayrı özet kutusu yerine DOĞRUDAN bizim sürüklenebilir kartlarımız (kapalı
-     halde) açılıyor (bkz. gunlukXauXagKartlariniAc, gecmisKayitKartAc). -->
+<!-- Günlük XAU/XAG (Altın/Gümüş) otomatik Gemini analizi özet popup'ı — her sabah 08:00'de
+     Apps Script tetikleyicisiyle üretilen analiz varsa, sayfa açılışında bir kez gösterilir.
+     MKK popup'ıyla aynı stil: sağ üst köşe, arkaplanı KAPATMAZ, sadece ✕ ile kapanır. -->
+<div id="gunlukXauXagPopup" style="display:none;position:fixed;top:20px;right:20px;z-index:99999;width:320px;background:rgba(255,255,255,0.12);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.2);border-radius:18px;padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.4);font-family:'Segoe UI',sans-serif;">
+    <button onclick="gunlukXauXagPopupKapat()" style="position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#cbd5e1;width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.color='#cbd5e1'">✕</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:18px;">🌅</span>
+        <span style="font-size:12px;font-weight:700;color:#FAF884;text-transform:uppercase;letter-spacing:0.5px;">Günlük Altın &amp; Gümüş</span>
+    </div>
+    <div id="gunlukXauXagTarih" style="font-size:10.5px;color:#64748b;margin-bottom:14px;">-</div>
+    <div id="gunlukXauXagIcerik" style="color:#94a3b8;font-size:12px;">Yükleniyor...</div>
+</div>
 
         <div id="analiz-grafikler-tab" class="tab-content">
             <div style="max-width: 1400px; margin: 0 auto;">
@@ -11075,8 +11083,8 @@ async function teknikAnalizGecmisiGoster() {
     const statusDiv = document.getElementById('teknik-analiz-status');
     const icerikDiv = document.getElementById('teknik-analiz-gecmis-icerik');
     const akordiyon = document.getElementById('teknik-analiz-gecmis-akordiyon');
-    // (30.10.2026 eklendi) Dışarıdan çağrıldığında da akordiyon açılsın — summary tıklamasından
-    // geçmeden doğrudan bu fonksiyon çağrılabiliyor.
+    // (30.10.2026 eklendi) Dışarıdan (ör. gunlukAnalizDetayAc) çağrıldığında da akordiyon açılsın —
+    // summary tıklamasından geçmeden doğrudan bu fonksiyon çağrılabiliyor.
     if (akordiyon) akordiyon.open = true;
 
     statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ Geçmiş analizler yükleniyor...</span>';
@@ -11306,24 +11314,16 @@ function tumDetayHtmlOlustur(obj, ticker, zamanStr) {
     html += backtestOzetiBolumuOlustur(obj.backtestOzeti);
     html += pineScriptBolumuOlustur(obj.analiz, ticker, zamanStr || '');
     if (obj.hamVeri) {
-        html += '<details style="margin-top:16px; border:1px solid rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.03);">' +
-            '<summary class="taBolumSummary" style="cursor:pointer; padding:8px 10px; display:flex; align-items:center; gap:6px; list-style:none; color:#FAF884; font-weight:600; font-size:12.5px;">' +
-                '<span style="flex-shrink:0; font-size:9px; color:#94a3b8;">▶</span>' +
-                '🔍 Yahoo\'dan çekilen ham veri (kontrol için)' +
-            '</summary>' +
-            '<div style="padding:8px 14px 14px; border-top:1px solid rgba(255,255,255,0.08); margin-top:2px;">' +
-                '<pre style="white-space:pre-wrap; font-size:12px; color:#cbd5e1; margin:0;">' + obj.hamVeri + '</pre>' +
-            '</div>' +
-        '</details>';
+        html += '<div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px;">' +
+            '<div style="color:#FAF884; font-weight:600; font-size:12.5px;">🔍 Yahoo\'dan çekilen ham veri (kontrol için)</div>' +
+            '<pre style="white-space:pre-wrap; font-size:12px; color:#cbd5e1; margin-top:8px;">' + obj.hamVeri + '</pre>' +
+        '</div>';
     }
     return html;
 }
 
-// (30.10.2026 eklendi) Bir geçmiş kaydı (kayit nesnesi) alıp, canlı analizle AYNI kart
-// sistemine (gecmisKartAc) açan paylaşılan yardımcı — hem "Geçmiş Analizler" listesindeki
-// tıklama (teknikAnalizGecmisTikla) hem de sabah otomatik XAU/XAG kartları
-// (gunlukXauXagKartlariniAc) bunu kullanıyor; mantık tek yerde.
-function gecmisKayitKartAc(kayit) {
+function teknikAnalizGecmisTikla(idx) {
+    const kayit = teknikAnalizGecmisVerisi[idx];
     if (!kayit) return;
 
     // (27.10.2026 eklendi) POZİSYON ANLIK GÖRÜNTÜSÜ — Code.gs tarafında arşive J sütunu olarak
@@ -11335,12 +11335,21 @@ function gecmisKayitKartAc(kayit) {
     // kart BUGÜNÜN değil O ANALİZİN tarihini gösterir — güncel pozisyonla karıştırılmaz.
     var anaHtml, skorHtml;
     if (kayit.piyasaSinyali !== undefined || kayit.pozisyonBazliKararEtiketi) {
+        // (29.10.2026 eklendi) Canlı analiz ekranıyla TUTARLI olsun diye teknikSkorBolumuOlustur
+        // çağrısı eklendi — önceden burada EKSİKTİ, bu yüzden geçmiş/otomatik (AUTO) kayıtları
+        // açtığında İşlem Skoru (Risk/Ödül Kalitesi) hiç görünmüyordu. kayit.teknikSkor.islem
+        // SADECE bu tarihten SONRA kaydedilen kayıtlarda dolu olur (bkz. Code.gs analizSheeteKaydet/
+        // teknikAnalizGecmisiGetir); eski kayıtlarda teknikSkorKartOlustur sessizce boş döner.
         anaHtml = sonucVeYonlendirmeBolumuOlustur(kayit, kayit.ticker, kayit.zaman);
         skorHtml = teknikSkorBolumuOlustur(kayit.teknikSkor);
     } else {
         // Arşivde sadece Trend Skoru saklanıyordu (İşlem Skoru/detay kırılımı yok, sadece o an
         // üretilen canlı sonuçta gösterilir) — eski kayıtlar için bu tek sayı rozet olarak kalır.
         const gecmisTrendSkoru = (kayit.guven && kayit.guven !== '-' && !isNaN(parseInt(kayit.guven, 10))) ? { yuzde: parseInt(kayit.guven, 10) } : null;
+        // (28.10.2026 güncellendi) teknikSkorKartOlustur'un 3. parametresi artık uzun bir
+        // açıklama cümlesi değil, kısa bir etiket (bkz. fonksiyon yorumu) — buradaki eski uzun
+        // cümle kısa "TREND GÜCÜ (ARŞİV)" etiketiyle değiştirildi, taze analiz kartlarıyla
+        // tutarlı olsun diye. Mantık/veri DEĞİŞMEDİ, sadece bu etiket metni.
         anaHtml = gecmisTrendSkoru ? teknikSkorKartOlustur('TREND SKORU (ARŞİV)', '📈', 'TREND GÜCÜ (ARŞİV)', gecmisTrendSkoru) : '';
         skorHtml = '';
     }
@@ -11348,10 +11357,6 @@ function gecmisKayitKartAc(kayit) {
     // kapalı başlar, okuyla açılır. Eski/yeni kayıt ayrımı yok — ikisinde de kayit.analiz var.
     var detayHtml = tumDetayHtmlOlustur(kayit, kayit.ticker, kayit.zaman);
     gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml);
-}
-
-function teknikAnalizGecmisTikla(idx) {
-    gecmisKayitKartAc(teknikAnalizGecmisVerisi[idx]);
 }
 
 // (29.10.2026 eklendi) Gökhan'ın isteğiyle: Pozisyonlar sekmesindeki her kontrat kartına eklenen
@@ -11409,42 +11414,88 @@ function pozisyonDanAnalizYap(kontratAdi, btn) {
         });
 }
 
-// (30.10.2026 güncellendi) Gökhan'ın isteğiyle: sabah tetikleyicilerinin (gunlukXAUUSDAnalizi,
-// gunlukXAGUSDAnalizi ~08:00/08:10) ürettiği günlük XAU/XAG analizleri artık ayrı, özet bir
-// köşe popup'ı yerine DOĞRUDAN bizim sürüklenebilir/kapatılabilir kart sistemimizde (gecmisKartAc)
-// KAPALI halde açılıyor — "Geçmiş Analizler" listesinden bir kayda tıklamakla BİREBİR aynı
-// mekanizma (gecmisKayitKartAc, bkz. teknikAnalizGecmisTikla). Eski popup'ın "bugün zaten
-// kapatıldı mı" hafızası (localStorage imza takibi) kasıtlı olarak KALDIRILDI (Gökhan: "hafızayı
-// takip etmene artık gerek yok") — yani sayfa her açıldığında/yenilendiğinde, o gün için hazır
-// olan XAU/XAG analizleri varsa kartlar (yeniden) açılır; kart zaten kapalı halde geldiği ve
-// her zamanki ✕ ile kapatılabildiği için bu basitlik bir sorun yaratmıyor.
-async function gunlukXauXagKartlariniAc() {
+// (28.10.2026 eklendi) Popup'ın "bugün kapatıldı mı" hafızası artık BASİT bir evet/hayır
+// bayrağı değil — HANGİ kayıtlarla (xau.zaman + xag.zaman) kapatıldığını saklıyor. Gökhan'ın
+// yaşadığı durum: XAUUSD hazır ama XAGUSD henüz hazır değilken popup açılıp kapatılmış, eski
+// basit bayrak yüzünden XAGUSD saatler sonra tamamlansa da popup BİR DAHA HİÇ açılmıyordu
+// (gün sonuna kadar kilitli kalıyordu, saat kaç olursa olsun). Çözüm: kapatıldığı andaki
+// "imza" (hangi iki kaydın gösterildiği) saklanır; bir sonraki kontrolde İMZA DEĞİŞMİŞSE
+// (örn. XAGUSD artık hazır, önceden yoktu) popup kilide bakmaksızın yine açılır.
+var _gunlukXauXagSonImza = null; // son gösterilen/kapatılan içeriğin imzası — Kapat fonksiyonunda kullanılır
+
+// Sheet arşivinde bugüne ait XAUUSD/XAGUSD kaydı var mı diye bakar; varsa ve bu İÇERİK
+// (xau+xag'ın kendi zaman damgalarıyla) daha önce kapatılmamışsa, "Günlük Altın & Gümüş
+// Analizi" özet popup'ını gösterir. Kaydı Apps Script'teki günlük tetikleyiciler
+// (gunlukXAUUSDAnalizi ~08:00, gunlukXAGUSDAnalizi ~08:10) üretir.
+async function gunlukXauXagPopupKontrol() {
     try {
-        // teknikAnalizGecmisi zaten "Geçmiş Analizler" panelinin kullandığı, TAM kayıtları
-        // (ticker bağımsız, en yeni en üstte) döndüren uç nokta — buradaki limit (50), normal
-        // bir günde bu tetikleyicilerden ÖNCE/SONRA yapılacak elle analiz sayısına kıyasla
-        // bolca pay bırakıyor.
-        const url = APPS_SCRIPT_URL + '?action=teknikAnalizGecmisi&limit=50&_=' + Date.now();
+        const url = APPS_SCRIPT_URL + '?action=gunlukXAUXAGDurum&_=' + Date.now();
         const response = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
         if (!response.ok) return;
         const result = await response.json();
         if (result.status !== 'success') return;
-        const kayitlar = result.kayitlar || [];
-        if (kayitlar.length === 0) return;
 
-        const bugun = new Date().toLocaleDateString('tr-TR'); // "dd.MM.yyyy" — kayit.zaman'daki tarih kısmıyla aynı format
-        ['XAUUSD', 'XAGUSD'].forEach(function(ticker) {
-            const kayit = kayitlar.find(function(k) {
-                return (k.ticker || '').toUpperCase() === ticker && (k.zaman || '').indexOf(bugun) === 0;
-            });
-            if (kayit) gecmisKayitKartAc(kayit);
-        });
+        const veri = result.data || {};
+        if (!veri.xau && !veri.xag) return; // bugüne ait kayıt henüz yoksa hiç açma
+
+        // İMZA: hangi iki kaydın (varsa) gösterilmek üzere olduğunu, kendi zaman damgalarıyla
+        // tanımlar. Örn. "28.10.2026 08:02||" (sadece XAU hazır) ya da "28.10.2026 08:02|28.10.2026 08:09" (ikisi de hazır).
+        // Bu imza daha önce kapatılanla AYNIYSA (yeni bir şey yok) popup tekrar açılmaz.
+        const imza = (veri.xau ? veri.xau.zaman : '') + '|' + (veri.xag ? veri.xag.zaman : '');
+        const bugunKey = 'gunluk_xauxag_popup_closed_' + new Date().toDateString();
+        if (localStorage.getItem(bugunKey) === imza) return; // bu İÇERİK zaten kapatılmış, yeni bir şey yok
+        _gunlukXauXagSonImza = imza;
+
+        const kararRenk = { 'AL': '#4ade80', 'SAT': '#f87171', 'TUT': '#fbbf24' };
+
+        function satirOlustur(ticker, emoji, ad, kayit) {
+            if (!kayit) return '';
+            const renk = kararRenk[kayit.karar] || '#94a3b8';
+            const guvenMetin = (kayit.guven && kayit.guven !== '-') ? ('%' + kayit.guven) : '';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px;">' +
+                '<div>' +
+                    '<div style="font-weight:700;color:#fff;font-size:13.5px;">' + emoji + ' ' + ticker + ' <span style="color:#94a3b8;font-weight:400;font-size:11px;">(' + ad + ')</span></div>' +
+                    '<div style="color:#94a3b8;font-size:11px;margin-top:2px;">Fiyat: ' + kayit.fiyat + '</div>' +
+                    '<a href="#" onclick="gunlukAnalizDetayAc(\'' + ticker + '\'); return false;" style="color:#94a3b8;font-size:10.5px;text-decoration:underline;">Detaylı analiz →</a>' +
+                '</div>' +
+                '<div style="text-align:right;">' +
+                    '<span style="color:' + renk + ';font-weight:800;font-size:15px;">' + kayit.karar + '</span>' +
+                    '<div style="color:#94a3b8;font-size:11px;">' + guvenMetin + '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        const html = satirOlustur('XAUUSD', '🥇', 'Altın', veri.xau) + satirOlustur('XAGUSD', '🥈', 'Gümüş', veri.xag);
+        document.getElementById('gunlukXauXagIcerik').innerHTML = html || '<div style="text-align:center;padding:10px;">Bugüne ait analiz bulunamadı.</div>';
+        document.getElementById('gunlukXauXagTarih').textContent = (veri.xau && veri.xau.zaman) || (veri.xag && veri.xag.zaman) || '';
+        document.getElementById('gunlukXauXagPopup').style.display = 'block';
     } catch (e) {
-        console.log('Günlük XAU/XAG kart hatası:', e);
+        console.log('Günlük XAU/XAG popup hata:', e);
     }
 }
 
-setTimeout(function() { gunlukXauXagKartlariniAc(); }, 2500);
+function gunlukXauXagPopupKapat() {
+    document.getElementById('gunlukXauXagPopup').style.display = 'none';
+    // (28.10.2026 düzeltildi) Artık sabit '1' değil, o anki İÇERİĞİN imzası kaydediliyor —
+    // böylece ikinci ticker'ın analizi SONRADAN tamamlanınca (imza değişince) popup, aynı gün
+    // içinde bile, bir kez daha (sadece yeni içerikle) açılabiliyor. _gunlukXauXagSonImza
+    // Kontrol fonksiyonu tarafından, popup her açıldığında güncellenir.
+    localStorage.setItem('gunluk_xauxag_popup_closed_' + new Date().toDateString(), _gunlukXauXagSonImza || '1');
+}
+
+// Popup'taki "Detaylı analiz →" linkine tıklanınca: popup'ı kapatır, Teknik Analiz
+// penceresini açar, Geçmiş Analizler listesini yükler ve doğrudan ilgili ticker'a filtreler.
+async function gunlukAnalizDetayAc(ticker) {
+    gunlukXauXagPopupKapat();
+    teknikAnalizGirisPaneliAc();
+    await teknikAnalizGecmisiGoster();
+    setTimeout(function() {
+        const f = document.getElementById('teknik-analiz-gecmis-filtre');
+        if (f) { f.value = ticker; teknikAnalizGecmisListesiRenderla(ticker); }
+    }, 100);
+}
+
+setTimeout(function() { gunlukXauXagPopupKontrol(); }, 2500);
 
 // ==================== TEKNİK ANALİZ (GEMİNİ) BİTİŞ ====================
 

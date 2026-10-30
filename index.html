@@ -10815,11 +10815,6 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     var asiriRiskHtml = '';
     if (result.asiriBolgeRiski) {
         var arSeviye = result.asiriBolgeRiski.seviye;
-        var arRenk = arSeviye === 'YÜKSEK'
-            ? { kenar: 'rgba(248,113,113,0.5)', arkaplan: 'rgba(248,113,113,0.1)', metin: '#fca5a5' }
-            : arSeviye === 'SINIRDA'
-            ? { kenar: 'rgba(251,191,36,0.5)', arkaplan: 'rgba(251,191,36,0.1)', metin: '#fbbf24' }
-            : { kenar: 'rgba(74,222,128,0.4)', arkaplan: 'rgba(74,222,128,0.08)', metin: '#86efac' };
         var arNeden = result.asiriBolgeRiski.neden || '';
         var arRsiEslesme = arNeden.match(/RSI\s*\d*\s*=\s*([\d.,]+)/i);
         // (30.10.2026 eklendi) Gökhan'ın isteği: yön belirsiz (BEKLE kararı — ne LONG ne SHORT)
@@ -10827,9 +10822,25 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
         // yanıltıcı bir etiket basmak yerine, var olan RSI sayısını etiketsiz göster (sadece
         // "RSI: 60.70") — backend artık bu durumda da 'neden' içine RSI14=.. değerini koyuyor.
         var arYonBelirsiz = arNeden.indexOf('yön belirsiz') !== -1;
+        // (30.10.2026 güncellendi) Gökhan'ın isteğiyle: "yön belirsiz" aslında "değerlendirme
+        // yapılmadı" demek, "risk yok/her şey yolunda" DEĞİL — bu yüzden artık NORMAL'in yeşil +
+        // ✅ tik rengini/ikonunu PAYLAŞMIYOR, VERI_YETERSIZ ile AYNI nötr gri paleti kullanıyor
+        // (bkz. aşağıdaki 'VERI_YETERSIZ' rengi, satır ~11029 — tutarlılık için aynı ton).
+        var arRenk = arYonBelirsiz
+            ? { kenar: 'rgba(148,163,184,0.5)', arkaplan: 'rgba(148,163,184,0.10)', metin: '#cbd5e1' }
+            : arSeviye === 'YÜKSEK'
+            ? { kenar: 'rgba(248,113,113,0.5)', arkaplan: 'rgba(248,113,113,0.1)', metin: '#fca5a5' }
+            : arSeviye === 'SINIRDA'
+            ? { kenar: 'rgba(251,191,36,0.5)', arkaplan: 'rgba(251,191,36,0.1)', metin: '#fbbf24' }
+            : { kenar: 'rgba(74,222,128,0.4)', arkaplan: 'rgba(74,222,128,0.08)', metin: '#86efac' };
         var arYonMetni = arYonBelirsiz ? '' : (arSeviye === 'NORMAL' ? 'NORMAL' : (arNeden.indexOf('satım') !== -1 ? 'AŞIRI SATIM' : (arNeden.indexOf('alım') !== -1 ? 'AŞIRI ALIM' : 'AŞIRI BÖLGE')));
         var arKisaMetin = arRsiEslesme ? ('RSI: ' + arRsiEslesme[1] + (arYonMetni ? (' · ' + arYonMetni) : '')) : (arNeden || arYonMetni);
-        var arIkon = arSeviye === 'NORMAL' ? '✅' : '<span style="display:inline-block; animation: pulse 1.2s infinite;">⚠️</span>';
+        // (30.10.2026 güncellendi) yön belirsiz durumunda artık yeşil ✅ yerine gri kare içinde
+        // büyük/kalın bir "−" işareti gösteriliyor (Gökhan'ın tarifi: "Gri bir karenin içine -
+        // işareti yazı rengi de gri.. büyük harf").
+        var arIkon = arYonBelirsiz
+            ? '<span style="display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:4px; background:rgba(148,163,184,0.18); border:1px solid rgba(148,163,184,0.45); color:#94a3b8; font-weight:800; font-size:14px; vertical-align:middle;">−</span>'
+            : arSeviye === 'NORMAL' ? '✅' : '<span style="display:inline-block; animation: pulse 1.2s infinite;">⚠️</span>';
         asiriRiskHtml = '<div style="margin-bottom:12px; padding:10px 12px; border-radius:10px; background:' + arRenk.arkaplan + '; border:1px solid ' + arRenk.kenar + '; font-size:12px; font-weight:700; color:' + arRenk.metin + '; line-height:1.55;">' +
             arIkon + ' ' + arKisaMetin +
         '</div>';

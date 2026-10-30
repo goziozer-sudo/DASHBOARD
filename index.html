@@ -1695,6 +1695,12 @@ select option:checked {
    etkileniyor — sitedeki DİĞER <details>/<summary> öğeleri (native oklu) ETKİLENMEZ. */
 .taBolumSummary::-webkit-details-marker { display: none; }
 
+/* (30.10.2026 eklendi) Gökhan'ın isteğiyle: yüzen kartların (giriş paneli + sonuç kartı) içinde
+   kayarken kenarda görünen scrollbar çubuğu gizlendi — kaydırma işlevi AYNEN çalışmaya devam
+   ediyor, sadece görsel çubuk kaldırıldı. Sadece .yuzenKartGovde class'ına sahip kutular etkilenir. */
+.yuzenKartGovde { scrollbar-width: none; -ms-overflow-style: none; }
+.yuzenKartGovde::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
     </style>
 <!-- ⚠️ parseUSD FIX - AVRUPA FORMAT DESTEĞİ -->
 <script src="parseUSD-fix.js"></script>
@@ -9627,6 +9633,7 @@ function teknikAnalizGirisPaneliAc() {
         '<span style="cursor:pointer; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">✕</span>';
 
     var govde = document.createElement('div');
+    govde.className = 'yuzenKartGovde';
     govde.style.cssText = 'padding:12px; max-height:75vh; overflow-y:auto;';
     govde.innerHTML =
         '<input type="text" id="teknik-analiz-ticker-input" placeholder="Örn: XAUUSD, BIMAS, XPTUSD" style="width:100%; padding:11px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.1); color:#fff; font-size:14px; box-sizing:border-box; text-transform:uppercase;" onkeydown="if(event.key===\'Enter\') submitTeknikAnaliz();">' +
@@ -11227,6 +11234,7 @@ function gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml) {
         '<span style="cursor:pointer; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">✕</span>';
 
     var govde = document.createElement('div');
+    govde.className = 'yuzenKartGovde';
     govde.style.cssText = 'padding:12px; max-height:75vh; overflow-y:auto;';
     var govdeHtml = anaHtml;
     var togglSatirStil = 'cursor:pointer; text-align:center; margin-top:10px; font-size:11px; color:#94a3b8; user-select:none;';

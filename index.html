@@ -1626,6 +1626,12 @@ tbody tr:hover {
     animation-play-state: paused !important;
 }
 
+/* (30.10.2026 eklendi) Şerit ilk belirişinde yumuşak fade-in — bkz. updateNewsTicker()'daki
+ilkGoruntuleme kontrolü. */
+#news-ticker-container {
+    transition: opacity 0.6s ease;
+}
+
 .ticker-hiz-secenek.aktif {
     background: rgba(250, 248, 132, 0.25) !important;
     border-color: rgba(250, 248, 132, 0.5) !important;
@@ -12530,10 +12536,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Sayfa yüklendiğinde haberleri yükle ve ticker'ı başlat
-    setTimeout(() => {
-        loadGlobalNews();
-    }, 2000);
+    // Sayfa yüklendiğinde haberleri yükle ve ticker'ı başlat — (30.10.2026 güncellendi) Gökhan'ın
+    // isteğiyle eskiden BİLEREK konan 2 saniyelik bekleme kaldırıldı: fetch zaten asenkron/arka planda
+    // çalışıyor, sayfanın geri kalanını BLOKE etmiyor, bu yüzden bekletmenin bir faydası yoktu —
+    // sadece şeridin "geç ve ansızın" belirmesine sebep oluyordu (bkz. updateNewsTicker'daki yumuşak
+    // belirme efekti de aynı amaçla eklendi).
+    loadGlobalNews();
 });
 
 setInterval(() => {
@@ -12549,7 +12557,7 @@ let tickerNews = [];
 
 // (30.10.2026 eklendi) Haber şeridi hız ayarları — Gökhan'ın kendi cihazından Yavaş/Orta/Hızlı
 // seçebilmesi için. Sheet'e yazılmıyor (cihaza özel tercih), sadece localStorage'da tutuluyor.
-const TICKER_HIZ_PRESETLERI = { yavas: 55, orta: 85, hizli: 120 };
+const TICKER_HIZ_PRESETLERI = { yavas: 500, orta: 750, hizli: 1000 }; // (30.10.2026 güncellendi) Gökhan'ın isteğiyle büyütüldü
 
 function tickerHizSecimiGetir() {
     try {
@@ -12560,7 +12568,7 @@ function tickerHizSecimiGetir() {
 }
 
 function tickerHizPxSaniyeGetir() {
-    return TICKER_HIZ_PRESETLERI[tickerHizSecimiGetir()] || 85;
+    return TICKER_HIZ_PRESETLERI[tickerHizSecimiGetir()] || 750;
 }
 
 function tickerHizPaneliniGuncelleGorunum() {
@@ -12626,7 +12634,17 @@ function updateNewsTicker() {
         container.style.display = 'none';
         return;
     }
+    // (30.10.2026 eklendi) Gökhan'ın isteğiyle: şerit ilk kez belirirken artık ansızın "pat" diye
+    // değil, yumuşak bir fade-in ile görünüyor (bkz. CSS: #news-ticker-container transition). Sadece
+    // İLK belirişte (önceki durumu gizliyse) uygulanıyor — her 5 dakikada bir otomatik yenilemede
+    // (loadGlobalNews setInterval) şerit zaten görünürken tekrar tekrar solup belirmesin diye.
+    const ilkGoruntuleme = container.style.display === 'none' || container.style.display === '';
     container.style.display = 'flex';
+    if (ilkGoruntuleme) {
+        container.style.opacity = '0';
+        void container.offsetWidth; // reflow — geçişin baştan, temiz başlaması için
+        container.style.opacity = '1';
+    }
 
     // (30.10.2026 güncellendi) Gökhan'ın isteğiyle artık GERÇEK kayan şerit (marquee) — önceden
     // her 4 saniyede tek bir haber solup-belirerek değişiyordu, animasyon hiç kullanılmıyordu.

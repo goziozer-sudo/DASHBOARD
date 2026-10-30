@@ -1774,7 +1774,7 @@ function sifreKontrol() {
                 <button onclick="toggleHaberlerPopup()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#FAF884;padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">📋 Haberler</button>
 
                 <!-- TEKNİK ANALİZ BUTONU -->
-                <button onclick="openTeknikAnalizModal()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#FAF884;padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🕯️ Teknik Analiz<span id="teknik-analiz-rozet" style="display:none;margin-left:5px;"></span></button>
+                <button onclick="teknikAnalizGirisPaneliAc()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#FAF884;padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🕯️ Teknik Analiz<span id="teknik-analiz-rozet" style="display:none;margin-left:5px;"></span></button>
 
                 <!-- SHEET'İ AÇ BUTONU -->
                 <button onclick="window.open('https://docs.google.com/spreadsheets/d/' + SHEET_ID, '_blank')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#FAF884;padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">📊 Sheet'i Aç</button>
@@ -2030,43 +2030,17 @@ function sifreKontrol() {
             </div>
         </div>
 
-        <!-- TEKNİK ANALİZ (GEMİNİ) POPUP -->
-        <!-- (29.10.2026 güncellendi — MOBİL SCROLL DÜZELTMESİ) Önceden pencere ekranın ortasına
-        top:50%+transform ile "yüzdürülüyordu" ve SADECE #teknik-analiz-result kendi içinde
-        kayıyordu (başlık/input hep sabit kalıyordu) — mobilde pencere ekranın tamamını
-        kullanamıyor, içerik taştığında üçüncü sütun (Karlılık) kesiliyordu. Şimdi dış sarmalayıcı
-        (#teknikAnalizModal) kendisi kayıyor (overflow-y:auto) ve iç kutu normal akışta, böylece
-        başlık dahil HER ŞEY TEK PARÇA halinde birlikte kayıyor. Mantık/veri DEĞİŞMEDİ — sadece
-        konumlandırma/scroll davranışı. -->
-        <div id="teknikAnalizModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); pointer-events: auto; overflow-y: auto; -webkit-overflow-scrolling: touch;">
-            <!-- (29.10.2026 güncellendi) Gökhan'ın isteğiyle: Teknik Analiz popup'ının kendi
-                 genişliği (max-width) 640px'ten 480px'e düşürüldü — cm ile ölçüp karşılaştırdı,
-                 asıl "büyük durma" hissinin iç padding'lerden değil, modalin kendi genişliğinden
-                 kaynaklandığını tespit etti. İçerik/mantık DEĞİŞMEDİ — sadece modalin dış genişliği. -->
-            <div style="position: relative; margin: 24px auto; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 8px 15px 15px 15px; max-width: 480px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-                <button onclick="closeTeknikAnalizModal()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: all 0.3s;">✕</button>
-                <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 20px; text-align: center;">🕯️ TEKNİK ANALİZ</h2>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                    <input type="text" id="teknik-analiz-ticker-input" placeholder="Örn: XAUUSD, BIMAS, XPTUSD" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; font-size: 15px; box-sizing: border-box; text-transform: uppercase;" onkeydown="if(event.key==='Enter') submitTeknikAnaliz();">
-                    <button onclick="submitTeknikAnaliz()" id="teknik-analiz-submit-btn" style="padding: 12px 18px; border-radius: 8px; border: none; background: #FAF884; color: #1e3a8a; cursor: pointer; font-weight: 700; font-size: 14px; white-space: nowrap;">Analiz Et</button>
-                </div>
-
-                <div style="text-align: center; margin-bottom: 10px; font-size: 11.5px;">
-                    <a href="#" onclick="teknikAnalizGecmisiGoster(); return false;" style="color: #94a3b8; text-decoration: underline; cursor: pointer;">📜 Geçmiş Analizler</a><span id="teknik-analiz-gecmis-tarih"></span>
-                </div>
-
-                <div id="teknik-analiz-status" style="font-size: 12px; text-align: center; min-height: 18px; margin-bottom: 8px;"></div>
-
-                <!-- (29.10.2026 güncellendi) Gökhan'ın isteğiyle: bu container'ın KENDİ border/
-                     background/padding'i kaldırıldı — içindeki her kutunun (ana kart, süreklilik
-                     banner'ı, Trend/İşlem Skoru, analiz başlıkları) zaten kendi çerçevesi var;
-                     bunun dışında bir de bu DIŞ kutunun çerçevesi olması "kutu içinde kutu"
-                     görüntüsü yaratıyordu (Gökhan'ın kırmızı ile işaretlediği dış çerçeve).
-                     İçerik/mantık DEĞİŞMEDİ — sadece bu dış sarmalayıcının görsel kutu stili. -->
-                <div id="teknik-analiz-result" style="display:none; color: #e2e8f0; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap;"></div>
-            </div>
-        </div>
+        <!-- (30.10.2026 kaldırıldı) Eski karartmalı tam ekran Teknik Analiz popup'ı
+             (#teknikAnalizModal) TAMAMEN kaldırıldı — Gökhan'ın isteğiyle yerine küçük,
+             sürüklenebilir, kapatılabilir bir giriş paneli geldi (bkz. teknikAnalizGirisPaneliAc,
+             document.body'e dinamik olarak ekleniyor — Geçmiş Analizler/pozisyon butonundaki
+             yüzen kart sistemiyle AYNI görsel dil). Ticker input, Analiz Et butonu, Geçmiş
+             Analizler akordiyonu ve durum satırı artık o panelin İÇİNDE, aynı id'lerle
+             (teknik-analiz-ticker-input, teknik-analiz-submit-btn, teknik-analiz-status,
+             teknik-analiz-gecmis-akordiyon, teknik-analiz-gecmis-tarih, teknik-analiz-gecmis-icerik)
+             dinamik olarak oluşturuluyor. Canlı analiz SONUCU artık panelin içine değil, Geçmiş
+             Analizler ile AYNI bağımsız sürüklenebilir sonuç kartına (gecmisKartAc) yazılıyor —
+             bu yüzden eski #teknik-analiz-result alanı da tamamen kaldırıldı. -->
 
         <!-- YENİ KONTRAT EKLE POPUP -->
         <div id="yeni-kontrat-modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); pointer-events: auto;">
@@ -9564,12 +9538,9 @@ function submitAddToContract() {
 
 // ==================== TEKNİK ANALİZ (GEMİNİ) ====================
 
-// 'bos' = boş form | 'yukleniyor' = arka planda analiz sürüyor | 'tamamlandi' = sonuç/hata bekliyor (görülmedi)
-let teknikAnalizDurum = 'bos';
-
-// Header'daki "Teknik Analiz" butonunun yanına küçük bir rozet koyar,
-// popup kapalıyken de arka planda analizin durumunu gösterir.
-// 'yukleniyor' iken rozet nabız gibi atar (mevcut @keyframes pulse) — popup kapalıyken bile
+// Header'daki "Teknik Analiz" butonunun yanına küçük bir rozet koyar, panel kapalıyken de
+// arka planda analizin durumunu gösterir.
+// 'yukleniyor' iken rozet nabız gibi atar (mevcut @keyframes pulse) — panel kapalıyken bile
 // "hâlâ çalışıyor" göz ucuyla fark edilsin diye. Sonuç gelince (hazır/hata) rozet birkaç kez
 // parlayıp durur (mevcut @keyframes mofcom-pulse, sonlu tekrar) — dikkat çeker ama sonsuza kadar
 // rahatsız etmez.
@@ -9602,30 +9573,116 @@ function teknikAnalizRozetGuncelle(durum) {
     }
 }
 
-function openTeknikAnalizModal() {
-    document.getElementById('teknikAnalizModal').style.display = 'block';
+// (30.10.2026 eklendi) Gökhan'ın isteğiyle: eski karartmalı tam ekran popup (#teknikAnalizModal)
+// TAMAMEN kaldırıldı, yerine küçük, sürüklenebilir, kapatılabilir bir GİRİŞ PANELİ geldi — Geçmiş
+// Analizler/pozisyon butonundaki yüzen kart sistemiyle (gecmisKartAc) AYNI görsel dil, ama ayrı bir
+// fonksiyon: gecmisKartAc'ın "▼ Trend/Tüm Detay" toggle yapısına ihtiyacı yok (sadece ticker input +
+// Analiz Et + Geçmiş Analizler var), bu yüzden sürükleme/kapatma/öne-getirme kodu BİLEREK burada
+// AYRI yazıldı (gecmisKartAc'taki ÇALIŞAN/test edilmiş koddan birebir kopyalandı) — ortak bir
+// fonksiyona çıkarıp gecmisKartAc'ı da değiştirmek, üstünde iki gerçek hata bulunup düzeltilmiş
+// (kart çakışması, ✕ butonu pointer-capture hatası) o fonksiyonu gereksiz yere riske atardı.
+// Panel zaten açıksa tekrar oluşturulmaz, sadece öne getirilip input'a odaklanılır. Canlı analiz
+// SONUCU artık bu panelin içine değil, Geçmiş Analizler ile AYNI bağımsız sürüklenebilir sonuç
+// kartına (gecmisKartAc, bkz. submitTeknikAnaliz) yazılıyor — panel açık kalır, art arda analiz
+// yapılabilir. teknikAnalizDurum değişkeni ve eski #teknik-analiz-result alanı bu yüzden tamamen
+// kaldırıldı (artık gerek yok — sonuç her zaman kendi kartında, panel açık/kapalı fark etmeksizin
+// görünür).
+function teknikAnalizGirisPaneliAc() {
+    // Panel zaten açıksa tekrar oluşturma, sadece öne getir.
+    var mevcutPanel = document.getElementById('teknikAnalizGirisPaneli');
+    if (mevcutPanel) {
+        gecmisKartSayaci++;
+        mevcutPanel.style.zIndex = 100000 + gecmisKartSayaci;
+        var mevcutInput = document.getElementById('teknik-analiz-ticker-input');
+        if (mevcutInput) mevcutInput.focus();
+        return;
+    }
+
     teknikAnalizRozetGuncelle(null); // artık görüldü, header rozetini temizle
 
-    // Arka planda sürmekte olan veya tamamlanmış (henüz görülmemiş) bir analiz varsa
-    // formu/sonucu SIFIRLAMA — kaldığı yerden göster. Sadece hiçbir şey yoksa temizle.
-    if (teknikAnalizDurum === 'bos') {
-        document.getElementById('teknik-analiz-ticker-input').value = '';
-        document.getElementById('teknik-analiz-status').innerHTML = '';
-        const resultDiv = document.getElementById('teknik-analiz-result');
-        resultDiv.style.display = 'none';
-        resultDiv.innerHTML = '';
-        setTimeout(() => document.getElementById('teknik-analiz-ticker-input').focus(), 100);
+    gecmisKartSayaci++;
+    var genislik = Math.min(300, window.innerWidth - 32);
+    if (gecmisYerlesimSol + genislik > window.innerWidth - 8) {
+        gecmisYerlesimSol = 16;
+        gecmisYerlesimUst += gecmisYerlesimSatirYuksekligi + 14;
+        gecmisYerlesimSatirYuksekligi = 0;
     }
-}
+    if (gecmisYerlesimUst > window.innerHeight - 140) {
+        var kaydirma = (gecmisKartSayaci * 22) % 100;
+        gecmisYerlesimUst = 70 + kaydirma;
+        gecmisYerlesimSol = 16 + kaydirma;
+        gecmisYerlesimSatirYuksekligi = 0;
+    }
+    var sol = gecmisYerlesimSol;
+    var ust = gecmisYerlesimUst;
+    gecmisYerlesimSol += genislik + 14;
 
-function closeTeknikAnalizModal() {
-    document.getElementById('teknikAnalizModal').style.display = 'none';
-    // Not: fetch isteği kapatılınca İPTAL OLMAZ, arka planda devam eder.
-    // Sonuç geldiğinde header'daki rozet güncellenir, dashboard'u kullanmaya devam edebilirsiniz.
-    // (29.10.2026 eklendi) Arşivden açılan "TICKER — tarih" bilgisi modal kapanınca sıfırlanıyor,
-    // bir dahaki açılışta eski/yanlış tarih görünmesin diye.
-    const gecmisTarihSpan = document.getElementById('teknik-analiz-gecmis-tarih');
-    if (gecmisTarihSpan) gecmisTarihSpan.innerHTML = '';
+    var kart = document.createElement('div');
+    kart.id = 'teknikAnalizGirisPaneli';
+    kart.style.cssText = 'position:fixed; top:' + ust + 'px; left:' + sol + 'px; width:' + genislik + 'px; max-width:92vw; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.45); z-index:' + (100000 + gecmisKartSayaci) + '; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;';
+
+    var baslikCubugu = document.createElement('div');
+    baslikCubugu.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; cursor:grab; background:rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.12); user-select:none;';
+    baslikCubugu.innerHTML = '<span style="font-size:11px; font-weight:700; color:#FAF884;">🕯️ Teknik Analiz</span>' +
+        '<span style="cursor:pointer; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">✕</span>';
+
+    var govde = document.createElement('div');
+    govde.style.cssText = 'padding:12px; max-height:75vh; overflow-y:auto;';
+    govde.innerHTML =
+        '<input type="text" id="teknik-analiz-ticker-input" placeholder="Örn: XAUUSD, BIMAS, XPTUSD" style="width:100%; padding:11px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.1); color:#fff; font-size:14px; box-sizing:border-box; text-transform:uppercase;" onkeydown="if(event.key===\'Enter\') submitTeknikAnaliz();">' +
+        '<button onclick="submitTeknikAnaliz()" id="teknik-analiz-submit-btn" style="width:100%; margin-top:8px; padding:10px; border-radius:8px; border:none; background:#FAF884; color:#1e3a8a; cursor:pointer; font-weight:700; font-size:13px;">Analiz Et</button>' +
+        '<details id="teknik-analiz-gecmis-akordiyon" style="margin-top:10px; font-size:11.5px;">' +
+            '<summary onclick="teknikAnalizGecmisAkordiyonTiklandi(event, this)" style="text-align:center; color:#94a3b8; text-decoration:underline; cursor:pointer;">📜 Geçmiş Analizler<span id="teknik-analiz-gecmis-tarih"></span></summary>' +
+            '<div id="teknik-analiz-gecmis-icerik" style="margin-top:8px;"></div>' +
+        '</details>' +
+        '<div id="teknik-analiz-status" style="font-size:12px; text-align:center; min-height:18px; margin-top:8px;"></div>';
+
+    kart.appendChild(baslikCubugu);
+    kart.appendChild(govde);
+    document.body.appendChild(kart);
+    gecmisYerlesimSatirYuksekligi = Math.max(gecmisYerlesimSatirYuksekligi, kart.offsetHeight);
+
+    setTimeout(function() {
+        var girisInput = document.getElementById('teknik-analiz-ticker-input');
+        if (girisInput) girisInput.focus();
+    }, 100);
+
+    var kapatBtn = baslikCubugu.lastElementChild;
+    kapatBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        kart.remove();
+    });
+
+    kart.addEventListener('pointerdown', function() {
+        gecmisKartSayaci++;
+        kart.style.zIndex = 100000 + gecmisKartSayaci;
+    });
+
+    var suruklemeAktif = false, baslX = 0, baslY = 0, kartBaslSol = 0, kartBaslUst = 0;
+    baslikCubugu.addEventListener('pointerdown', function(e) {
+        if (e.target === kapatBtn || kapatBtn.contains(e.target)) return;
+        suruklemeAktif = true;
+        baslikCubugu.setPointerCapture(e.pointerId);
+        baslikCubugu.style.cursor = 'grabbing';
+        baslX = e.clientX; baslY = e.clientY;
+        var dikdortgen = kart.getBoundingClientRect();
+        kartBaslSol = dikdortgen.left; kartBaslUst = dikdortgen.top;
+        e.preventDefault();
+    });
+    baslikCubugu.addEventListener('pointermove', function(e) {
+        if (!suruklemeAktif) return;
+        var yeniSol = kartBaslSol + (e.clientX - baslX);
+        var yeniUst = kartBaslUst + (e.clientY - baslY);
+        yeniSol = Math.max(-kart.offsetWidth + 60, Math.min(window.innerWidth - 60, yeniSol));
+        yeniUst = Math.max(0, Math.min(window.innerHeight - 40, yeniUst));
+        kart.style.left = yeniSol + 'px';
+        kart.style.top = yeniUst + 'px';
+    });
+    function suruklemeBirak() { suruklemeAktif = false; baslikCubugu.style.cursor = 'grab'; }
+    baslikCubugu.addEventListener('pointerup', suruklemeBirak);
+    baslikCubugu.addEventListener('pointercancel', suruklemeBirak);
+
+    return kart;
 }
 
 // Gemini'den gelen "1. BAŞLIK / 👉 Bu bulgudan dolayı: AL / 📊 GENEL ÖZET" formatındaki
@@ -9688,6 +9745,11 @@ function formatTeknikAnalizSonucu(text) {
         // kısaltılmış gösteriliyor ("ÇOKLU ZAMAN DİLİMİ MUM YAPISI VE MARKET STRUCTURE" →
         // "MUM VE MARKET YAPISI"). Sadece GÖSTERİM metni — ham analiz/mantık DEĞİŞMEDİ.
         if (acikBolum.no === '1') { baslikParantezsiz = 'MUM VE MARKET YAPISI'; }
+        // (30.10.2026 eklendi) Gökhan'ın isteğiyle 2. ve 3. bölüm başlıkları da 1. bölüm gibi
+        // sabit/kısa başlıklarla gösteriliyor — Gemini'nin kendi verdiği (bazen uzun/parantezli)
+        // başlık metni yerine. Mantık/veri DEĞİŞMEDİ, sadece gösterim metni.
+        if (acikBolum.no === '2') { baslikParantezsiz = 'FİYAT SEVİYELERİ VE LİKİDİTE'; }
+        if (acikBolum.no === '3') { baslikParantezsiz = 'RİSK VE ÖDÜL PLANI'; }
         var baslikMetniGosterim = (acikBolum.no ? (acikBolum.no + '. ') : '') + baslikParantezsiz;
         // (29.10.2026 güncellendi) Gökhan'ın isteğiyle: EKLE rozeti artık başlığın hemen yanında
         // değil, satırın SAĞ ucuna yaslı — başlık uzunluğu ne olursa olsun rozet hep aynı hizada.
@@ -10268,11 +10330,13 @@ function teknikSkorKartOlustur(baslik, emoji, kisaEtiket, skorObj, ekRozetHtml) 
     // (29.10.2026 güncellendi) Gökhan'ın isteğiyle satır/başlık padding'leri artık onaylanan
     // Varyant 3 mockup'ındaki (.kriter-table th/td) değerlerle BİREBİR aynı: başlık 4px 4px,
     // veri satırı 6px 4px.
+    // (30.10.2026 güncellendi) Gökhan'ın isteğiyle 4 sütun (Kriter/Değer/Yorum/Puan) artık hepsi
+    // ORTALANMIŞ (önceden sol hizalı, Puan sağ hizalıydı). Hesaplama/veri DEĞİŞMEDİ, sadece text-align.
     const basliklar = detayVarMi ? '<div style="display:grid; ' + kolonlar + ' gap:6px; padding:4px 4px;">' +
-        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;">Kriter</span>' +
-        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;">Değer</span>' +
-        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; margin-left:2px;">Yorum</span>' +
-        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:right;">Puan</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Kriter</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Değer</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Yorum</span>' +
+        '<span style="color:#fff; font-size:11px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; text-align:center;">Puan</span>' +
     '</div>' : '';
     const detaySatirlari = detayVarMi ? skorObj.detay.map(function(d) {
         if (typeof d === 'string') { // geriye dönük güvenlik — eski (26-27.10.2026) string formatı
@@ -10280,11 +10344,11 @@ function teknikSkorKartOlustur(baslik, emoji, kisaEtiket, skorObj, ekRozetHtml) 
         }
         var puanOran = (typeof d.max === 'number' && d.max > 0) ? (d.puan / d.max) : 0;
         var puanRenk = puanOran >= 0.65 ? '#4ade80' : (puanOran >= 0.4 ? '#fbbf24' : '#f87171');
-        return '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:3px 4px; border-bottom:1px solid rgba(255,255,255,0.05); gap:6px;">' +
+        return '<div style="display:grid; ' + kolonlar + ' align-items:center; padding:3px 4px; border-bottom:1px solid rgba(255,255,255,0.05); gap:6px; text-align:center;">' +
             '<div style="color:#fff; font-size:11px; font-weight:600; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + d.kriter + '</div>' +
             '<div style="color:#fff; font-size:11px; font-weight:700; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + d.deger + '</div>' +
-            '<div style="color:#fff; font-size:11px; min-width:0; margin-left:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + d.yorum + '</div>' +
-            '<div style="text-align:right; font-size:11px; font-weight:800; color:' + puanRenk + '; white-space:nowrap;">' + d.puan + '<span style="color:#fff; font-weight:400; font-size:9.5px;">/' + d.max + '</span></div>' +
+            '<div style="color:#fff; font-size:11px; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + d.yorum + '</div>' +
+            '<div style="font-size:11px; font-weight:800; color:' + puanRenk + '; white-space:nowrap;">' + d.puan + '<span style="color:#fff; font-weight:400; font-size:9.5px;">/' + d.max + '</span></div>' +
         '</div>';
     }).join('') : '';
     return '<div style="margin-top:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:10px 12px;">' +
@@ -10425,7 +10489,13 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // mini tabloya satır olarak ekleniyor (bkz. pozisyonTablosuOlustur_). Hesaplanan değerler ve
     // yön/kz% mantığı AYNEN KORUNDU — sadece son adımda pozisyonKutusuOlustur_ çağrısı yerine
     // pozisyonSatirlari dizisine bir satır objesi push ediliyor.
-    var pozisyonSatirlari = [];
+    // (29.10.2026 güncellendi, 30.10.2026 tekrar güncellendi) ŞAHSİ/ŞİRKET satırları artık ayrı
+    // bir diziye (pozisyonHesapSatirlari) toplanıyor — bunlar başlıklı/ortalanmış 4 kolonlu bir
+    // ızgarada (Hesap/Fiyat/Adet/K-Z%) gösterilecek (Gökhan'ın isteği, 30.10.2026). Hedef/Stop ve
+    // Giriş Fiyatı ise ayrı bir "düz" listede (pozisyonDuzSatirlari) kalmaya devam ediyor — bunlar
+    // ızgaraya girmiyor, sola/sağa yapışık tek satır olarak kalıyor. Hesaplama/veri DEĞİŞMEDİ.
+    var pozisyonHesapSatirlari = [];
+    var pozisyonDuzSatirlari = [];
     if (result.mevcutPozisyonlar && result.mevcutPozisyonlar.length > 0) {
         for (var pzI = 0; pzI < result.mevcutPozisyonlar.length; pzI++) {
             var pz = result.mevcutPozisyonlar[pzI];
@@ -10447,32 +10517,31 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
                 kzPctGosterilecek = parseFloat((fark / pz.maliyet * 100).toFixed(2));
             }
             var kzMetin = (kzPctGosterilecek !== undefined && kzPctGosterilecek !== null) ? ((kzPctGosterilecek >= 0 ? '+' : '') + kzPctGosterilecek + '%') : '-';
-            // (29.10.2026 güncellendi) Gökhan onaylı Varyant 3 mockup'ındaki ORİJİNAL hale
-            // (başlıksız/sütunsuz, düz metin satırı: "ŞAHSİ  53.75$ · 12 adet · +1.39%") dönüldü —
-            // daha önce denenen "4 sütun başlıklı tablo" hali Gökhan'ın onayladığı mockup
-            // ekran görüntüsüyle TUTARSIZ bulundu, bu yüzden geri alındı (29.10.2026).
             // hesap adı yoksa (eski/tek hesaplı kayıt) pozisyon yönü (LONG/SHORT) etiket olarak
             // kullanılır — sessizce geriye dönük uyumlu.
             var kzRenkV3 = (typeof kzMetin === 'string' && kzMetin.indexOf('-') === 0) ? '#fca5a5' : '#4ade80';
-            pozisyonSatirlari.push({
-                sol: pz.hesap || pzYon,
-                sag: '<b style="color:#fff;">' + formatNumberTeknik(pz.maliyet, ondalik) + '</b> · ' + Math.abs(pz.adet) + ' adet · <b style="color:' + kzRenkV3 + ';">' + kzMetin + '</b>'
+            pozisyonHesapSatirlari.push({
+                etiket: pz.hesap || pzYon,
+                fiyat: formatNumberTeknik(pz.maliyet, ondalik),
+                adet: Math.abs(pz.adet) + ' adet',
+                yuzde: kzMetin,
+                renk: kzRenkV3
             });
         }
     }
 
-    // (29.10.2026 güncellendi) Hedef/Stop artık AYRI bir "SHORT PLANI" kutusu değil, mockup'taki
-    // gibi ŞAHSİ/ŞİRKET ile AYNI düz satır listesinin bir parçası ("Hedef / Stop  46.81$ / 54.58$").
-    // planKutusuOlustur_'e (büyük rakamlı, ayrı kutulu eski görünüm) ARTIK BURADAN ÇAĞRI YAPILMIYOR
-    // — fonksiyonun kendisi SİLİNMEDİ, başka yerde kullanılmıyor, geriye dönük uyumluluk için duruyor.
-    // GİRİŞ FİYATI bilgisi (daha önce ayrı sarı kapsül) kaybolmasın diye aynı düz satır formatında
-    // EK bir satır olarak korundu. Mantık/veri/hesaplama DEĞİŞMEDİ — sadece gösterim formatı.
+    // (29.10.2026 güncellendi, 30.10.2026 tekrar güncellendi) Hedef/Stop artık "HEDEF: ... / STOP: ..."
+    // olarak İKİ AYRI değer halinde, sola ve sağa yapışık tek satırda gösteriliyor (Gökhan'ın isteği)
+    // — önceki "Hedef / Stop  46.81$ / 54.58$" tek-değer gösterimi terk edildi. planKutusuOlustur_'e
+    // (büyük rakamlı, ayrı kutulu eski görünüm) ARTIK BURADAN ÇAĞRI YAPILMIYOR — fonksiyonun kendisi
+    // SİLİNMEDİ, başka yerde kullanılmıyor, geriye dönük uyumluluk için duruyor. GİRİŞ FİYATI bilgisi
+    // aynı düz satır formatında EK bir satır olarak korundu. Mantık/veri/hesaplama DEĞİŞMEDİ.
     if (result.yapisalSeviyeler && typeof result.yapisalSeviyeler.hedefOnerisi === 'number') {
         var ys = result.yapisalSeviyeler;
         var stopMetinYeni = (typeof ys.stopOnerisi === 'number') ? formatNumberTeknik(ys.stopOnerisi, ondalik) : '-';
-        pozisyonSatirlari.push({
-            sol: 'Hedef / Stop',
-            sag: '<b style="color:#fff;">' + formatNumberTeknik(ys.hedefOnerisi, ondalik) + '</b> / <b style="color:#fca5a5;">' + stopMetinYeni + '</b>'
+        pozisyonDuzSatirlari.push({
+            sol: '<span style="color:#94a3b8;">HEDEF:</span> <b style="color:#fff;">' + formatNumberTeknik(ys.hedefOnerisi, ondalik) + '</b>',
+            sag: '<span style="color:#94a3b8;">STOP:</span> <b style="color:#fca5a5;">' + stopMetinYeni + '</b>'
         });
         // (28.10.2026 eklendi, 29.10.2026 gösterim formatı güncellendi) GİRİŞ FİYATI — sadece
         // aksiyon gerektiren kararlarda (icraPlaniGosterilsinMi_) VE Code.gs'in zaten hesapladığı
@@ -10480,46 +10549,72 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
         var girisFiyatiMetni = (typeof ys.girisFiyati === 'number' && icraPlaniGosterilsinMi_(etiket))
             ? formatNumberTeknik(ys.girisFiyati, ondalik) : null;
         if (girisFiyatiMetni) {
-            pozisyonSatirlari.push({ sol: 'Giriş Fiyatı', sag: '<b style="color:#fde68a;">' + girisFiyatiMetni + '</b>' });
+            pozisyonDuzSatirlari.push({ sol: 'Giriş Fiyatı', sag: '<b style="color:#fde68a;">' + girisFiyatiMetni + '</b>' });
         }
     }
 
-    // (29.10.2026 eklendi) pozisyonSatirlari artık ŞAHSİ/ŞİRKET + Hedef/Stop (+ varsa Giriş
-    // Fiyatı) satırlarının TÜMÜNÜ içeriyor — mockup'taki .v3-table ile birebir aynı: tek kutu,
-    // background rgba(255,255,255,.05), border-radius:10px, padding:8px 12px, satırlar arası
-    // ince çizgi (son satırda yok).
+    // (30.10.2026 güncellendi) ŞAHSİ/ŞİRKET artık başlıklı (Hesap/Fiyat/Adet/K-Z%) ve ORTALANMIŞ
+    // 4 kolonlu bir ızgara; Hedef/Stop (+ Giriş Fiyatı) ise aynı kutunun İÇİNDE ama ızgaraya
+    // girmeden, eskisi gibi sola/sağa yapışık düz satır(lar) olarak devam ediyor. Tek kutu,
+    // background rgba(255,255,255,.05), border-radius:10px, padding:8px 12px korunuyor.
     var pozisyonTablosuHtml = '';
-    if (pozisyonSatirlari.length > 0) {
-        var v3SatirHtml = pozisyonSatirlari.map(function(r, idx) {
-            var sonMu = (idx === pozisyonSatirlari.length - 1);
-            return '<div style="display:flex; justify-content:space-between; padding:3px 0; font-size:11px; color:#cbd5e1;' + (sonMu ? '' : ' border-bottom:1px solid rgba(255,255,255,0.06);') + '">' +
-                '<span>' + r.sol + '</span><span>' + r.sag + '</span>' +
+    var pozisyonHesapHtml = '';
+    if (pozisyonHesapSatirlari.length > 0) {
+        var hesapKolonlar = 'grid-template-columns: 1fr 1fr 1fr 1fr;';
+        var hesapBaslikHtml = '<div style="display:grid; ' + hesapKolonlar + ' gap:4px; padding:2px 4px 5px;">' +
+            '<span style="color:#fff; font-size:9.5px; font-weight:800; letter-spacing:0.3px; text-transform:uppercase; text-align:center;">Hesap</span>' +
+            '<span style="color:#fff; font-size:9.5px; font-weight:800; letter-spacing:0.3px; text-transform:uppercase; text-align:center;">Fiyat</span>' +
+            '<span style="color:#fff; font-size:9.5px; font-weight:800; letter-spacing:0.3px; text-transform:uppercase; text-align:center;">Adet</span>' +
+            '<span style="color:#fff; font-size:9.5px; font-weight:800; letter-spacing:0.3px; text-transform:uppercase; text-align:center;">K-Z %</span>' +
+        '</div>';
+        var hesapSatirHtml = pozisyonHesapSatirlari.map(function(r, idx) {
+            var sonMu = (idx === pozisyonHesapSatirlari.length - 1);
+            return '<div style="display:grid; ' + hesapKolonlar + ' align-items:center; gap:4px; padding:3px 4px; text-align:center;' + (sonMu ? '' : ' border-bottom:1px solid rgba(255,255,255,0.06);') + '">' +
+                '<span style="color:#cbd5e1; font-size:11px; font-weight:700;">' + r.etiket + '</span>' +
+                '<span style="color:#fff; font-size:11px; font-weight:700;">' + r.fiyat + '</span>' +
+                '<span style="color:#cbd5e1; font-size:11px;">' + r.adet + '</span>' +
+                '<span style="color:' + r.renk + '; font-size:11px; font-weight:800;">' + r.yuzde + '</span>' +
             '</div>';
         }).join('');
-        pozisyonTablosuHtml = '<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:8px 12px; margin-top:8px;">' + v3SatirHtml + '</div>';
+        pozisyonHesapHtml = hesapBaslikHtml + hesapSatirHtml;
+    }
+    var duzSatirHtml = pozisyonDuzSatirlari.map(function(r, idx) {
+        var sonMu = (idx === pozisyonDuzSatirlari.length - 1);
+        return '<div style="display:flex; justify-content:space-between; padding:3px 0; font-size:11px; color:#cbd5e1;' + (sonMu ? '' : ' border-bottom:1px solid rgba(255,255,255,0.06);') + '">' +
+            '<span>' + r.sol + '</span><span>' + r.sag + '</span>' +
+        '</div>';
+    }).join('');
+    if (pozisyonHesapHtml || duzSatirHtml) {
+        var ayiracHtml = (pozisyonHesapHtml && duzSatirHtml) ? '<div style="height:1px; background:rgba(255,255,255,0.1); margin:4px 0 2px;"></div>' : '';
+        pozisyonTablosuHtml = '<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:8px 12px; margin-top:8px;">' + pozisyonHesapHtml + ayiracHtml + duzSatirHtml + '</div>';
     }
     var planHtml = ''; // Hedef/Stop artık yukarıdaki pozisyonTablosuHtml'in içinde, ayrı kutu yok.
 
-    // (27.10.2026 eklendi) AŞIRI ALIM/SATIM RİSK FİLTRESİ — Code.gs'teki asiriBolgeRiskiHesapla_
-    // zaten hesaplayıp pozisyonBazliKararEtiketi'ni (EKLE→TUT, AL/SHORT AÇ→BEKLE) KODDAN
-    // etkilemişti (bkz. fonksiyon yorumu) — burada SADECE o kararın NEDENİNİ kullanıcıya
-    // göstermek için bir not ekleniyor, YENİ bir hesaplama/karar YAPILMIYOR. seviye NORMAL ise
-    // (ya da alan hiç yoksa — eski/arşiv kaydı) hiçbir şey eklenmez.
+    // (27.10.2026 eklendi, 30.10.2026 kısaltıldı) AŞIRI ALIM/SATIM RİSK FİLTRESİ — Code.gs'teki
+    // asiriBolgeRiskiHesapla_ zaten hesaplayıp pozisyonBazliKararEtiketi'ni (EKLE→TUT, AL/SHORT
+    // AÇ→BEKLE) KODDAN etkilemişti (bkz. fonksiyon yorumu) — burada SADECE o kararın NEDENİNİ
+    // kullanıcıya göstermek için bir not ekleniyor, YENİ bir hesaplama/karar YAPILMIYOR. seviye
+    // NORMAL ise (ya da alan hiç yoksa — eski/arşiv kaydı) hiçbir şey eklenmez. (30.10.2026)
+    // Gökhan'ın isteğiyle metin kısaltıldı ("RSI: 26.12 · AŞIRI SATIM" gibi) ve ⚠️ ikonu backend'in
+    // 'neden' cümlesinden RSI değerini/yönünü regex ile çekerek YANIP SÖNER hale getirildi (mevcut
+    // @keyframes pulse kullanıldı, yeni CSS eklenmedi). neden metni beklenen formatta değilse
+    // (regex eşleşmezse) eski uzun cümleye sessizce geri düşülür — hiçbir veri kaybolmaz.
     var asiriRiskHtml = '';
     if (result.asiriBolgeRiski && (result.asiriBolgeRiski.seviye === 'YÜKSEK' || result.asiriBolgeRiski.seviye === 'SINIRDA')) {
         var arRenk = result.asiriBolgeRiski.seviye === 'YÜKSEK'
             ? { kenar: 'rgba(248,113,113,0.5)', arkaplan: 'rgba(248,113,113,0.1)', metin: '#fca5a5' }
             : { kenar: 'rgba(251,191,36,0.5)', arkaplan: 'rgba(251,191,36,0.1)', metin: '#fbbf24' };
-        var arBaslik = result.asiriBolgeRiski.seviye === 'YÜKSEK'
-            ? '⚠️ Aşırı bölge riski — YÜKSEK (yeni pozisyon/ekleme engellendi)'
-            : '⚠️ Aşırı bölge riski — SINIRDA (bilgi amaçlı, tek başına engellemez)';
+        var arNeden = result.asiriBolgeRiski.neden || '';
+        var arRsiEslesme = arNeden.match(/RSI\s*\d*\s*=\s*([\d.,]+)/i);
+        var arYonMetni = arNeden.indexOf('satım') !== -1 ? 'AŞIRI SATIM' : (arNeden.indexOf('alım') !== -1 ? 'AŞIRI ALIM' : 'AŞIRI BÖLGE');
+        var arKisaMetin = arRsiEslesme ? ('RSI: ' + arRsiEslesme[1] + ' · ' + arYonMetni) : (arNeden || arYonMetni);
         // (27.10.2026 düzeltildi) Gökhan'ın isteği: "Sarı RSI uyarısını kırmızı çerçevenin
         // dışında bırak" — banner artık ana kartın İÇİNDE değil, kartın ALTINDA ayrı bir kutu
         // olarak basılıyor (bkz. return ifadesi). Kendi margin-bottom'ını da burada taşıyor ki
         // kartın dışına çıkınca bir sonraki bölümle (süreklilik notu vb.) arasındaki boşluk
         // kaybolmasın.
-        asiriRiskHtml = '<div style="margin-bottom:12px; padding:10px 12px; border-radius:10px; background:' + arRenk.arkaplan + '; border:1px solid ' + arRenk.kenar + '; font-size:11px; color:' + arRenk.metin + '; line-height:1.55;">' +
-            '<b>' + arBaslik + '</b><br>' + (result.asiriBolgeRiski.neden || '') +
+        asiriRiskHtml = '<div style="margin-bottom:12px; padding:10px 12px; border-radius:10px; background:' + arRenk.arkaplan + '; border:1px solid ' + arRenk.kenar + '; font-size:12px; font-weight:700; color:' + arRenk.metin + '; line-height:1.55;">' +
+            '<span style="display:inline-block; animation: pulse 1.2s infinite;">⚠️</span> ' + arKisaMetin +
         '</div>';
     }
 
@@ -10911,8 +11006,10 @@ function pineScriptKopyala(id, btn) {
 async function submitTeknikAnaliz() {
     const input = document.getElementById('teknik-analiz-ticker-input');
     const statusDiv = document.getElementById('teknik-analiz-status');
-    const resultDiv = document.getElementById('teknik-analiz-result');
     const submitBtn = document.getElementById('teknik-analiz-submit-btn');
+    // (30.10.2026 eklendi) Giriş paneli bir şekilde kapatılmışken (ör. Enter tuşuna basılırken
+    // eski bir referans kaldıysa) sessizce çık — hata fırlatma.
+    if (!input || !statusDiv || !submitBtn) return;
 
     const ticker = (input.value || '').trim().toUpperCase();
     if (!ticker) {
@@ -10924,14 +11021,7 @@ async function submitTeknikAnaliz() {
     submitBtn.style.opacity = '0.75';
     submitBtn.style.cursor = 'wait';
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analiz ediliyor...';
-    statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ Gemini analiz yapıyor, birkaç saniye sürebilir... <span style="opacity:0.8;">(bu pencereyi kapatıp dashboard\'u kullanmaya devam edebilirsiniz — sonuç header\'daki rozette görünecek)</span></span>';
-    resultDiv.style.display = 'none';
-    resultDiv.innerHTML = '';
-    // (29.10.2026 eklendi) Yeni canlı analiz başlayınca, önceki arşiv görüntülemesinden
-    // kalmış olabilecek "TICKER — tarih" bilgisi sıfırlanıyor.
-    const gecmisTarihSpanYeni = document.getElementById('teknik-analiz-gecmis-tarih');
-    if (gecmisTarihSpanYeni) gecmisTarihSpanYeni.innerHTML = '';
-    teknikAnalizDurum = 'yukleniyor';
+    statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ Gemini analiz yapıyor, birkaç saniye sürebilir...</span>';
     teknikAnalizRozetGuncelle('yukleniyor');
 
     try {
@@ -10947,59 +11037,29 @@ async function submitTeknikAnaliz() {
         if (result.status === 'error' || result.success === false) {
             statusDiv.innerHTML = '<span style="color: #ef4444;">❌ ' + (result.message || 'Analiz yapılamadı') + '</span> ' +
                 '<button onclick="submitTeknikAnaliz()" style="margin-left:8px;padding:4px 10px;border-radius:6px;border:none;background:#FAF884;color:#1e3a8a;cursor:pointer;font-weight:700;font-size:12px;">🔄 Tekrar Dene</button>';
-            teknikAnalizDurum = 'tamamlandi';
-            // Popup şu an kapalıysa header'da uyarı rozeti göster; açıksa zaten görünüyor.
-            // Popup AÇIKSA rozeti 'yukleniyor'da ASILI BIRAKMA — temizle (null): aksi halde
-            // popup daha sonra kapatıldığında header'daki kum saati SONSUZA KADAR takılı
-            // kalıyordu (bildirilen hata: "sheete analiz geliyor ama kum saati duruyor").
-            if (document.getElementById('teknikAnalizModal').style.display !== 'block') {
-                teknikAnalizRozetGuncelle('hata');
-            } else {
-                teknikAnalizRozetGuncelle(null);
-            }
+            teknikAnalizRozetGuncelle('hata');
             return;
         }
 
         statusDiv.innerHTML = '<span style="color: #4ade80;">✅ ' + (result.ticker || ticker) + ' için analiz hazır</span>';
-        // (26.10.2026 güncellendi, Gökhan'la "Adım 1" olarak kararlaştırıldı) SIRALAMA DEĞİŞTİ:
-        // önce SONUÇ VE YÖNLENDİRME (karar + güncel fiyat + trend skoru + mevcut pozisyon maliyeti +
-        // işlem planı, tek bakışta) ve kısa süreklilik notu; ALTINDA "Açıklamalar" olarak uzun
-        // anlatı (5 başlık + GENEL ÖZET), Trend/İşlem Skoru detay kartları ve pozisyon döngüsü
-        // performansı — hiçbiri SİLİNMEDİ/hesaplaması DEĞİŞMEDİ, sadece sırası ve bir üst özet
-        // kartı eklendi. Eski pozisyonBazliKararEtiketiBolumuOlustur çağrısı burada artık
-        // sonucVeYonlendirmeBolumuOlustur'a devredildi (fonksiyonun kendisi hâlâ duruyor).
-        resultDiv.innerHTML = sonucVeYonlendirmeBolumuOlustur(result, result.ticker || ticker) +
-  sureklilikNotuBolumuOlustur(result.sureklilikNotu, result.sureklilikDurumu, result.sureklilikDetay) +
-  teknikSkorBolumuOlustur(result.teknikSkor) +
-  '<div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px;">' +
-  '<div style="font-size:13.5px; line-height:1.7;">' + formatTeknikAnalizSonucu(result.analiz || 'Sonuç boş döndü.') + '</div>' +
-  backtestOzetiBolumuOlustur(result.backtestOzeti) +
-  '</div>' +
-  pineScriptBolumuOlustur(result.analiz, result.ticker || ticker, '') +
-  '<details style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px;">' +
-  '<summary style="cursor:pointer; color:#FAF884; font-weight:600;">🔍 Yahoo\'dan çekilen ham veri (kontrol için)</summary>' +
-  '<pre style="white-space:pre-wrap; font-size:12px; color:#cbd5e1; margin-top:8px;">' + (result.hamVeri || '-') + '</pre>' +
-  '</details>';
-        resultDiv.style.display = 'block';
-        teknikAnalizDurum = 'tamamlandi';
-        // Popup şu an kapalıysa header'da "hazır" rozeti göster; açıksa zaten sonuç görünüyor.
-        // Popup AÇIKSA rozeti 'yukleniyor'da ASILI BIRAKMA — temizle (null), aksi halde
-        // popup daha sonra kapatıldığında header'daki kum saati SONSUZA KADAR takılı kalır.
-        if (document.getElementById('teknikAnalizModal').style.display !== 'block') {
-            teknikAnalizRozetGuncelle('hazir');
-        } else {
-            teknikAnalizRozetGuncelle(null);
-        }
+        // (30.10.2026 güncellendi) Gökhan'ın isteğiyle sonuç artık giriş panelinin İÇİNE yazılmıyor —
+        // Geçmiş Analizler/pozisyon butonuyla AYNI bağımsız sürüklenebilir sonuç kartına (gecmisKartAc)
+        // açılıyor. Panel açık kalır, art arda başka ticker'lar analiz edilebilir. anaHtml/skorHtml
+        // AYNEN eskisi gibi (sonucVeYonlendirmeBolumuOlustur/teknikSkorBolumuOlustur); detayHtml artık
+        // ortak tumDetayHtmlOlustur() yardımcısından geliyor — Tüm Detay'ın altına Süreklilik Notu +
+        // Backtest Özeti + Ham Veri'yi de (hepsi direkt açık) ekliyor, Gökhan'ın isteğiyle.
+        var anaHtml = sonucVeYonlendirmeBolumuOlustur(result, result.ticker || ticker);
+        var skorHtml = teknikSkorBolumuOlustur(result.teknikSkor);
+        var detayHtml = tumDetayHtmlOlustur(result, result.ticker || ticker, '');
+        var simdiZaman = new Date();
+        var zamanStr = simdiZaman.toLocaleDateString('tr-TR') + ' ' + simdiZaman.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+        gecmisKartAc({ ticker: result.ticker || ticker, zaman: zamanStr }, anaHtml, skorHtml, detayHtml);
+        teknikAnalizRozetGuncelle('hazir');
 
     } catch (error) {
         console.error('❌ Teknik analiz hatası:', error);
         statusDiv.innerHTML = '<span style="color: #ef4444;">❌ HATA: ' + error.message + '</span>';
-        teknikAnalizDurum = 'tamamlandi';
-        if (document.getElementById('teknikAnalizModal').style.display !== 'block') {
-            teknikAnalizRozetGuncelle('hata');
-        } else {
-            teknikAnalizRozetGuncelle(null);
-        }
+        teknikAnalizRozetGuncelle('hata');
     } finally {
         submitBtn.disabled = false;
         submitBtn.style.opacity = '';
@@ -11013,12 +11073,14 @@ let teknikAnalizGecmisVerisi = [];
 
 async function teknikAnalizGecmisiGoster() {
     const statusDiv = document.getElementById('teknik-analiz-status');
-    const resultDiv = document.getElementById('teknik-analiz-result');
+    const icerikDiv = document.getElementById('teknik-analiz-gecmis-icerik');
+    const akordiyon = document.getElementById('teknik-analiz-gecmis-akordiyon');
+    // (30.10.2026 eklendi) Dışarıdan (ör. gunlukAnalizDetayAc) çağrıldığında da akordiyon açılsın —
+    // summary tıklamasından geçmeden doğrudan bu fonksiyon çağrılabiliyor.
+    if (akordiyon) akordiyon.open = true;
 
     statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ Geçmiş analizler yükleniyor...</span>';
-    resultDiv.style.display = 'none';
-    resultDiv.innerHTML = '';
-    teknikAnalizDurum = 'tamamlandi'; // popup kapatılıp açılınca liste kaybolmasın
+    icerikDiv.innerHTML = '';
 
     try {
         const url = APPS_SCRIPT_URL + '?action=teknikAnalizGecmisi&limit=30&_=' + Date.now();
@@ -11034,10 +11096,9 @@ async function teknikAnalizGecmisiGoster() {
 
         statusDiv.innerHTML = '<span style="color: #4ade80;">📜 Son ' + kayitlar.length + ' analiz</span>';
 
-        resultDiv.innerHTML =
+        icerikDiv.innerHTML =
             '<input type="text" id="teknik-analiz-gecmis-filtre" placeholder="🔍 Ticker\'a göre filtrele (örn: THYAO)" oninput="teknikAnalizGecmisListesiRenderla(this.value)" style="width:100%; box-sizing:border-box; padding:9px 12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; font-size:12.5px; text-transform:uppercase;">' +
             '<div id="teknik-analiz-gecmis-liste"></div>';
-        resultDiv.style.display = 'block';
         teknikAnalizGecmisListesiRenderla('');
         setTimeout(function() {
             const f = document.getElementById('teknik-analiz-gecmis-filtre');
@@ -11047,6 +11108,20 @@ async function teknikAnalizGecmisiGoster() {
     } catch (error) {
         console.error('❌ Geçmiş analizler hatası:', error);
         statusDiv.innerHTML = '<span style="color: #ef4444;">❌ Geçmiş yüklenemedi: ' + error.message + '</span>';
+    }
+}
+
+// (30.10.2026 eklendi) "Geçmiş Analizler" akordiyonunun <summary>'sine tıklanınca çağrılır.
+// Native <details> toggle'ı preventDefault ile durdurulup KENDİMİZ yönetiyoruz: açıksa kapat
+// (yeniden fetch yok), kapalıysa teknikAnalizGecmisiGoster() çağrılır (kendisi akordiyonu da açar).
+function teknikAnalizGecmisAkordiyonTiklandi(event, summaryEl) {
+    event.preventDefault();
+    var detailsEl = summaryEl.closest('details');
+    if (!detailsEl) return;
+    if (detailsEl.open) {
+        detailsEl.open = false;
+    } else {
+        teknikAnalizGecmisiGoster();
     }
 }
 
@@ -11216,6 +11291,28 @@ function gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml) {
     return kart;
 }
 
+// (30.10.2026 eklendi) "Tüm Detay" içeriğini TEK yerden üretir — canlı analiz, Geçmiş Analizler
+// ve pozisyon kartı 🕯️ butonu ARTIK AYNI fonksiyonu kullanıyor (Gökhan'ın isteğiyle). Eskiden
+// sadece formatTeknikAnalizSonucu + pineScriptBolumuOlustur vardı; şimdi ALTINA (ayrı bir satır/
+// toggle olmadan, aynı "Tüm Detay" açılır bölümünün içinde) Süreklilik Notu + Backtest Özeti +
+// Ham Veri de ekleniyor — hepsi direkt açık (Gökhan: "açık gelsin"). obj.sureklilikNotu/
+// backtestOzeti/hamVeri yoksa (ör. arşiv kaydı veya eski kayıt) ilgili bölüm sessizce atlanır —
+// hiçbir fonksiyonun kendi davranışı/hesaplaması DEĞİŞMEDİ, sadece burada BİRLEŞTİRİLİYORLAR.
+function tumDetayHtmlOlustur(obj, ticker, zamanStr) {
+    if (!obj) return '';
+    var html = formatTeknikAnalizSonucu(obj.analiz || '');
+    html += sureklilikNotuBolumuOlustur(obj.sureklilikNotu, obj.sureklilikDurumu, obj.sureklilikDetay);
+    html += backtestOzetiBolumuOlustur(obj.backtestOzeti);
+    html += pineScriptBolumuOlustur(obj.analiz, ticker, zamanStr || '');
+    if (obj.hamVeri) {
+        html += '<div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px;">' +
+            '<div style="color:#FAF884; font-weight:600; font-size:12.5px;">🔍 Yahoo\'dan çekilen ham veri (kontrol için)</div>' +
+            '<pre style="white-space:pre-wrap; font-size:12px; color:#cbd5e1; margin-top:8px;">' + obj.hamVeri + '</pre>' +
+        '</div>';
+    }
+    return html;
+}
+
 function teknikAnalizGecmisTikla(idx) {
     const kayit = teknikAnalizGecmisVerisi[idx];
     if (!kayit) return;
@@ -11249,7 +11346,7 @@ function teknikAnalizGecmisTikla(idx) {
     }
     // "▼ Tüm Detay" — Gemini'nin madde madde gerekçeleri (1-5 bölüm) + Pine Script, kart içinde
     // kapalı başlar, okuyla açılır. Eski/yeni kayıt ayrımı yok — ikisinde de kayit.analiz var.
-    var detayHtml = formatTeknikAnalizSonucu(kayit.analiz) + pineScriptBolumuOlustur(kayit.analiz, kayit.ticker, kayit.zaman);
+    var detayHtml = tumDetayHtmlOlustur(kayit, kayit.ticker, kayit.zaman);
     gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml);
 }
 
@@ -11295,7 +11392,7 @@ function pozisyonDanAnalizYap(kontratAdi, btn) {
             }
             var anaHtml = sonucVeYonlendirmeBolumuOlustur(result, result.ticker || temelTicker);
             var skorHtml = teknikSkorBolumuOlustur(result.teknikSkor);
-            var detayHtml = formatTeknikAnalizSonucu(result.analiz || '') + pineScriptBolumuOlustur(result.analiz, result.ticker || temelTicker, '');
+            var detayHtml = tumDetayHtmlOlustur(result, result.ticker || temelTicker, '');
             var simdi = new Date();
             var zamanStr = simdi.toLocaleDateString('tr-TR') + ' ' + simdi.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
             gecmisKartAc({ ticker: result.ticker || temelTicker, zaman: zamanStr }, anaHtml, skorHtml, detayHtml);
@@ -11381,7 +11478,7 @@ function gunlukXauXagPopupKapat() {
 // penceresini açar, Geçmiş Analizler listesini yükler ve doğrudan ilgili ticker'a filtreler.
 async function gunlukAnalizDetayAc(ticker) {
     gunlukXauXagPopupKapat();
-    openTeknikAnalizModal();
+    teknikAnalizGirisPaneliAc();
     await teknikAnalizGecmisiGoster();
     setTimeout(function() {
         const f = document.getElementById('teknik-analiz-gecmis-filtre');

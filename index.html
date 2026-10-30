@@ -12662,8 +12662,23 @@ function updateNewsTicker() {
         return '<span class="news-ticker-item ' + (isCritical ? 'critical' : 'normal') + '" onclick="openNewsDetailFromTicker(' + i + ')" style="cursor:pointer;">' + icon + ' ' + shortTitle + '</span><span class="news-ticker-separator">•</span>';
     }).join('');
 
+    // (30.10.2026 eklendi) Gökhan'ın isteğiyle: haber sayısı AZSA (örn. 3 haber), tek bir "tur" (tekKopyaHtml)
+    // ekranı doldurmaya yetmiyordu — bu da haberler bitince kayma hissi kesilip "boşluğa düşüp" sıfırlanıyormuş
+    // gibi görünüyordu, gerçek bir dairesel/kesintisiz kayma hissi vermiyordu. ÇÖZÜM: önce TEK bir turun doğal
+    // genişliğini ölç, konteynerin (görünen alanın) genişliğinden DAHA DAR ise, haber listesini yeterli sayıda
+    // art arda tekrarlayıp "tek tur" olarak ekranı (en az bir konteyner genişliği kadar) dolduracak hale getir —
+    // ancak SONRA bu büyütülmüş turu yine 3 kere art arda basıp (mevcut kesintisiz-döngü tekniği) kaydırıyoruz.
+    // Sonuç: haber sayısı ne olursa olsun, bir haber sol kenardan kaybolurken ekranda HER ZAMAN yeterince içerik
+    // (gerekirse aynı haberlerin tekrarı) akmaya devam ediyor — "duruyor" hissi tamamen ortadan kalkıyor.
     ticker.style.animation = 'none';
-    ticker.innerHTML = tekKopyaHtml + tekKopyaHtml + tekKopyaHtml;
+    ticker.innerHTML = tekKopyaHtml;
+    void ticker.offsetWidth;
+    const tekTurDogalGenisligi = Math.max(1, ticker.scrollWidth);
+    const konteynerGenisligi = container.clientWidth || container.offsetWidth || 0;
+    const tekrarSayisi = Math.max(1, Math.ceil((konteynerGenisligi + 1) / tekTurDogalGenisligi));
+    const buyutulmusKopyaHtml = tekKopyaHtml.repeat(tekrarSayisi);
+
+    ticker.innerHTML = buyutulmusKopyaHtml + buyutulmusKopyaHtml + buyutulmusKopyaHtml;
     void ticker.offsetWidth; // reflow — animasyonu baştan temiz başlatmak için
     const birKopyaGenisligi = ticker.scrollWidth / 3;
     const HIZ_PX_SANIYE = tickerHizPxSaniyeGetir(); // (30.10.2026 güncellendi) artık sabit değil — Gökhan ⚙️ ile Yavaş/Orta/Hızlı seçebiliyor (bkz. tickerHizPxSaniyeGetir)

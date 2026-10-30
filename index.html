@@ -12339,38 +12339,39 @@ function updateNewsTicker() {
     }
     container.style.display = '';
 
-    tickerIndex = 0;
-    showTickerNews(tickerIndex);
+    // (30.10.2026 güncellendi) Gökhan'ın isteğiyle artık GERÇEK kayan şerit (marquee) — önceden
+    // her 4 saniyede tek bir haber solup-belirerek değişiyordu, animasyon hiç kullanılmıyordu.
+    // Şimdi TÜM haberler yan yana dizilip (• ayraçlarıyla) sabit bir pikse/saniye hızla sağdan
+    // sola kayıyor. Kesintisiz döngü için klasik "3 kopya" tekniği kullanılıyor: içerik 3 kere
+    // art arda basılıyor, CSS @keyframes ticker (bkz. <style>, satır ~1616) tam bir kopya
+    // genişliği kadar (-33.33%) kaydırıp başa sarıyor — izleyici hiç "sıfırlanma" anı görmüyor.
+    // Süre, içerik uzunluğuna göre JS'de hesaplanıyor (çok haber varsa animasyon da uzuyor,
+    // böylece okuma hızı her zaman sabit kalıyor). Üstüne gelince durması (:hover) zaten CSS'te
+    // tanımlıydı, bu da artık gerçekten işliyor.
+    const tekKopyaHtml = tickerNews.map((news, i) => {
+        const isCritical = news.keywords && news.keywords.includes('critical');
+        const icon = isCritical ? '🔴' : '🟡';
+        const shortTitle = news.title.length > 110 ? news.title.substring(0, 110) + '...' : news.title;
+        return '<span class="news-ticker-item ' + (isCritical ? 'critical' : 'normal') + '" onclick="openNewsDetailFromTicker(' + i + ')" style="cursor:pointer;">' + icon + ' ' + shortTitle + '</span><span class="news-ticker-separator">•</span>';
+    }).join('');
 
-    if (tickerInterval) clearInterval(tickerInterval);
-    tickerInterval = setInterval(() => {
-        tickerIndex = (tickerIndex + 1) % tickerNews.length;
-        showTickerNews(tickerIndex);
-    }, 4000);
-}
-
-function showTickerNews(index) {
-    const ticker = document.getElementById('news-ticker');
-    if (!ticker || !tickerNews[index]) return;
-    const news = tickerNews[index];
-    const isCritical = news.keywords && news.keywords.includes('critical');
-    const icon = isCritical ? '🔴' : '🟡';
-    const shortTitle = news.title.length > 80 ? news.title.substring(0, 80) + '...' : news.title;
-    ticker.style.opacity = '0';
-    ticker.style.transition = 'opacity 0.4s ease';
-    setTimeout(() => {
-        ticker.innerHTML = `<span class="news-ticker-item ${isCritical ? 'critical' : 'normal'}" onclick="openNewsDetailFromTicker(${index})" style="cursor:pointer;">${icon} ${shortTitle}</span>`;
-        ticker.style.opacity = '1';
-    }, 400);
+    ticker.style.animation = 'none';
+    ticker.innerHTML = tekKopyaHtml + tekKopyaHtml + tekKopyaHtml;
+    void ticker.offsetWidth; // reflow — animasyonu baştan temiz başlatmak için
+    const birKopyaGenisligi = ticker.scrollWidth / 3;
+    const HIZ_PX_SANIYE = 55; // sabit kayma hızı
+    const sureSaniye = Math.max(15, Math.round(birKopyaGenisligi / HIZ_PX_SANIYE));
+    ticker.style.animation = 'ticker ' + sureSaniye + 's linear infinite';
 }
 
 function openNewsDetailFromTicker(index) {
-    const recentNews = globalNewsData
-        .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-        .slice(0, 10);
-    
-    if (recentNews[index]) {
-        openNewsDetail(recentNews[index]);
+    // (30.10.2026 düzeltildi) ÖNEMLİ HATA DÜZELTMESİ: burada eskiden globalNewsData'dan "en son 10
+    // haber" yeniden türetiliyordu — ama şerit artık globalNewsData'nın TAMAMINI değil, filtrelenmiş
+    // (OilPrice/Investing/kritik-USNI) VE farklı sırada bir alt kümesini (tickerNews) gösteriyor.
+    // İki liste index'leri UYUŞMUYORDU — yani şeritteki bir habere tıklayınca YANLIŞ haber açılabiliyordu.
+    // Artık tıklanan index doğrudan tickerNews'ten okunuyor (ekrandaki ile tıklanan AYNI haber).
+    if (tickerNews[index]) {
+        openNewsDetail(tickerNews[index]);
     }
 }
 

@@ -1742,15 +1742,18 @@ select option:checked {
 .radar-toolbar { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px 28px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
 .radar-table-wrap { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; overflow: hidden; overflow-x: auto; }
 .radar-table { width: 100%; border-collapse: collapse; min-width: 760px; }
-.radar-th { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: rgba(255,255,255,0.55); font-weight: 600; text-align: left; padding: 10px 14px; }
-.radar-td { padding: 14px; border-top: 1px solid rgba(255,255,255,0.08); vertical-align: middle; }
+.radar-th { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: rgba(255,255,255,0.55); font-weight: 600; text-align: center; padding: 7px 10px; }
+.radar-td { padding: 7px 10px; border-top: 1px solid rgba(255,255,255,0.08); vertical-align: middle; text-align: center; }
+.radar-th:first-child, .radar-td:first-child { text-align: left; }
+.radar-th:nth-child(6), .radar-td:nth-child(6) { text-align: left; }
 .radar-row:hover { background: rgba(255,255,255,0.06); }
-.radar-badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
-.radar-detay { font-size: 11.5px; color: rgba(255,255,255,0.65); line-height: 1.6; }
+.radar-badge { display: inline-flex; align-items: center; justify-content: center; padding: 3px 9px; border-radius: 7px; font-size: 11.5px; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
+.radar-detay { font-size: 10.5px; color: rgba(255,255,255,0.65); line-height: 1.35; }
 .radar-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px 14px; color: #fff; font-size: 13px; }
 .radar-input::placeholder { color: rgba(255,255,255,0.4); }
-.radar-icon-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); border-radius: 8px; width: 32px; height: 32px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.radar-icon-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); border-radius: 7px; width: 26px; height: 26px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .radar-icon-btn:hover { background: rgba(255,255,255,0.16); }
+.radar-sil-btn:hover { background: rgba(248,113,113,0.25); border-color: rgba(248,113,113,0.6); color: #fca5a5; }
 .radar-btn-primary { background: rgba(74,222,128,0.18); border: 1px solid rgba(74,222,128,0.5); color: #4ade80; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
 .radar-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .radar-btn-secondary { background: rgba(96,165,250,0.18); border: 1px solid rgba(96,165,250,0.5); color: #93c5fd; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -3389,6 +3392,7 @@ function sifreKontrol() {
         <!-- RADAR TAB (31.10.2026 eklendi) -->
         <div id="radar-tab" class="tab-content">
             <div class="radar-panel">
+                <div id="radar-toast" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:rgba(30,60,114,0.97); color:#fff; padding:12px 22px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,0.35); z-index:9999; transition:opacity 0.3s; opacity:0;"></div>
                 <div class="radar-toolbar">
                     <div style="display:flex; align-items:center; gap:14px;">
                         <div style="width:44px; height:44px; border-radius:12px; background: rgba(96,165,250,0.18); border:1px solid rgba(96,165,250,0.4); display:flex; align-items:center; justify-content:center; font-size:20px;">📡</div>
@@ -3403,7 +3407,7 @@ function sifreKontrol() {
 
                         <label for="radar-ticker-ekle" class="radar-sr-only">Yeni ticker ekle</label>
                         <input id="radar-ticker-ekle" type="text" class="radar-input" placeholder="Yeni ticker (örn. AAPL)" style="width:170px;" onkeydown="if(event.key==='Enter'){radarTickerEkleTiklandi();}">
-                        <button id="radar-ekle-btn" class="radar-btn-secondary" onclick="radarTickerEkleTiklandi()">+ Ekle</button>
+                        <button id="radar-ekle-btn" class="radar-btn-secondary" onclick="radarTickerEkleTiklandi()">🔎 Tara</button>
 
                         <button id="radar-tara-btn" class="radar-btn-primary" onclick="radarYenidenTaraTiklandi()">↻ Yeniden Tara</button>
                     </div>
@@ -4812,18 +4816,21 @@ function radarSatirHtml(row) {
     const gorecelGucMetin = (gorecelGuc === '' || gorecelGuc == null) ? '—' : radarEscapeHtml(gorecelGuc);
     const tickerGuvenli = radarEscapeHtml(String(ticker).toUpperCase());
 
-    return '<tr class="radar-row">' +
-        '<td class="radar-td" style="font-weight:700; font-size:15px;">' + radarEscapeHtml(ticker) + '</td>' +
-        '<td class="radar-td"><div style="display:flex; align-items:center; gap:10px;">' +
-            '<span style="font-size:18px; font-weight:800;">' + radarEscapeHtml(skor || '—') + '</span>' +
-            '<div style="width:60px; height:6px; border-radius:3px; background: rgba(255,255,255,0.12); overflow:hidden;"><div style="width:' + skorYuzde + '%; height:100%; background:' + skorRenk + ';"></div></div>' +
+    return '<tr class="radar-row" data-ticker="' + tickerGuvenli + '">' +
+        '<td class="radar-td" style="font-weight:700; font-size:13px;">' + radarEscapeHtml(ticker) + '</td>' +
+        '<td class="radar-td"><div style="display:inline-flex; align-items:center; gap:8px;">' +
+            '<span style="font-size:15px; font-weight:800;">' + radarEscapeHtml(skor || '—') + '</span>' +
+            '<div style="width:46px; height:5px; border-radius:3px; background: rgba(255,255,255,0.12); overflow:hidden;"><div style="width:' + skorYuzde + '%; height:100%; background:' + skorRenk + ';"></div></div>' +
         '</div></td>' +
         '<td class="radar-td"><span class="radar-badge" style="background:' + yonR.bg + '; color:' + yonR.color + '; border:1px solid ' + yonR.border + ';">' + yonR.metin + '</span></td>' +
         '<td class="radar-td"><span class="radar-badge" style="background:' + asamaR.bg + '; color:' + asamaR.color + '; border:1px solid ' + asamaR.border + ';">' + asamaR.metin + '</span></td>' +
         '<td class="radar-td"><span class="radar-badge" style="background:' + izinR.bg + '; color:' + izinR.color + '; border:1px solid ' + izinR.border + ';">' + izinR.metin + '</span></td>' +
         '<td class="radar-td radar-detay">RSI: ' + radarEscapeHtml(rsi || '—') + '<br>CHoCH: ' + radarEscapeHtml(choch || '—') + '<br>Göreceli Güç: ' + gorecelGucMetin + '</td>' +
         '<td class="radar-td">' + radarVeriKaliteGoster(veriKalite) + '</td>' +
-        '<td class="radar-td"><button class="radar-icon-btn radar-tek-tara-btn" data-ticker="' + tickerGuvenli + '" aria-label="' + tickerGuvenli + ' sembolünü tekrar tara" title="Bu sembolü tekrar tara">↻</button></td>' +
+        '<td class="radar-td"><div style="display:inline-flex; gap:6px;">' +
+            '<button class="radar-icon-btn radar-tek-tara-btn" data-ticker="' + tickerGuvenli + '" aria-label="' + tickerGuvenli + ' sembolünü tekrar tara" title="Bu sembolü tekrar tara">↻</button>' +
+            '<button class="radar-icon-btn radar-sil-btn" data-ticker="' + tickerGuvenli + '" aria-label="' + tickerGuvenli + ' sembolünü sil" title="Bu sembolü listeden sil">🗑</button>' +
+        '</div></td>' +
     '</tr>';
 }
 
@@ -4869,6 +4876,7 @@ async function radarYenidenTaraTiklandi() {
             throw new Error(result.message || 'Tarama başarısız');
         }
         await loadRadarData();
+        radarGosterToast('✅ Tarama tamamlandı — ' + radarTumSatirlar.length + ' ticker güncellendi');
     } catch (error) {
         alert('Tarama sırasında hata oluştu: ' + error.message);
     } finally {
@@ -4878,8 +4886,14 @@ async function radarYenidenTaraTiklandi() {
 }
 
 // Satırdaki ↻ ikonu — SADECE o satırdaki ticker'ı yeniden tarar (radarTekilTaramaBaslat),
-// diğer ticker'lara dokunmaz.
-async function radarTekilTaraTiklandi(ticker) {
+// diğer ticker'lara dokunmaz. Tıklanan buton elemanı (btnEl) da gönderiliyor ki taranırken
+// ikon kısa süreliğine ⏳ gösterip devre dışı kalsın (31.10.2026 — geri bildirim iyileştirmesi).
+async function radarTekilTaraTiklandi(ticker, btnEl) {
+    const orijinalIcerik = btnEl ? btnEl.innerHTML : null;
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '⏳';
+    }
     try {
         const timestamp = new Date().getTime();
         const url = `${APPS_SCRIPT_URL}?action=radarTekilTaramaBaslat&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&ticker=${encodeURIComponent(ticker)}&_=${timestamp}`;
@@ -4888,10 +4902,72 @@ async function radarTekilTaraTiklandi(ticker) {
         if (result.status !== 'success') {
             throw new Error(result.message || 'Tarama başarısız');
         }
-        await loadRadarData();
+        await loadRadarData(); // tbody yeniden çiziliyor — eski buton artık DOM'da değil, aşağıdaki
+                                 // finally'de restore etmeye gerek yok (yeni satır zaten ↻ ile geliyor).
+        radarSatiriParlat(ticker);
+        const veri = result.data || {};
+        radarGosterToast('✅ ' + ticker + ' tarandı — ' + (veri.radarSkoru != null ? veri.radarSkoru : '—') + ' puan, ' + (veri.radarAsamasi || '—'));
     } catch (error) {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = orijinalIcerik;
+        }
         alert(ticker + ' taranırken hata oluştu: ' + error.message);
     }
+}
+
+// Bir ticker'ın satırını kısa süreliğine yeşilimsi parlatır — "bu satır az önce güncellendi" net
+// görünsün diye (değer değişmemiş olsa bile fark edilsin).
+function radarSatiriParlat(ticker) {
+    const hedef = String(ticker || '').toUpperCase();
+    const satirlar = document.querySelectorAll('#radar-tbody tr.radar-row');
+    satirlar.forEach(function (tr) {
+        if (tr.getAttribute('data-ticker') === hedef) {
+            tr.style.transition = 'background-color 0.3s';
+            tr.style.backgroundColor = 'rgba(74,222,128,0.25)';
+            setTimeout(function () {
+                tr.style.backgroundColor = '';
+            }, 1200);
+        }
+    });
+}
+
+// Satırdaki 🗑 ikonu — kullanıcıya SORAR, onaylarsa ticker'ı RADAR_TARAMA_LISTESI'nden VE
+// RADAR'daki güncel satırdan siler (radarTickerSil). RADAR_ARSIV'deki geçmiş veri ASLA silinmez.
+async function radarTickerSilTiklandi(ticker, btnEl) {
+    const onay = confirm(ticker + ' silinsin mi?\n\nBir daha taranmaz ve tablodan kaldırılır. (Geçmiş arşiv verisi silinmez, sadece aktif listeden çıkar.)');
+    if (!onay) return;
+    if (btnEl) btnEl.disabled = true;
+    try {
+        const timestamp = new Date().getTime();
+        const url = `${APPS_SCRIPT_URL}?action=radarTickerSil&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&ticker=${encodeURIComponent(ticker)}&_=${timestamp}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const result = await response.json();
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Silme başarısız');
+        }
+        await loadRadarData();
+        radarGosterToast('✅ ' + ticker + ' silindi');
+    } catch (error) {
+        if (btnEl) btnEl.disabled = false;
+        alert(ticker + ' silinirken hata oluştu: ' + error.message);
+    }
+}
+
+// Ekranın altında 2,5 saniyeliğine görünen, kendi kendine kaybolan küçük bildirim — mevcut
+// hata alert()'lerinin aksine akışı BLOKE ETMEZ (31.10.2026 — geri bildirim iyileştirmesi).
+let radarToastTimeout = null;
+function radarGosterToast(mesaj) {
+    const toast = document.getElementById('radar-toast');
+    if (!toast) return;
+    toast.textContent = mesaj;
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    if (radarToastTimeout) clearTimeout(radarToastTimeout);
+    radarToastTimeout = setTimeout(function () {
+        toast.style.opacity = '0';
+        setTimeout(function () { toast.style.display = 'none'; }, 300);
+    }, 2500);
 }
 
 // "+ Ekle" butonu (veya kutuda Enter) — yeni ticker'ı RADAR_TARAMA_LISTESI'ne ekler ve SADECE
@@ -4907,7 +4983,7 @@ async function radarTickerEkleTiklandi() {
     const orijinalMetin = btn ? btn.textContent : '';
     if (btn) {
         btn.disabled = true;
-        btn.textContent = 'Ekleniyor...';
+        btn.textContent = 'Taranıyor...';
     }
     try {
         const timestamp = new Date().getTime();
@@ -4919,6 +4995,8 @@ async function radarTickerEkleTiklandi() {
         }
         if (input) input.value = '';
         await loadRadarData();
+        const veri = result.data || {};
+        radarGosterToast('✅ ' + ticker + ' eklendi ve tarandı — ' + (veri.radarSkoru != null ? veri.radarSkoru : '—') + ' puan, ' + (veri.radarAsamasi || '—'));
     } catch (error) {
         alert('Ticker eklenirken hata oluştu: ' + error.message);
     } finally {
@@ -4936,9 +5014,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const radarTbody = document.getElementById('radar-tbody');
     if (radarTbody) {
         radarTbody.addEventListener('click', function (e) {
-            const btn = e.target.closest('.radar-tek-tara-btn');
-            if (btn) {
-                radarTekilTaraTiklandi(btn.getAttribute('data-ticker'));
+            const taraBtn = e.target.closest('.radar-tek-tara-btn');
+            if (taraBtn) {
+                radarTekilTaraTiklandi(taraBtn.getAttribute('data-ticker'), taraBtn);
+                return;
+            }
+            const silBtn = e.target.closest('.radar-sil-btn');
+            if (silBtn) {
+                radarTickerSilTiklandi(silBtn.getAttribute('data-ticker'), silBtn);
             }
         });
     }

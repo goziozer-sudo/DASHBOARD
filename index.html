@@ -1736,6 +1736,27 @@ select option:checked {
 .yuzenKartGovde { scrollbar-width: none; -ms-overflow-style: none; }
 .yuzenKartGovde::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
+/* (31.10.2026 eklendi) RADAR sekmesi — rozetler, tablo, Ticker Ekle/Tek Tara arayüzü için stiller.
+   Sadece .radar- önekli class'lar kullanılıyor, mevcut hiçbir class'a dokunulmadı. */
+.radar-panel { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; border-radius: 16px; padding: 28px; }
+.radar-toolbar { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px 28px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+.radar-table-wrap { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; overflow: hidden; overflow-x: auto; }
+.radar-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.radar-th { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: rgba(255,255,255,0.55); font-weight: 600; text-align: left; padding: 10px 14px; }
+.radar-td { padding: 14px; border-top: 1px solid rgba(255,255,255,0.08); vertical-align: middle; }
+.radar-row:hover { background: rgba(255,255,255,0.06); }
+.radar-badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
+.radar-detay { font-size: 11.5px; color: rgba(255,255,255,0.65); line-height: 1.6; }
+.radar-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px 14px; color: #fff; font-size: 13px; }
+.radar-input::placeholder { color: rgba(255,255,255,0.4); }
+.radar-icon-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); border-radius: 8px; width: 32px; height: 32px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.radar-icon-btn:hover { background: rgba(255,255,255,0.16); }
+.radar-btn-primary { background: rgba(74,222,128,0.18); border: 1px solid rgba(74,222,128,0.5); color: #4ade80; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.radar-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.radar-btn-secondary { background: rgba(96,165,250,0.18); border: 1px solid rgba(96,165,250,0.5); color: #93c5fd; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.radar-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+.radar-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
     </style>
 <!-- ⚠️ parseUSD FIX - AVRUPA FORMAT DESTEĞİ -->
 <script src="parseUSD-fix.js"></script>
@@ -1865,6 +1886,7 @@ function sifreKontrol() {
             <button class="tab-btn" data-tab="detay-analiz" style="display:none">🔍 DETAY ANALİZ</button>
             <button class="tab-btn" data-tab="pozisyonlar">POZİSYONLAR</button>
             <button class="tab-btn" data-tab="performans">📈 PERFORMANS</button>
+            <button class="tab-btn" data-tab="radar">📡 RADAR</button>
 
         </div>
 
@@ -3364,6 +3386,56 @@ function sifreKontrol() {
         </div>
 
         <!-- TOPLAM BÜTÇE TAB -->
+        <!-- RADAR TAB (31.10.2026 eklendi) -->
+        <div id="radar-tab" class="tab-content">
+            <div class="radar-panel">
+                <div class="radar-toolbar">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <div style="width:44px; height:44px; border-radius:12px; background: rgba(96,165,250,0.18); border:1px solid rgba(96,165,250,0.4); display:flex; align-items:center; justify-content:center; font-size:20px;">📡</div>
+                        <div>
+                            <div style="font-size:20px; font-weight:700;">Radar — Erken Sinyal Taraması</div>
+                            <div style="font-size:12px; color:rgba(255,255,255,0.6);" id="radar-last-scan">Son güncelleme: —</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap;">
+                        <label for="radar-search" class="radar-sr-only">Ticker ara</label>
+                        <input id="radar-search" type="text" class="radar-input" placeholder="Ticker ara..." style="width:150px;" oninput="radarAramaFiltrele()">
+
+                        <label for="radar-ticker-ekle" class="radar-sr-only">Yeni ticker ekle</label>
+                        <input id="radar-ticker-ekle" type="text" class="radar-input" placeholder="Yeni ticker (örn. AAPL)" style="width:170px;" onkeydown="if(event.key==='Enter'){radarTickerEkleTiklandi();}">
+                        <button id="radar-ekle-btn" class="radar-btn-secondary" onclick="radarTickerEkleTiklandi()">+ Ekle</button>
+
+                        <button id="radar-tara-btn" class="radar-btn-primary" onclick="radarYenidenTaraTiklandi()">↻ Yeniden Tara</button>
+                    </div>
+                </div>
+
+                <div class="radar-table-wrap">
+                    <table class="radar-table">
+                        <thead>
+                            <tr>
+                                <th class="radar-th">Ticker</th>
+                                <th class="radar-th">Skor</th>
+                                <th class="radar-th">Yön</th>
+                                <th class="radar-th">Aşama</th>
+                                <th class="radar-th">İşlem İzni</th>
+                                <th class="radar-th">Detaylar</th>
+                                <th class="radar-th">Veri Kalitesi</th>
+                                <th class="radar-th"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="radar-tbody">
+                            <tr><td class="radar-td" colspan="8" style="text-align:center; color:rgba(255,255,255,0.5);">Veri yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top:14px; font-size:11px; color:rgba(255,255,255,0.45); display:flex; gap:18px; align-items:center; flex-wrap: wrap;">
+                    <span>Yön: <span style="color:#4ade80;">●</span> LONG &nbsp; <span style="color:#fb923c;">●</span> SHORT &nbsp; <span style="color:#cbd5e1;">●</span> NÖTR</span>
+                    <span>Aşama: <span style="color:#4ade80;">●</span> GÜÇLÜ &nbsp; <span style="color:#60a5fa;">●</span> ONAYLI &nbsp; <span style="color:#fde047;">●</span> ERKEN &nbsp; <span style="color:#fca5a5;">●</span> RED</span>
+                </div>
+            </div>
+        </div>
+
         <div id="budget-tab" class="tab-content">
             <div class="cards-container">
                 <div class="card">
@@ -4215,7 +4287,8 @@ async function loadAllData() {
             loadFonDataSahsi(),
             loadOzetSheetData(),
             loadSahsiSheetData(),
-            loadSignals()  // ✅ SİNYALLER YÜKLENSİN!
+            loadSignals(),  // ✅ SİNYALLER YÜKLENSİN!
+            loadRadarData()  // (31.10.2026 eklendi) RADAR sekmesi verisi
         ]);
         
         updateLastUpdateTime();
@@ -4635,6 +4708,242 @@ async function fetchSheetCSV(sheetAdi, limit) {
         }).join(',');
     }).join('\n');
 }
+
+// ==================== RADAR SEKMESİ (31.10.2026 eklendi) ====================
+// Backend'deki RADAR_SUTUNLARI sırasıyla BİREBİR eşleşen sütun indeksleri (Code.gs'teki
+// RADAR_SUTUNLARI dizisi değişirse buradaki indeksler de güncellenmeli):
+// 0 Ticker, 1 Son Tarama Zamanı, 2 Güncel Fiyat, 3 Radar Skoru, 4 Radar Aşaması, 5 Yön,
+// 6 RSI Değeri, 7 RSI Divergence, 8 Liquidity Sweep, 9 RVOL, 10 OBV/CMF, 11 CHoCH,
+// 12 Kırılan Swing, 13 EMA20, 14 EMA50, 15 Göreceli Güç, 16 Zorunlu Kapılar Sonucu,
+// 17 Derin Analiz Kuyruğu, 18 Son Gemini Zamanı, 19 Gemini Uyum, 20 Veri Kalite, 21 Sinyal Geçerlilik.
+let radarTumSatirlar = [];
+
+// RADAR sekmesindeki veriyi sunucudan çeker (zaten var olan fetchSheetCSV/parseCSV ile, diğer
+// 11 sayfayla AYNI yol) ve tabloyu doldurur. loadAllData()'nın paralel yükleme listesine eklendi.
+async function loadRadarData() {
+    try {
+        const csvText = await fetchSheetCSV('RADAR');
+        const rows = parseCSV(csvText);
+        radarTumSatirlar = rows.slice(1); // başlık satırı hariç
+        renderRadarTable(radarTumSatirlar);
+        const radarLastScanEl = document.getElementById('radar-last-scan');
+        if (radarLastScanEl) {
+            radarLastScanEl.textContent = 'Son güncelleme: ' + new Date().toLocaleString('tr-TR') + ' · ' + radarTumSatirlar.length + ' ticker';
+        }
+    } catch (error) {
+        console.error('RADAR verisi yüklenemedi:', error);
+        const tbody = document.getElementById('radar-tbody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td class="radar-td" colspan="8" style="text-align:center; color:#fca5a5;">Radar verisi yüklenemedi: ' + radarEscapeHtml(error.message) + '</td></tr>';
+        }
+    }
+}
+
+// HTML özel karakterlerini kaçışlar — ticker adı veya metin alanları < > & " içerse bile tabloyu
+// bozmaz (XSS/görsel bozulma önlemi).
+function radarEscapeHtml(deger) {
+    return String(deger == null ? '' : deger)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// Radar Aşaması metnine (Code.gs'teki 4 gerçek değer: GÜÇLÜ/ONAYLI/ERKEN/RED) göre rozet rengi.
+function radarAsamaRozet(asama) {
+    const a = String(asama || '').toUpperCase();
+    if (a === 'GÜÇLÜ') return { bg: 'rgba(74,222,128,0.18)', border: 'rgba(74,222,128,0.5)', color: '#4ade80', metin: 'GÜÇLÜ' };
+    if (a === 'ONAYLI') return { bg: 'rgba(96,165,250,0.18)', border: 'rgba(96,165,250,0.5)', color: '#60a5fa', metin: 'ONAYLI' };
+    if (a === 'ERKEN') return { bg: 'rgba(234,179,8,0.18)', border: 'rgba(234,179,8,0.5)', color: '#fde047', metin: 'ERKEN' };
+    return { bg: 'rgba(248,113,113,0.18)', border: 'rgba(248,113,113,0.5)', color: '#fca5a5', metin: a || 'RED' };
+}
+
+// Yön metnine (LONG/SHORT/NÖTR) göre rozet rengi.
+function radarYonRozet(yon) {
+    const y = String(yon || '').toUpperCase();
+    if (y === 'LONG') return { bg: 'rgba(74,222,128,0.18)', border: 'rgba(74,222,128,0.5)', color: '#4ade80', metin: 'LONG' };
+    if (y === 'SHORT') return { bg: 'rgba(251,146,60,0.18)', border: 'rgba(251,146,60,0.5)', color: '#fb923c', metin: 'SHORT' };
+    return { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', color: '#cbd5e1', metin: y || 'NÖTR' };
+}
+
+// Zorunlu İşlem Kapıları Sonucu metninin BAŞINA bakar — Code.gs'teki 'İŞLEM İZNİ VAR' /
+// 'İŞLEM İZNİ YOK' / 'GÜVENİLİR SKOR ÜRETİLEMEDİ' önekleriyle AYNI mantık, burada tekrarlanıyor.
+function radarIzinRozet(kapiSonucu) {
+    const k = String(kapiSonucu || '');
+    if (k.indexOf('GÜVENİLİR SKOR ÜRETİLEMEDİ') === 0) {
+        return { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', color: '#cbd5e1', metin: 'GEÇERSİZ' };
+    }
+    if (k.indexOf('İŞLEM İZNİ VAR') === 0) {
+        return { bg: 'rgba(74,222,128,0.18)', border: 'rgba(74,222,128,0.5)', color: '#4ade80', metin: '✓ VAR' };
+    }
+    return { bg: 'rgba(248,113,113,0.18)', border: 'rgba(248,113,113,0.5)', color: '#fca5a5', metin: '✗ YOK' };
+}
+
+// Veri Kalite Durumu metninin BAŞINA bakar — Code.gs'teki zorunluKapilariDegerlendir_ içindeki
+// "'RVOL hesaplanamadı' ile başlıyorsa gerçek sorun, 'OK' ile başlıyorsa (ek not olsa bile)
+// sorun değil" mantığıyla AYNI.
+function radarVeriKaliteGoster(veriKalite) {
+    const v = String(veriKalite || '');
+    if (v.indexOf('OK') === 0) {
+        const notVarMi = v.indexOf('|') !== -1;
+        return '<span style="font-size:12px; color:#4ade80;"' + (notVarMi ? ' title="' + radarEscapeHtml(v) + '"' : '') + '>OK' + (notVarMi ? ' ⓘ' : '') + '</span>';
+    }
+    return '<span style="font-size:12px; color:#fca5a5;" title="' + radarEscapeHtml(v) + '">' + radarEscapeHtml(v) + '</span>';
+}
+
+// Bir RADAR satırını (parseCSV'den gelen ham string dizisi) tablo satırı HTML'ine çevirir.
+function radarSatirHtml(row) {
+    const ticker = row[0] || '';
+    const skor = row[3] || '';
+    const asama = row[4] || '';
+    const yon = row[5] || '';
+    const rsi = row[6] || '';
+    const choch = row[11] || '';
+    const gorecelGuc = row[15];
+    const kapiSonucu = row[16] || '';
+    const veriKalite = row[20] || '';
+
+    const asamaR = radarAsamaRozet(asama);
+    const yonR = radarYonRozet(yon);
+    const izinR = radarIzinRozet(kapiSonucu);
+    const skorSayi = parseFloat(String(skor).replace(',', '.'));
+    const skorYuzde = isFinite(skorSayi) ? Math.max(0, Math.min(100, skorSayi)) : 0;
+    const skorRenk = skorYuzde >= 75 ? '#4ade80' : (skorYuzde >= 50 ? '#60a5fa' : '#ef4444');
+    const gorecelGucMetin = (gorecelGuc === '' || gorecelGuc == null) ? '—' : radarEscapeHtml(gorecelGuc);
+    const tickerGuvenli = radarEscapeHtml(String(ticker).toUpperCase());
+
+    return '<tr class="radar-row">' +
+        '<td class="radar-td" style="font-weight:700; font-size:15px;">' + radarEscapeHtml(ticker) + '</td>' +
+        '<td class="radar-td"><div style="display:flex; align-items:center; gap:10px;">' +
+            '<span style="font-size:18px; font-weight:800;">' + radarEscapeHtml(skor || '—') + '</span>' +
+            '<div style="width:60px; height:6px; border-radius:3px; background: rgba(255,255,255,0.12); overflow:hidden;"><div style="width:' + skorYuzde + '%; height:100%; background:' + skorRenk + ';"></div></div>' +
+        '</div></td>' +
+        '<td class="radar-td"><span class="radar-badge" style="background:' + yonR.bg + '; color:' + yonR.color + '; border:1px solid ' + yonR.border + ';">' + yonR.metin + '</span></td>' +
+        '<td class="radar-td"><span class="radar-badge" style="background:' + asamaR.bg + '; color:' + asamaR.color + '; border:1px solid ' + asamaR.border + ';">' + asamaR.metin + '</span></td>' +
+        '<td class="radar-td"><span class="radar-badge" style="background:' + izinR.bg + '; color:' + izinR.color + '; border:1px solid ' + izinR.border + ';">' + izinR.metin + '</span></td>' +
+        '<td class="radar-td radar-detay">RSI: ' + radarEscapeHtml(rsi || '—') + '<br>CHoCH: ' + radarEscapeHtml(choch || '—') + '<br>Göreceli Güç: ' + gorecelGucMetin + '</td>' +
+        '<td class="radar-td">' + radarVeriKaliteGoster(veriKalite) + '</td>' +
+        '<td class="radar-td"><button class="radar-icon-btn radar-tek-tara-btn" data-ticker="' + tickerGuvenli + '" aria-label="' + tickerGuvenli + ' sembolünü tekrar tara" title="Bu sembolü tekrar tara">↻</button></td>' +
+    '</tr>';
+}
+
+// Tabloyu verilen satırlarla doldurur (hem ilk yüklemede hem arama filtresinde kullanılır).
+function renderRadarTable(rows) {
+    const tbody = document.getElementById('radar-tbody');
+    if (!tbody) return;
+    if (!rows || rows.length === 0) {
+        tbody.innerHTML = '<tr><td class="radar-td" colspan="8" style="text-align:center; color:rgba(255,255,255,0.5);">Henüz tarama verisi yok.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map(radarSatirHtml).join('');
+}
+
+// "Ticker ara" kutusu — ticker adına göre anlık filtreleme, sunucuya gitmez.
+function radarAramaFiltrele() {
+    const kutu = document.getElementById('radar-search');
+    const girilen = (kutu ? kutu.value : '').toUpperCase().trim();
+    if (!girilen) {
+        renderRadarTable(radarTumSatirlar);
+        return;
+    }
+    const filtreli = radarTumSatirlar.filter(function (row) {
+        return String(row[0] || '').toUpperCase().indexOf(girilen) !== -1;
+    });
+    renderRadarTable(filtreli);
+}
+
+// "↻ Yeniden Tara" butonu — listedeki TÜM aktif ticker'ları tarar (radarTaramaBaslat), bitince
+// tabloyu tazeler. radarTaramaCalistir()'in mimarisine/puanlamasına dokunulmuyor.
+async function radarYenidenTaraTiklandi() {
+    const btn = document.getElementById('radar-tara-btn');
+    if (!btn) return;
+    const orijinalMetin = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Taranıyor...';
+    try {
+        const timestamp = new Date().getTime();
+        const url = `${APPS_SCRIPT_URL}?action=radarTaramaBaslat&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&_=${timestamp}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const result = await response.json();
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Tarama başarısız');
+        }
+        await loadRadarData();
+    } catch (error) {
+        alert('Tarama sırasında hata oluştu: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orijinalMetin;
+    }
+}
+
+// Satırdaki ↻ ikonu — SADECE o satırdaki ticker'ı yeniden tarar (radarTekilTaramaBaslat),
+// diğer ticker'lara dokunmaz.
+async function radarTekilTaraTiklandi(ticker) {
+    try {
+        const timestamp = new Date().getTime();
+        const url = `${APPS_SCRIPT_URL}?action=radarTekilTaramaBaslat&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&ticker=${encodeURIComponent(ticker)}&_=${timestamp}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const result = await response.json();
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Tarama başarısız');
+        }
+        await loadRadarData();
+    } catch (error) {
+        alert(ticker + ' taranırken hata oluştu: ' + error.message);
+    }
+}
+
+// "+ Ekle" butonu (veya kutuda Enter) — yeni ticker'ı RADAR_TARAMA_LISTESI'ne ekler ve SADECE
+// kendisini tarar (radarTickerEkle), diğer ticker'lara dokunmaz.
+async function radarTickerEkleTiklandi() {
+    const input = document.getElementById('radar-ticker-ekle');
+    const ticker = (input ? input.value : '').trim().toUpperCase();
+    if (!ticker) {
+        alert('Lütfen bir ticker adı girin.');
+        return;
+    }
+    const btn = document.getElementById('radar-ekle-btn');
+    const orijinalMetin = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Ekleniyor...';
+    }
+    try {
+        const timestamp = new Date().getTime();
+        const url = `${APPS_SCRIPT_URL}?action=radarTickerEkle&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}&ticker=${encodeURIComponent(ticker)}&_=${timestamp}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const result = await response.json();
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Ekleme başarısız');
+        }
+        if (input) input.value = '';
+        await loadRadarData();
+    } catch (error) {
+        alert('Ticker eklenirken hata oluştu: ' + error.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = orijinalMetin;
+        }
+    }
+}
+
+// Tablo her yeniden çizildiğinde (innerHTML ile) satırdaki ↻ butonları da yeniden oluştuğu için,
+// dinleyici doğrudan onlara değil, HİÇ DEĞİŞMEYEN #radar-tbody kabına bağlanıyor (event delegation)
+// — böylece her renderRadarTable() çağrısından sonra yeniden bağlama YAPMAYA gerek kalmıyor.
+document.addEventListener('DOMContentLoaded', () => {
+    const radarTbody = document.getElementById('radar-tbody');
+    if (radarTbody) {
+        radarTbody.addEventListener('click', function (e) {
+            const btn = e.target.closest('.radar-tek-tara-btn');
+            if (btn) {
+                radarTekilTaraTiklandi(btn.getAttribute('data-ticker'));
+            }
+        });
+    }
+});
+// ==================== RADAR SEKMESİ BİTİŞ ====================
 
 // Render VIOP ŞAHSİ data
 function renderViopSahsiData() {

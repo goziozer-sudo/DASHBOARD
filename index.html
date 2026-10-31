@@ -1760,6 +1760,17 @@ select option:checked {
 .radar-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 .radar-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
+/* (31.10.2026 eklendi) Sağ üst köşede, YENİ "İşlem İzni VAR" sinyali çıktığında beliren kart
+   yığını — dashboard'un kendi rengiyle (mevcut modal'larla AYNI gradyan). Yeni kart en SONA
+   eklenir (DOM'da son = üstte boyanır), bir öncekinin üstüne -46px ile biner, böylece sadece
+   üstteki kartın başlığı görünür kalır ("kart destesi" görünümü). */
+.radar-sinyal-karti { position: relative; background: linear-gradient(135deg, rgba(30,60,114,0.97) 0%, rgba(42,82,152,0.97) 100%); backdrop-filter: blur(10px); border-radius: 14px; border: 1px solid rgba(74,222,128,0.55); box-shadow: 0 12px 32px rgba(0,0,0,0.45); padding: 12px 14px; color: #fff; }
+.radar-sinyal-karti + .radar-sinyal-karti { margin-top: -46px; }
+.radar-sinyal-baslik { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:700; }
+.radar-sinyal-govde { font-size:12px; color: rgba(255,255,255,0.85); margin-top:6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.radar-sinyal-kapat { background: rgba(255,255,255,0.12); border:none; color:#fff; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.radar-sinyal-kapat:hover { background: rgba(255,255,255,0.22); }
+
     </style>
 <!-- ⚠️ parseUSD FIX - AVRUPA FORMAT DESTEĞİ -->
 <script src="parseUSD-fix.js"></script>
@@ -2044,6 +2055,24 @@ function sifreKontrol() {
                 <!-- İçerik -->
                 <div id="vade-modal-content" style="color: white; font-size: 13px; line-height: 1.6;">
                     <!-- JavaScript ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RADAR YENİ SİNYAL KART YIĞINI (31.10.2026 eklendi) — sağ üst köşe, sabit. -->
+        <div id="radar-sinyal-yigin" style="position: fixed; top: 20px; right: 20px; z-index: 10050; width: 300px; max-width: calc(100vw - 40px);"></div>
+
+        <!-- RADAR TICKER SİL ONAY MODAL (31.10.2026 eklendi) — diğer modal'larla (KONTRAT KAPAT vb.)
+             AYNI görsel desen, native confirm() yerine kullanılıyor. -->
+        <div id="radarSilModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); pointer-events: auto;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(30, 60, 114, 0.98) 0%, rgba(42, 82, 152, 0.98) 100%); backdrop-filter: blur(12px); border-radius: 16px; padding: 24px; width: 90%; max-width: 380px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 2px #f87171;">
+                <div style="text-align: center; margin-bottom: 18px; padding: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                    <h3 style="color: #ffffff; font-size: 17px; font-weight: 600; margin: 0; display:flex; align-items:center; justify-content:center; gap:8px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">🗑 Ticker Sil</h3>
+                </div>
+                <div id="radar-sil-modal-content" style="color: white; font-size: 13px; line-height: 1.6; text-align:center;"></div>
+                <div style="margin-top: 18px; display:flex; gap:10px;">
+                    <button id="radar-sil-vazgec-btn" onclick="radarSilModalKapat(false)" style="flex:1; background: rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.25); padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Vazgeç</button>
+                    <button id="radar-sil-onayla-btn" onclick="radarSilModalKapat(true)" style="flex:1; background: #f87171; color:#1e1e1e; border:none; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">Evet, Sil</button>
                 </div>
             </div>
         </div>
@@ -4724,12 +4753,108 @@ let radarTumSatirlar = [];
 
 // RADAR sekmesindeki veriyi sunucudan çeker (zaten var olan fetchSheetCSV/parseCSV ile, diğer
 // 11 sayfayla AYNI yol) ve tabloyu doldurur. loadAllData()'nın paralel yükleme listesine eklendi.
+// Zorunlu İşlem Kapıları Sonucu metninin BAŞINA bakarak 3 kategoriden birini döner — YENİ sinyal
+// tespiti (aşağıda) bu kategoriyi önceki taramayla karşılaştırır. radarIzinRozet() İLE AYNI mantık.
+function radarIzinKategori(kapiSonucu) {
+    const k = String(kapiSonucu || '');
+    if (k.indexOf('GÜVENİLİR SKOR ÜRETİLEMEDİ') === 0) return 'GECERSIZ';
+    if (k.indexOf('İŞLEM İZNİ VAR') === 0) return 'VAR';
+    return 'YOK';
+}
+
+// Her ticker'ın SON BİLİNEN İşlem İzni kategorisini tarayıcıda (localStorage) saklar — sayfa
+// kapanıp açılsa bile "bu zaten biliniyordu" / "bu YENİ" ayrımı kaybolmasın diye. localStorage
+// kullanılamazsa (örn. gizli sekme) sessizce atlanır, sayfa normal çalışmaya devam eder, sadece
+// bildirim özelliği o oturumda çalışmaz.
+function radarOncekiIzinDurumlariniOku() {
+    try {
+        const ham = localStorage.getItem('radarOncekiIzinDurumlari');
+        return ham ? JSON.parse(ham) : {};
+    } catch (e) {
+        return {};
+    }
+}
+function radarOncekiIzinDurumlariniYaz(durumlar) {
+    try {
+        localStorage.setItem('radarOncekiIzinDurumlari', JSON.stringify(durumlar));
+    } catch (e) {
+        // localStorage yazılamıyor — sessizce geçilir, sayfa bozulmaz.
+    }
+}
+
+// Her veri yüklemesinden sonra çağrılır: bir ticker'ın İşlem İzni önceden VAR DEĞİLKEN şimdi
+// VAR olduysa (gerçekten YENİ bir sinyal), sağ üst köşede kart gösterir. Tarayıcıda bu ticker'lar
+// için HİÇ kayıt yoksa (ilk hiç çalıştırma), hiçbir kart göstermeden sessizce temel durumu kaydeder
+// — yoksa sayfa ilk açıldığında ZATEN VAR olan her ticker için yanlışlıkla "yeni sinyal" görünürdü.
+function radarYeniSinyalleriKontrolEt(rows) {
+    let hamOnceki;
+    try {
+        hamOnceki = localStorage.getItem('radarOncekiIzinDurumlari');
+    } catch (e) {
+        hamOnceki = null;
+    }
+    const ilkCalismaMi = (hamOnceki === null);
+    const onceki = radarOncekiIzinDurumlariniOku();
+    const guncel = {};
+    (rows || []).forEach(function (row) {
+        const ticker = String(row[0] || '').toUpperCase().trim();
+        if (!ticker) return;
+        const kategori = radarIzinKategori(row[16] || '');
+        guncel[ticker] = kategori;
+        if (!ilkCalismaMi && kategori === 'VAR' && onceki[ticker] !== 'VAR') {
+            radarSinyalKartiEkle(row);
+        }
+    });
+    radarOncekiIzinDurumlariniYaz(guncel);
+}
+
+// Sağ üst köşedeki yığına bir sinyal kartı ekler — "kart destesi" görünümü (CSS: .radar-sinyal-karti
+// + .radar-sinyal-karti { margin-top: -46px }) ve en fazla 4 kart (fazlası birikmesin), 10 saniye
+// sonra kendiliğinden kaybolur, ✕ ile de hemen kapatılabilir.
+function radarSinyalKartiEkle(row) {
+    const yigin = document.getElementById('radar-sinyal-yigin');
+    if (!yigin) return;
+    const ticker = row[0] || '';
+    const skor = row[3] || '';
+    const asama = row[4] || '';
+    const yon = row[5] || '';
+    const yonR = radarYonRozet(yon);
+
+    const kart = document.createElement('div');
+    kart.className = 'radar-sinyal-karti';
+    kart.innerHTML =
+        '<div class="radar-sinyal-baslik">' +
+            '<span>🚀 ' + radarEscapeHtml(ticker) + '</span>' +
+            '<button class="radar-sinyal-kapat" aria-label="Kapat">✕</button>' +
+        '</div>' +
+        '<div class="radar-sinyal-govde">' +
+            '<span class="radar-badge" style="background:' + yonR.bg + '; color:' + yonR.color + '; border:1px solid ' + yonR.border + ';">' + yonR.metin + '</span>' +
+            '<span>sinyali onaylandı — ' + radarEscapeHtml(skor) + ' puan, ' + radarEscapeHtml(asama) + '</span>' +
+        '</div>';
+
+    const kapatBtn = kart.querySelector('.radar-sinyal-kapat');
+    if (kapatBtn) {
+        kapatBtn.addEventListener('click', function () {
+            if (kart.parentNode) kart.remove();
+        });
+    }
+
+    yigin.appendChild(kart);
+    while (yigin.children.length > 4) {
+        yigin.removeChild(yigin.firstChild);
+    }
+    setTimeout(function () {
+        if (kart.parentNode) kart.remove();
+    }, 10000);
+}
+
 async function loadRadarData() {
     try {
         const csvText = await fetchSheetCSV('RADAR');
         const rows = parseCSV(csvText);
         radarTumSatirlar = rows.slice(1); // başlık satırı hariç
         renderRadarTable(radarTumSatirlar);
+        radarYeniSinyalleriKontrolEt(radarTumSatirlar);
         const radarLastScanEl = document.getElementById('radar-last-scan');
         if (radarLastScanEl) {
             radarLastScanEl.textContent = 'Son güncelleme: ' + new Date().toLocaleString('tr-TR') + ' · ' + radarTumSatirlar.length + ' ticker';
@@ -4932,10 +5057,32 @@ function radarSatiriParlat(ticker) {
     });
 }
 
-// Satırdaki 🗑 ikonu — kullanıcıya SORAR, onaylarsa ticker'ı RADAR_TARAMA_LISTESI'nden VE
-// RADAR'daki güncel satırdan siler (radarTickerSil). RADAR_ARSIV'deki geçmiş veri ASLA silinmez.
+// Native confirm() PENCERESİ YERİNE — dashboard'un kendi görsel diliyle (diğer modal'lar gibi)
+// bir onay kartı açar, Promise ile sonucu (true/false) döner (31.10.2026 eklendi).
+let radarSilModalCozucu = null;
+function radarSilModalAc(mesaj) {
+    return new Promise(function (resolve) {
+        radarSilModalCozucu = resolve;
+        const icerik = document.getElementById('radar-sil-modal-content');
+        const modal = document.getElementById('radarSilModal');
+        if (icerik) icerik.textContent = mesaj;
+        if (modal) modal.style.display = 'block';
+    });
+}
+function radarSilModalKapat(sonuc) {
+    const modal = document.getElementById('radarSilModal');
+    if (modal) modal.style.display = 'none';
+    if (radarSilModalCozucu) {
+        radarSilModalCozucu(sonuc);
+        radarSilModalCozucu = null;
+    }
+}
+
+// Satırdaki 🗑 ikonu — kullanıcıya SORAR (kendi modal kartımızla, native confirm() DEĞİL),
+// onaylarsa ticker'ı RADAR_TARAMA_LISTESI'nden VE RADAR'daki güncel satırdan siler
+// (radarTickerSil). RADAR_ARSIV'deki geçmiş veri ASLA silinmez.
 async function radarTickerSilTiklandi(ticker, btnEl) {
-    const onay = confirm(ticker + ' silinsin mi?\n\nBir daha taranmaz ve tablodan kaldırılır. (Geçmiş arşiv verisi silinmez, sadece aktif listeden çıkar.)');
+    const onay = await radarSilModalAc(ticker + ' silinsin mi? Bir daha taranmaz ve tablodan kaldırılır. (Geçmiş arşiv verisi silinmez, sadece aktif listeden çıkar.)');
     if (!onay) return;
     if (btnEl) btnEl.disabled = true;
     try {

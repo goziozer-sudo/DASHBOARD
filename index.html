@@ -12262,7 +12262,7 @@ async function gunlukXauXagKartlariniAc() {
     }
 }
 
-setTimeout(function() { gunlukXauXagKartlariniAc(); }, 2500);
+let gunlukKontrolBulunanGun = null; let gunlukKontrolCalisiyor = false; function gunlukKontrolBugun_() { return new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }); } function gunlukKontrolSabahPenceresinde_() { const saat = new Date().toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hour12: false }); return saat >= '07:55' && saat <= '09:30'; } async function gunlukKontrolCalistir_() { if (gunlukKontrolCalisiyor) return; if (gunlukKontrolBulunanGun === gunlukKontrolBugun_()) return; gunlukKontrolCalisiyor = true; try { await gunlukXauXagKartlariniAc(); if (gunlukHazirAnalizler.length > 0) gunlukKontrolBulunanGun = gunlukKontrolBugun_(); } finally { gunlukKontrolCalisiyor = false; } } setTimeout(gunlukKontrolCalistir_, 2500); setInterval(function () { if (!gunlukKontrolSabahPenceresinde_()) return; gunlukKontrolCalistir_(); }, 5 * 60 * 1000);
 
 // ==================== TEKNİK ANALİZ (GEMİNİ) BİTİŞ ====================
 

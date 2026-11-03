@@ -12205,7 +12205,7 @@ function teknikAnalizButonTiklandi() {
     if (yanipSoniyor && gunlukHazirAnalizler.length > 0) {
         // Yanıp sönerken tıklandı: hazır günlük analiz kart(lar)ını doğrudan aç, yanıp sönmeyi durdur.
         teknikAnalizButonuYanipSondurDurdur();
-        gunlukHazirAnalizler.forEach(function (kayit) { gecmisKayitKartAc(kayit); });
+        gunlukAnalizGorulduKaydet_(gunlukHazirAnalizler); gunlukHazirAnalizler.forEach(function (kayit) { gecmisKayitKartAc(kayit); });
         gunlukHazirAnalizler = [];
     } else {
         // Normal durum: standart ticker girişi + Geçmiş Analizler paneli.
@@ -12213,7 +12213,7 @@ function teknikAnalizButonTiklandi() {
     }
 }
 
-async function gunlukXauXagKartlariniAc() {
+function gunlukAnalizAnahtar_(k) { return String(k.ticker || '').toUpperCase() + '|' + String(k.zaman || ''); } function gunlukAnalizGorulenler_() { const bugun = new Date().toLocaleDateString('tr-TR'); try { const o = JSON.parse(localStorage.getItem('gunlukAnalizGoruldu') || 'null'); if (o && o.gun === bugun && Array.isArray(o.liste)) return o; } catch (e) {} return { gun: bugun, liste: [] }; } function gunlukAnalizGoruldu_(k) { return gunlukAnalizGorulenler_().liste.indexOf(gunlukAnalizAnahtar_(k)) !== -1; } function gunlukAnalizGorulduKaydet_(kayitlar) { try { const o = gunlukAnalizGorulenler_(); kayitlar.forEach(function (k) { const a = gunlukAnalizAnahtar_(k); if (o.liste.indexOf(a) === -1) o.liste.push(a); }); localStorage.setItem('gunlukAnalizGoruldu', JSON.stringify(o)); } catch (e) {} } async function gunlukXauXagKartlariniAc() {
     try {
         // Günlük otomatik analizde hangi ticker'ların beklendiğini backend'den al (sabit XAU/XAG +
         // açık pozisyonlar + EXTRA, HARIC hariç). Erişilemezse güvenli varsayılana (sadece XAU/XAG) düş.
@@ -12248,9 +12248,9 @@ async function gunlukXauXagKartlariniAc() {
         kontrolEdilecekTickerlar.forEach(function (ticker) {
             const ust = String(ticker || '').toUpperCase();
             const kayit = kayitlar.find(function (k) {
-                return (k.ticker || '').toUpperCase() === ust && (k.zaman || '').indexOf(bugun) === 0;
+                return (k.ticker || '').toUpperCase() === ust && (k.zaman || '').indexOf(bugun) === 0 && String(k.kaynak || '').toUpperCase() === 'AUTO';
             });
-            if (kayit) hazirKayitlar.push(kayit);
+            if (kayit && !gunlukAnalizGoruldu_(kayit)) hazirKayitlar.push(kayit);
         });
 
         if (hazirKayitlar.length > 0) {

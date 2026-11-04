@@ -11343,14 +11343,6 @@ function kvBaslat_() {
 }
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', kvBaslat_); } else { kvBaslat_(); }
 
-2) Aynı dosyada (Ctrl+F) ŞU SATIRI BUL (tek satır, yaklaşık 11.400. satır civarı):
-
-        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' +
-
-   O satırın TAMAMINI şununla DEĞİŞTİR:
-
-        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' + kvIkonYeri_(ticker, baslikMetni, tarihMetniOverride) +
-
         
 function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     var etiket = result.pozisyonBazliKararEtiketi; // ör. "LONG'U KAPAT + SHORT AÇ", "AL", "BEKLE"

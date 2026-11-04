@@ -12243,7 +12243,7 @@ function gunlukAnalizAnahtar_(k) { return String(k.ticker || '').toUpperCase() +
         const kayitlar = result.kayitlar || [];
         if (kayitlar.length === 0) return;
 
-        const bugun = new Date().toLocaleDateString('tr-TR'); // "dd.MM.yyyy" — kayit.zaman'daki tarih kısmıyla aynı format
+        const _d = new Date(); const bugun = String(_d.getDate()).padStart(2, '0') + '.' + String(_d.getMonth() + 1).padStart(2, '0') + '.' + _d.getFullYear();
         const hazirKayitlar = [];
         kontrolEdilecekTickerlar.forEach(function (ticker) {
             const ust = String(ticker || '').toUpperCase();

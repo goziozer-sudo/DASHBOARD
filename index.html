@@ -11782,7 +11782,7 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // kolayca eklenebilir.
     var topRowHtml = '<div style="display:flex; align-items:center;">' +
         (rozetHtml ? '<span style="margin-right:8px;">' + rozetHtml + '</span>' : '') +
-        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' +
+        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' + kvIkonYeri_(ticker, baslikMetni, tarihMetniOverride) +
     '</div>';
     return '<div style="margin-bottom:10px; background:' + renk.arkaplan + '; border:1.5px solid ' + renk.kenar + '; border-radius:12px; padding:14px 16px;">' +
         topRowHtml +

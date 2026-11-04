@@ -11180,6 +11180,179 @@ function teknikSkorBolumuOlustur(teknikSkor) {
 // verilmez, fonksiyon eskisi gibi BUGÜNÜN tarihini gösterir (davranış DEĞİŞMEDİ). Geçmiş
 // Analizler listesinden açılan bir kayıt için verilir (o analizin KENDİ tarihi) — aksi halde
 // eski bir kayıt bugünün tarihiyle gösterilip kullanıcıyı "bu güncel mi?" diye yanıltabilirdi.
+var kvPopEl = null;
+var kvPopKapatZ = null;
+var kvPopAcikIkon = null;
+var kvPopAcZaman = 0;
+var kvRenk = {
+    kirmizi: { dolgu: '#ef4444', gol: 'rgba(239,68,68,0.9)', bg: '#3b0d0d', ttl: '#fecaca', isaret: '#ffffff' },
+    sari: { dolgu: '#eab308', gol: 'rgba(234,179,8,0.9)', bg: '#3a2f05', ttl: '#fde68a', isaret: '#1a1a1a' },
+    yesil: { dolgu: '#22c55e', gol: 'rgba(34,197,94,0.9)', bg: '#052e16', ttl: '#bbf7d0', isaret: '#ffffff' }
+};
+function kvEsc_(s) {
+    return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function kvYon_(m) {
+    m = String(m || '').toUpperCase();
+    if (m.indexOf('SHORT AÇ') !== -1) return 'SHORT';
+    if (m.indexOf('KAPAT') !== -1) return '';
+    if (m.indexOf('SHORT') !== -1 || m === 'SAT') return 'SHORT';
+    if (m.indexOf('LONG') !== -1 || m.indexOf('AL') === 0) return 'LONG';
+    return '';
+}
+function kvIkonYeri_(ticker, baslik, ref) {
+    var y = kvYon_(baslik);
+    if (!y || !ticker) return '';
+    return '<span class="kv-ikon-yer" data-ticker="' + kvEsc_(ticker) + '" data-yon="' + y + '" data-ref="' + kvEsc_(ref || '') + '" style="display:inline-flex; align-items:center; margin-left:8px;"></span>';
+}
+function kvStilEkle_() {
+    if (document.getElementById('kv-stil')) return;
+    var s = document.createElement('style');
+    s.id = 'kv-stil';
+    s.textContent = '@keyframes kvYanip { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } } ' +
+        '.kv-ikon { display:inline-flex; align-items:center; justify-content:center; width:26px; height:24px; cursor:pointer; user-select:none; } ' +
+        '.kv-ikon svg { width:24px; height:22px; animation: kvYanip 1s ease-in-out infinite; } ' +
+        '.kv-ikon.dur svg { animation-play-state: paused; } ' +
+        '.kv-pop { position:fixed; z-index:2147483000; display:none; width:290px; max-width:calc(100vw - 16px); border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.45; color:#fff; box-shadow:0 10px 25px rgba(0,0,0,0.5); text-align:left; } ' +
+        '.kv-pop .t { font-weight:800; font-size:13px; margin-bottom:4px; } ' +
+        '.kv-pop .tfs { margin-top:6px; display:grid; grid-template-columns:auto 1fr; gap:2px 8px; } ' +
+        '.kv-pop .tfs span:nth-child(odd) { color:#cbd5e1; } ' +
+        '.kv-pop .ft { margin-top:6px; color:#cbd5e1; font-size:11px; }';
+    document.head.appendChild(s);
+}
+function kvSinyalMetni_(o) {
+    var ik = o.sinyal === 'AL' ? (o.seviye === 'teyitli' ? '🟢' : '🟡') : (o.seviye === 'teyitli' ? '🔴' : '🟠');
+    return ik + ' ' + kvEsc_(o.sinyal) + ' ' + kvEsc_(o.seviye) + ' ' + kvEsc_(o.zaman);
+}
+function kvSure_(ms) {
+    if (!ms) return 'henüz yok';
+    var dk = Math.max(0, Math.round((Date.now() - ms) / 60000));
+    if (dk < 60) return dk + ' dk önce';
+    var sa = Math.round(dk / 60);
+    if (sa < 48) return sa + ' sa önce';
+    return Math.round(sa / 24) + ' gün önce';
+}
+function kvPopKapat_() {
+    clearTimeout(kvPopKapatZ);
+    if (kvPopEl) kvPopEl.style.display = 'none';
+    if (kvPopAcikIkon) kvPopAcikIkon.classList.remove('dur');
+    kvPopAcikIkon = null;
+}
+function kvPopKapatPlanla_() {
+    clearTimeout(kvPopKapatZ);
+    kvPopKapatZ = setTimeout(kvPopKapat_, 250);
+}
+function kvPopAc_(ikon) {
+    if (!kvPopEl) {
+        kvPopEl = document.createElement('div');
+        kvPopEl.className = 'kv-pop';
+        document.body.appendChild(kvPopEl);
+        kvPopEl.addEventListener('mouseenter', function () { clearTimeout(kvPopKapatZ); });
+        kvPopEl.addEventListener('mouseleave', kvPopKapatPlanla_);
+        kvPopEl.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
+    clearTimeout(kvPopKapatZ);
+    if (kvPopAcikIkon && kvPopAcikIkon !== ikon) kvPopAcikIkon.classList.remove('dur');
+    var r = kvRenk[ikon.getAttribute('data-tip')] || kvRenk.sari;
+    kvPopEl.innerHTML = ikon.kvHtml || '';
+    kvPopEl.style.background = r.bg;
+    kvPopEl.style.border = '2px solid ' + r.dolgu;
+    kvPopEl.style.display = 'block';
+    var b = ikon.getBoundingClientRect();
+    var w = kvPopEl.offsetWidth;
+    var h = kvPopEl.offsetHeight;
+    var sol = Math.max(8, Math.min(b.left + b.width / 2 - w / 2, window.innerWidth - w - 8));
+    var ust = b.bottom + 6;
+    if (ust + h > window.innerHeight - 8) ust = Math.max(8, b.top - h - 6);
+    kvPopEl.style.left = sol + 'px';
+    kvPopEl.style.top = ust + 'px';
+    ikon.classList.add('dur');
+    kvPopAcikIkon = ikon;
+    kvPopAcZaman = Date.now();
+}
+async function kvIkonDoldur_(el) {
+    el.setAttribute('data-dolu', '1');
+    var yon = el.getAttribute('data-yon');
+    var url = APPS_SCRIPT_URL + '?action=tvSonSinyaller&ticker=' + encodeURIComponent(el.getAttribute('data-ticker') || '') + '&ref=' + encodeURIComponent(el.getAttribute('data-ref') || '') + '&_=' + Date.now();
+    try {
+        var resp = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        if (!resp.ok) return;
+        var js = await resp.json();
+        if (js.status !== 'success' || !js.data) return;
+        var ol = js.data.olaylar || [];
+        if (!ol.length) return;
+        var ters = (yon === 'SHORT') ? 'AL' : 'SAT';
+        var tersTeyit = ol.filter(function (o) { return o.sinyal === ters && o.seviye === 'teyitli' && (o.tf === '4H' || o.tf === '8H'); });
+        var tersHepsi = ol.filter(function (o) { return o.sinyal === ters; });
+        var ayni = ol.filter(function (o) { return o.sinyal !== ters; });
+        var ayniTeyit = ayni.filter(function (o) { return o.seviye === 'teyitli'; });
+        var tip, baslik, aciklama, ana;
+        if (tersTeyit.length) {
+            tip = 'kirmizi'; ana = tersTeyit[tersTeyit.length - 1];
+            baslik = '⚠️ Çoklu zaman dilimi çelişkisi';
+            aciklama = 'Karar ' + yon + ' yönünde, ama ' + ana.tf + ' tarafında ters yönde teyitli sinyal var:';
+        } else if (tersHepsi.length) {
+            tip = 'sari'; ana = tersHepsi[tersHepsi.length - 1];
+            baslik = 'ℹ️ Kısa vadeli ters sinyal';
+            aciklama = 'Karar ' + yon + ' yönünde; kısa vadede ters yönde sinyal var (4H/8H teyidi yok):';
+        } else if (ayni.length) {
+            tip = 'yesil'; ana = ayniTeyit.length ? ayniTeyit[ayniTeyit.length - 1] : ayni[ayni.length - 1];
+            baslik = '✅ Kısa vade kararla aynı yönde';
+            aciklama = 'Karar ' + yon + ' yönünde; kısa vadeli sinyaller de aynı yönde:';
+        } else {
+            return;
+        }
+        var r = kvRenk[tip];
+        var tfSatir = ['1H', '4H', '8H'].map(function (tf) {
+            var x = ol.filter(function (o) { return o.tf === tf; });
+            return '<span>' + tf + '</span><span>' + (x.length ? kvSinyalMetni_(x[x.length - 1]) : '—') + '</span>';
+        }).join('');
+        var neden = String(ana.neden || '').replace(/;\s*$/, '');
+        var html = '<div class="t" style="color:' + r.ttl + ';">' + baslik + '</div>' + kvEsc_(aciklama) + '<br>' +
+            '<b>' + kvEsc_(ana.tf) + ' ' + kvEsc_(ana.sinyal) + ' ' + kvEsc_(ana.seviye) + ' — ' + kvEsc_(ana.zaman) + '</b>' +
+            (neden ? ' (' + kvEsc_(neden) + ')' : '') +
+            '<div class="tfs">' + tfSatir + '</div>' +
+            '<div class="ft">TradingView · son 24 saat · son sinyal ' + kvSure_(js.data.sonAlindiMs) + '</div>';
+        el.innerHTML = '<span class="kv-ikon" data-tip="' + tip + '"><svg viewBox="0 0 24 22" style="filter:drop-shadow(0 0 5px ' + r.gol + ');"><path d="M12 1 L23 21 L1 21 Z" fill="' + r.dolgu + '"/><rect x="11" y="7" width="2" height="8" fill="' + r.isaret + '"/><rect x="11" y="16.5" width="2" height="2" fill="' + r.isaret + '"/></svg></span>';
+        var ikon = el.firstChild;
+        ikon.kvHtml = html;
+        ikon.addEventListener('mouseenter', function () { kvPopAc_(ikon); });
+        ikon.addEventListener('mouseleave', kvPopKapatPlanla_);
+        ikon.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (kvPopAcikIkon === ikon && Date.now() - kvPopAcZaman > 400) { kvPopKapat_(); } else { kvPopAc_(ikon); }
+        });
+    } catch (err) {
+        console.log('Kısa vade ikonu yüklenemedi:', err);
+    }
+}
+function kvTara_() {
+    kvStilEkle_();
+    document.querySelectorAll('.kv-ikon-yer:not([data-dolu])').forEach(function (el) { kvIkonDoldur_(el); });
+}
+function kvBaslat_() {
+    var kvTaraZ = null;
+    var gozlemci = new MutationObserver(function () {
+        clearTimeout(kvTaraZ);
+        kvTaraZ = setTimeout(kvTara_, 150);
+    });
+    gozlemci.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('click', kvPopKapat_);
+    window.addEventListener('scroll', kvPopKapat_, true);
+    kvTara_();
+}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', kvBaslat_); } else { kvBaslat_(); }
+
+-------------------------------------------------------------------------------------
+2) Aynı dosyada (Ctrl+F) ŞU SATIRI BUL (tek satır, yaklaşık 11.400. satır civarı):
+
+        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' +
+
+   O satırın TAMAMINI şununla DEĞİŞTİR:
+
+        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' + kvIkonYeri_(ticker, baslikMetni, tarihMetniOverride) +
+
+        
 function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     var etiket = result.pozisyonBazliKararEtiketi; // ör. "LONG'U KAPAT + SHORT AÇ", "AL", "BEKLE"
     var piyasaSinyali = result.piyasaSinyali;       // ör. 'SAT' — pozisyondan bağımsız HAM karar (GENEL ÖZET'ten)

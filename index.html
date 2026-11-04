@@ -11459,7 +11459,77 @@ async function ruKontrol_() {
 }
 setTimeout(ruKontrol_, 4000);
 setInterval(ruKontrol_, 5 * 60 * 1000);
-       
+ var ruGosterilen = {};
+function ruEsc_(s) {
+    return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function ruAnahtar_(r) {
+    return 'ruGoruldu_' + r.anahtar + '|K' + r.kademe;
+}
+function ruGoruldu_(k) {
+    try { return localStorage.getItem(k) === '1'; } catch (e) { return false; }
+}
+function ruGorulduYap_(k) {
+    try { localStorage.setItem(k, '1'); } catch (e) {}
+}
+function ruFiyat_(x) {
+    var n = Number(String(x === undefined || x === null ? '' : x).replace(',', '.'));
+    return isNaN(n) ? ruEsc_(x) : n.toFixed(2).replace('.', ',');
+}
+function ruStilEkle_() {
+    if (document.getElementById('ru-stil')) return;
+    var s = document.createElement('style');
+    s.id = 'ru-stil';
+    s.textContent = '@keyframes ruYanip { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } } ' +
+        '#ru-uyari { position:relative; text-align:center; background:rgba(127,29,29,0.85); border:1px solid #ef4444; border-radius:10px; padding:6px 30px; line-height:1.35; flex-shrink:0; } ' +
+        '#ru-uyari .ru-ik { position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:16px; animation: ruYanip 1s ease-in-out infinite; } ' +
+        '#ru-uyari .ru-x { position:absolute; right:7px; top:4px; cursor:pointer; font-size:12px; opacity:0.8; color:#fff; } ' +
+        '#ru-uyari .ru-l1 { font-size:12px; color:#fecaca; } ' +
+        '#ru-uyari .ru-l2 { font-size:14px; font-weight:800; color:#fff; } ' +
+        '#ru-uyari .ru-l3 { font-size:11.5px; color:#fde68a; }';
+    document.head.appendChild(s);
+}
+function ruKapat_() {
+    var u = document.getElementById('ru-uyari');
+    if (u) {
+        (u.ruAnahtarlar || []).forEach(function (k) { ruGorulduYap_(k); });
+        u.remove();
+    }
+}
+function ruGoster_(liste) {
+    ruStilEkle_();
+    var eski = document.getElementById('ru-uyari');
+    if (eski) eski.remove();
+    var r = liste[liste.length - 1];
+    var yonMetni = String(r.yon).indexOf('YUKARI') !== -1 ? 'Yukarı Dönüş Riski' : 'Aşağı Dönüş Riski';
+    var ek = liste.length > 1 ? ' (+' + (liste.length - 1) + ')' : '';
+    var u = document.createElement('div');
+    u.id = 'ru-uyari';
+    u.innerHTML = '<span class="ru-ik">⚠️</span><span class="ru-x" title="Gördüm" onclick="ruKapat_()">✕</span>' +
+        '<div class="ru-l1">' + ruEsc_(r.ticker) + ' · Fiyat ' + ruFiyat_(r.tespitFiyati) + ek + '</div>' +
+        '<div class="ru-l2">' + yonMetni + '</div>' +
+        '<div class="ru-l3">Pozisyonlarını kontrol et</div>';
+    u.ruAnahtarlar = liste.map(ruAnahtar_);
+    var yer = document.getElementById('lastUpdate');
+    if (yer && yer.parentNode) { yer.insertAdjacentElement('afterend', u); } else { document.body.insertBefore(u, document.body.firstChild); }
+}
+async function ruKontrol_() {
+    try {
+        var url = APPS_SCRIPT_URL + '?action=erkenUyariRiskleri&_=' + Date.now();
+        var resp = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        if (!resp.ok) return;
+        var js = await resp.json();
+        if (js.status !== 'success' || !Array.isArray(js.data)) return;
+        var gorulmemis = js.data.filter(function (r) { return !ruGoruldu_(ruAnahtar_(r)); });
+        if (!gorulmemis.length) return;
+        ruGoster_(gorulmemis);
+    } catch (e) {
+        console.log('Pozisyon riski kontrolü yapılamadı:', e);
+    }
+}
+setTimeout(ruKontrol_, 4000);
+setInterval(ruKontrol_, 5 * 60 * 1000);
+      
 function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     var etiket = result.pozisyonBazliKararEtiketi; // ör. "LONG'U KAPAT + SHORT AÇ", "AL", "BEKLE"
     var piyasaSinyali = result.piyasaSinyali;       // ör. 'SAT' — pozisyondan bağımsız HAM karar (GENEL ÖZET'ten)

@@ -13507,7 +13507,7 @@ document.addEventListener('click', function (e) {
     panel.style.display = 'none';
 });
 
-function updateNewsTicker() {
+function updateNewsTicker() { var tsImza = globalNewsData.map(function (n) { return n.title; }).join('|') + '|' + tickerHizPxSaniyeGetir(); var tsEl = document.getElementById('news-ticker'); if (tsEl && tsEl.innerHTML && window.tickerSonImza === tsImza) { return; } window.tickerSonImza = tsImza;
     const ticker = document.getElementById('news-ticker');
     const container = document.getElementById('news-ticker-container');
 

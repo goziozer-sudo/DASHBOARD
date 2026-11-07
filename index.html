@@ -8296,7 +8296,7 @@ function portfoyDegisimHTML(baslik, onceDeger, bugunDeger, cekim) {
     const toplamPct = (bugunDeger - onceDeger) / onceDeger * 100;
     const nakitPct = -cekim / onceDeger * 100;
     const islemPct = toplamPct - nakitPct;
-    const altSatir = 'text-align:left;width:100%;display:grid;grid-template-columns:130px 58px auto;column-gap:6px;align-items:baseline;font-size:12.5px;color:#cbd5e1;padding-top:3px;font-variant-numeric:tabular-nums;';
+    const altSatir = 'text-align:left;width:100%;display:grid;grid-template-columns:130px 58px auto;column-gap:6px;align-items:baseline;font-size:10px;color:#cbd5e1;padding-top:3px;font-variant-numeric:tabular-nums;';
     const deger = (v, r) => `<span style="display:grid;grid-template-columns:auto 1fr;color:${r};font-weight:600;"><span>${isaret(v)}</span><span style="text-align:right;">${sayi(v)}</span></span>`;
     let html = `
         <div style="text-align:left;width:100%;display:grid;grid-template-columns:1fr auto;align-items:baseline;font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.12);font-variant-numeric:tabular-nums;">
@@ -8305,7 +8305,7 @@ function portfoyDegisimHTML(baslik, onceDeger, bugunDeger, cekim) {
     if (cekim > 0) {
         html += `
         <div style="${altSatir}"><span>İşlem Karı</span>${deger(islemPct, renk(islemPct))}</div>
-        <div style="${altSatir}"><span>Nakit Çıkış</span>${deger(nakitPct, '#fbbf24')}<span style="font-size:11.5px;">(${Math.round(cekim).toLocaleString('tr-TR')} TL)</span></div>`;
+        <div style="${altSatir}"><span>Nakit Çıkış</span>${deger(nakitPct, '#fbbf24')}<span style="font-size:9px;">(${Math.round(cekim).toLocaleString('tr-TR')} TL)</span></div>`;
     }
     return html;
 }

@@ -8296,10 +8296,10 @@ function portfoyDegisimHTML(baslik, onceDeger, bugunDeger, cekim) {
     const toplamPct = (bugunDeger - onceDeger) / onceDeger * 100;
     const nakitPct = -cekim / onceDeger * 100;
     const islemPct = toplamPct - nakitPct;
-    const altSatir = 'display:grid;grid-template-columns:130px 58px auto;column-gap:6px;align-items:baseline;font-size:12.5px;color:#cbd5e1;padding-top:3px;font-variant-numeric:tabular-nums;';
+    const altSatir = 'text-align:left;width:100%;display:grid;grid-template-columns:130px 58px auto;column-gap:6px;align-items:baseline;font-size:12.5px;color:#cbd5e1;padding-top:3px;font-variant-numeric:tabular-nums;';
     const deger = (v, r) => `<span style="display:grid;grid-template-columns:auto 1fr;color:${r};font-weight:600;"><span>${isaret(v)}</span><span style="text-align:right;">${sayi(v)}</span></span>`;
     let html = `
-        <div style="display:grid;grid-template-columns:1fr auto;align-items:baseline;font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.12);font-variant-numeric:tabular-nums;">
+        <div style="text-align:left;width:100%;display:grid;grid-template-columns:1fr auto;align-items:baseline;font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.12);font-variant-numeric:tabular-nums;">
             <span>${baslik}</span><span style="font-size:17px;color:${renk(toplamPct)};">${isaret(toplamPct)}${sayi(toplamPct)}</span>
         </div>`;
     if (cekim > 0) {

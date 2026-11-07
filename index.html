@@ -8288,24 +8288,24 @@ function nakitCikisToplami(oncekiTarihStr, bugunTarihStr) {
 }
 
 function portfoyDegisimHTML(baslik, onceDeger, bugunDeger, cekim) {
-    const yuzde = v => (v >= 0 ? '+' : '-') + '%' + Math.abs(v).toFixed(2);
+    // 07.11.2026 hizalama: Değişim % satır sonunda (17px); İşlem/Nakit rakamları sabit sütunda,
+    // "+%/-%" işareti ayrı yerde, rakam sağa yaslı → birler basamağı alt alta. Ondalık virgül.
+    const isaret = v => (v >= 0 ? '+' : '-') + '%';
+    const sayi = v => Math.abs(v).toFixed(2).replace('.', ',');
     const renk = v => v >= 0 ? '#4ade80' : '#f87171';
     const toplamPct = (bugunDeger - onceDeger) / onceDeger * 100;
     const nakitPct = -cekim / onceDeger * 100;
     const islemPct = toplamPct - nakitPct;
-    const satir = 'display:grid;grid-template-columns:120px auto;align-items:baseline;';
+    const altSatir = 'display:grid;grid-template-columns:130px 58px auto;column-gap:6px;align-items:baseline;font-size:12.5px;color:#cbd5e1;padding-top:3px;font-variant-numeric:tabular-nums;';
+    const deger = (v, r) => `<span style="display:grid;grid-template-columns:auto 1fr;color:${r};font-weight:600;"><span>${isaret(v)}</span><span style="text-align:right;">${sayi(v)}</span></span>`;
     let html = `
-        <div style="${satir}font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.12);">
-            <span>${baslik}</span><span style="font-size:15px;color:${renk(toplamPct)};">${yuzde(toplamPct)}</span>
+        <div style="display:grid;grid-template-columns:1fr auto;align-items:baseline;font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.12);font-variant-numeric:tabular-nums;">
+            <span>${baslik}</span><span style="font-size:17px;color:${renk(toplamPct)};">${isaret(toplamPct)}${sayi(toplamPct)}</span>
         </div>`;
     if (cekim > 0) {
         html += `
-        <div style="${satir}font-size:12.5px;color:#cbd5e1;padding:3px 0 0 8px;">
-            <span>İşlem Karı</span><span style="color:${renk(islemPct)};font-weight:600;">${yuzde(islemPct)}</span>
-        </div>
-        <div style="${satir}font-size:12.5px;color:#cbd5e1;padding:2px 0 0 8px;">
-            <span>Nakit Çıkış</span><span style="color:#fbbf24;font-weight:600;">${yuzde(nakitPct)} <span style="font-size:11.5px;color:#cbd5e1;font-weight:400;">(${Math.round(cekim).toLocaleString('tr-TR')} TL)</span></span>
-        </div>`;
+        <div style="${altSatir}"><span>İşlem Karı</span>${deger(islemPct, renk(islemPct))}</div>
+        <div style="${altSatir}"><span>Nakit Çıkış</span>${deger(nakitPct, '#fbbf24')}<span style="font-size:11.5px;">(${Math.round(cekim).toLocaleString('tr-TR')} TL)</span></div>`;
     }
     return html;
 }

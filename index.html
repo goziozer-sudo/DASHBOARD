@@ -1953,6 +1953,10 @@ function sifreKontrol() {
                     <button onclick="addNewGFsRow()" style="position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s; z-index: 10;" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.3)'" title="Yeni GFs Satırı Ekle">
                         <i class="fas fa-plus"></i>
                     </button>
+                    <!-- Nakit Çekim Butonu (07.11.2026) -->
+                    <button onclick="openNakitCekimModal()" style="position: absolute; top: 8px; right: 48px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); z-index: 10;" title="Nakit Çekim Ekle">₺−</button>
+
+
                     
                     <div class="card-icon"><i class="fas fa-chart-line"></i></div>
                     <div class="card-content">
@@ -3712,6 +3716,30 @@ function sifreKontrol() {
         </div>
     </div>
 
+    <!-- NAKİT ÇEKİM Modal (07.11.2026) -->
+    <div id="nakit-cekim-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 24px; max-width: 420px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <h2 style="color: #fff; margin: 0 0 16px 0; font-size: 18px; text-align: center;">₺− NAKİT ÇEKİM</h2>
+            <label style="color:#cbd5e1;font-size:13px;display:block;margin-bottom:4px;">Hesap</label>
+            <select id="nc-hesap" onchange="nakitCekimOnizle()" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:#1e3a8a;color:#fff;font-size:15px;margin-bottom:10px;">
+                <option value="ŞİRKET">ŞİRKET</option>
+                <option value="ŞAHSİ">ŞAHSİ</option>
+            </select>
+            <label style="color:#cbd5e1;font-size:13px;display:block;margin-bottom:4px;">Tutar (TL)</label>
+            <input type="text" id="nc-tutar" placeholder="Örn: 150.000" oninput="nakitCekimOnizle()" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:15px;box-sizing:border-box;margin-bottom:10px;">
+            <label style="color:#cbd5e1;font-size:13px;display:block;margin-bottom:4px;">Tarih</label>
+            <input type="date" id="nc-tarih" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:15px;box-sizing:border-box;margin-bottom:10px;">
+            <label style="color:#cbd5e1;font-size:13px;display:block;margin-bottom:4px;">Not (isteğe bağlı)</label>
+            <input type="text" id="nc-not" placeholder="ör. ortak payı" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:15px;box-sizing:border-box;margin-bottom:10px;">
+            <div id="nc-onizleme" style="color:#fbbf24;font-size:13px;min-height:18px;margin-bottom:14px;"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button onclick="closeNakitCekimModal()" style="padding:10px 20px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-size:14px;">İptal</button>
+                <button id="nc-kaydet-btn" onclick="saveNakitCekim()" style="padding:10px 20px;border-radius:8px;border:none;background:#f59e0b;color:#fff;cursor:pointer;font-weight:600;font-size:14px;">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- NAKİT GÜNCELLE MODAL -->
     <div id="nakit-detail-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center;" onclick="closeNakitDetailModal()">
         <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
@@ -4417,6 +4445,7 @@ async function loadGFsData() {
         // limit=60: sadece son 60 satır + başlık okunuyor (günlük/haftalık/aylık değişim
         // hesapları en fazla 31 satır geriye bakıyor, +buffer); 2405 satırın tamamını okumak
         // gereksiz yere yavaşlatıyordu — bkz. fetchSheetCSV() ve backend'deki "limit" desteği.
+        await loadNakitHareketData(); // Nakit çekim kayıtları (07.11.2026) — PORTFÖY DEĞİŞİMİ ayrıştırması için
         const csvText = await fetchSheetCSV('GFs', 60);
         console.log('GFs CSV received, length:', csvText.length);
         
@@ -8221,156 +8250,191 @@ function updateOzetTotalNakit() {
     console.log('✅ ÖZET Total Nakit güncellendi:', bankaNakit);
 }
 
-// 2. Günlük Değişim (GFs'den)
+// ==================== PORTFÖY DEĞİŞİMİ + NAKİT ÇEKİM (07.11.2026) ====================
+// Toplam değişim eskisi gibi GFs U sütunundan (TOPLAM BÜTÇE) hesaplanır.
+// Nakit Çıkış = NAKIT_HAREKET'te tarihi (karşılaştırma günü, bugün] aralığında olan "Aktif" çekimler.
+// İşlem Karı = Toplam − Nakit Çıkış  →  (Bugün − Önce + Çekim) / Önce
+window.nakitHareketData = [];
+
+async function loadNakitHareketData() {
+    try {
+        const csvText = await fetchSheetCSV('NAKIT_HAREKET');
+        window.nakitHareketData = parseCSV(csvText);
+    } catch (err) {
+        // Sekme henüz yoksa (ilk çekimde otomatik oluşur) sessizce boş geç
+        window.nakitHareketData = [];
+        console.log('ℹ️ NAKIT_HAREKET okunamadı/yok, nakit çıkış 0 sayılacak:', err.message);
+    }
+}
+
+function nkTarihSayi(str) {               // "GG.AA.YYYY" → YYYYAAGG (karşılaştırma için)
+    const p = String(str || '').trim().split(' ')[0].split('.');
+    if (p.length !== 3) return null;
+    return parseInt(p[2], 10) * 10000 + parseInt(p[1], 10) * 100 + parseInt(p[0], 10);
+}
+
+function nakitCikisToplami(oncekiTarihStr, bugunTarihStr) {
+    const bas = nkTarihSayi(oncekiTarihStr), bit = nkTarihSayi(bugunTarihStr);
+    if (bas === null || bit === null) return 0;
+    let toplam = 0;
+    const veri = window.nakitHareketData || [];
+    for (let i = 1; i < veri.length; i++) {
+        const r = veri[i];
+        if (!r || String(r[8] || '').trim() !== 'Aktif') continue;
+        const t = nkTarihSayi(r[1]);
+        if (t !== null && t > bas && t <= bit) toplam += parseNumberSmart(r[3]) || 0;
+    }
+    return toplam;
+}
+
+function portfoyDegisimHTML(baslik, onceDeger, bugunDeger, cekim) {
+    const yuzde = v => (v >= 0 ? '+' : '-') + '%' + Math.abs(v).toFixed(2);
+    const renk = v => v >= 0 ? '#4ade80' : '#f87171';
+    const toplamPct = (bugunDeger - onceDeger) / onceDeger * 100;
+    const nakitPct = -cekim / onceDeger * 100;
+    const islemPct = toplamPct - nakitPct;
+    const satir = 'display:grid;grid-template-columns:120px auto;align-items:baseline;';
+    let html = `
+        <div style="${satir}font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,0.12);">
+            <span>${baslik}</span><span style="font-size:15px;color:${renk(toplamPct)};">${yuzde(toplamPct)}</span>
+        </div>`;
+    if (cekim > 0) {
+        html += `
+        <div style="${satir}font-size:12.5px;color:#cbd5e1;padding:3px 0 0 8px;">
+            <span>İşlem Karı</span><span style="color:${renk(islemPct)};font-weight:600;">${yuzde(islemPct)}</span>
+        </div>
+        <div style="${satir}font-size:12.5px;color:#cbd5e1;padding:2px 0 0 8px;">
+            <span>Nakit Çıkış</span><span style="color:#fbbf24;font-weight:600;">${yuzde(nakitPct)} <span style="font-size:11.5px;color:#cbd5e1;font-weight:400;">(${Math.round(cekim).toLocaleString('tr-TR')} TL)</span></span>
+        </div>`;
+    }
+    return html;
+}
+
+// 2. Günlük Değişim
 function updateOzetDailyChange() {
     const element = document.getElementById('ozet-daily-change');
     if (!element || !gfsData || gfsData.length < 3) return;
-    
     const lastRow = gfsData[gfsData.length - 1];
     const prevRow = gfsData[gfsData.length - 2];
-    
-    const budgetToday = parseNumberSmart(lastRow[20]) || 0;
-    const budgetYesterday = parseNumberSmart(prevRow[20]) || 0;
-    
-    if (budgetYesterday > 0) {
-        const change = budgetToday - budgetYesterday;
-        const percent = (change / budgetYesterday) * 100;
-        
-        const color = change >= 0 ? '#4ade80' : '#f87171';
-        const sign = change >= 0 ? '+' : '';
-        
-        // GÜNCEL TASARIM: Üstte "GÜNLÜK DEĞİŞİM", Altta Yan Yana "TL" ve "%"
-        element.innerHTML = `
-            <div style="text-align: left; margin-bottom: 4px;">
-                <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">GÜNLÜK DEĞİŞİM</span>
-            </div>
-            <div style="display: flex; align-items: baseline; gap: 8px;">
-                <span style="font-size: 16px; font-weight: 700; color: ${color};">${sign}₺${formatNumber(Math.abs(change))}</span>
-                <span style="font-size: 13px; font-weight: 600; color: ${color}; opacity: 0.9;">(${sign}${percent.toFixed(2)}%)</span>
-            </div>
-        `;
+    const bugun = parseNumberSmart(lastRow[20]) || 0;
+    const once = parseNumberSmart(prevRow[20]) || 0;
+    if (once > 0) {
+        const cekim = nakitCikisToplami(prevRow[1], lastRow[1]);
+        element.innerHTML = portfoyDegisimHTML('GÜNLÜK DEĞİŞİM', once, bugun, cekim);
     } else {
         element.innerHTML = '<span style="color:#94a3b8">Veri Yok</span>';
     }
 }
 
-// 3. Haftalık Değişim (GFs'den - son 7 gün)
+// 3. Haftalık Değişim (son 7 gün)
 function updateOzetWeeklyChange() {
     const element = document.getElementById('ozet-weekly-change');
     if (!element) return;
-    
     if (!gfsData || gfsData.length < 8) {
         element.innerHTML = '<span style="color:#94a3b8; font-size: 12px;">Yetersiz veri</span>';
         return;
     }
-    
-    // GFS Verisi: Tarih, ..., TOPLAM VARLIK (20. index / U sütunu)
-    // Son satır bugündür.
     const lastRow = gfsData[gfsData.length - 1];
-    const weekAgoRow = gfsData[gfsData.length - 8]; // 7 gün önceki veri
-    
-    const budgetToday = parseNumberSmart(lastRow[20]) || 0;
-    const budgetWeekAgo = parseNumberSmart(weekAgoRow[20]) || 0;
-    
-    if (budgetWeekAgo > 0) {
-        const change = budgetToday - budgetWeekAgo;
-        const percent = (change / budgetWeekAgo) * 100;
-        
-        const color = change >= 0 ? '#4ade80' : '#f87171';
-        const sign = change >= 0 ? '+' : '';
-        
-        // GÜNCEL TASARIM
-        element.innerHTML = `
-            <div style="text-align: left; margin-bottom: 4px;">
-                <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">HAFTALIK DEĞİŞİM</span>
-            </div>
-            <div style="display: flex; align-items: baseline; gap: 8px;">
-                <span style="font-size: 16px; font-weight: 700; color: ${color};">${sign}₺${formatNumber(Math.abs(change))}</span>
-                <span style="font-size: 13px; font-weight: 600; color: ${color}; opacity: 0.9;">(${sign}${percent.toFixed(2)}%)</span>
-            </div>
-        `;
+    const weekAgoRow = gfsData[gfsData.length - 8];
+    const bugun = parseNumberSmart(lastRow[20]) || 0;
+    const once = parseNumberSmart(weekAgoRow[20]) || 0;
+    if (once > 0) {
+        const cekim = nakitCikisToplami(weekAgoRow[1], lastRow[1]);
+        element.innerHTML = portfoyDegisimHTML('HAFTALIK DEĞİŞİM', once, bugun, cekim);
     } else {
         element.innerHTML = '<span style="color:#94a3b8">Veri Yok</span>';
     }
 }
 
-// 4. Aylık Değişim (GFs'den - son 30 gün)
+// 4. Aylık Değişim (son 30 gün — tarih eşleştirmeli, 25.09.2026 düzeltmesi korunuyor)
 function updateOzetMonthlyChange() {
     const element = document.getElementById('ozet-monthly-change');
-    if (!element || !gfsData || gfsData.length < 31) {
-        if (element) {
-            element.innerHTML = `
-                <div>
-                    <div style="text-align: left; font-size: 15px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">AYLIK</div>
-                    <div style="text-align: center; color: #94a3b8; font-size: 13px;">Yetersiz veri (min 30 gün)</div>
-                </div>
-            `;
-        }
+    if (!element) return;
+    if (!gfsData || gfsData.length < 31) {
+        element.innerHTML = '<span style="color:#94a3b8; font-size: 12px;">Aylık: yetersiz veri (min 30 gün)</span>';
         return;
     }
-    
-    const lastRow = gfsData[gfsData.length - 1];      // Bugün
-    // DÜZELTME (25.09.2026): "30 satır geriye git" GFs tablosunda her günün ayrı ve boşluksuz
-    // bir satırı olduğunu varsayıyordu. Tabloda bir gün atlanmış/eksik ya da fazladan bir satır
-    // varsa "31 satır önce" gerçek takvimde tam 30 gün önceye denk gelmiyor — bu da GRAFİKLER ve
-    // PERFORMANS sekmelerinin (tarihe göre eşleştiren findGFsRowByDate ile) verdiği -%14,50 ile
-    // ÖZET'in AYLIK'ının (-%13,91 / -%13,54) neden tutmadığını açıklıyor. Aynı tarih-eşleştirme
-    // mantığına geçirildi; tam 30 gün önceki tarih GFs'te bulunamazsa eski (satır bazlı) yönteme
-    // geri düşülüyor, böylece veri hiç görünmemesi riski yok.
+    const lastRow = gfsData[gfsData.length - 1];
     let monthAgoRow = null;
-    const bugunTarihStr = lastRow && lastRow[1] ? String(lastRow[1]).trim() : '';
-    const bugunParts = bugunTarihStr.split('.'); // DD.MM.YYYY
+    const bugunParts = (lastRow && lastRow[1] ? String(lastRow[1]).trim() : '').split('.');
     if (bugunParts.length === 3) {
-        const bugunDate = new Date(parseInt(bugunParts[2], 10), parseInt(bugunParts[1], 10) - 1, parseInt(bugunParts[0], 10));
-        if (!isNaN(bugunDate.getTime())) {
-            const otuzGunOnceDate = new Date(bugunDate);
-            otuzGunOnceDate.setDate(otuzGunOnceDate.getDate() - 30);
-            const otuzGunOnceStr = String(otuzGunOnceDate.getDate()).padStart(2, '0') + '.' +
-                String(otuzGunOnceDate.getMonth() + 1).padStart(2, '0') + '.' +
-                otuzGunOnceDate.getFullYear();
-            monthAgoRow = findGFsRowByDate(otuzGunOnceStr);
+        const d = new Date(parseInt(bugunParts[2], 10), parseInt(bugunParts[1], 10) - 1, parseInt(bugunParts[0], 10));
+        if (!isNaN(d.getTime())) {
+            d.setDate(d.getDate() - 30);
+            const s = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+            monthAgoRow = findGFsRowByDate(s);
         }
     }
     if (!monthAgoRow) {
         console.warn('⚠️ AYLIK: tam 30 gün önceki tarih GFs\'te bulunamadı, satır-bazlı yönteme geri dönülüyor');
-        monthAgoRow = gfsData[gfsData.length - 31]; // Yedek (eski) yöntem
+        monthAgoRow = gfsData[gfsData.length - 31];
     }
-
-    const budgetToday = parseNumberSmart(lastRow[20]) || 0;
-    const budgetMonthAgo = parseNumberSmart(monthAgoRow[20]) || 0;
-
-    console.log('📅 AYLIK DEĞİŞİM:', {
-        bugün: budgetToday,
-        otuzGünÖnce: budgetMonthAgo,
-        satırSayısı: gfsData.length
-    });
-    
-    if (budgetMonthAgo > 0) {
-        const change = budgetToday - budgetMonthAgo;
-        const percent = (change / budgetMonthAgo) * 100;
-        
-        const color = change >= 0 ? '#4ade80' : '#f87171';
-        const sign = change >= 0 ? '+' : '';
-        
-        element.innerHTML = `
-            <div>
-                <div style="text-align: left; font-size: 15px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">AYLIK</div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 16px; font-weight: 600; color: ${color};">₺${formatNumber(Math.abs(change))}</span>
-                    <span style="font-size: 16px; font-weight: 600; color: ${color};">${sign}${percent.toFixed(2)}%</span>
-                </div>
-            </div>
-        `;
-        console.log('✅ AYLIK Değişim güncellendi:', {change, percent: percent.toFixed(2) + '%'});
+    const bugun = parseNumberSmart(lastRow[20]) || 0;
+    const once = parseNumberSmart(monthAgoRow[20]) || 0;
+    if (once > 0) {
+        const cekim = nakitCikisToplami(monthAgoRow[1], lastRow[1]);
+        element.innerHTML = portfoyDegisimHTML('AYLIK DEĞİŞİM', once, bugun, cekim);
     } else {
-        element.innerHTML = `
-            <div>
-                <div style="text-align: left; font-size: 15px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">AYLIK</div>
-                <div style="text-align: center; color: #94a3b8;">━ ₺0<br>0.00%</div>
-            </div>
-        `;
+        element.innerHTML = '<span style="color:#94a3b8">Aylık: veri yok</span>';
     }
 }
+
+// ---------- ₺− Nakit Çekim penceresi ----------
+function openNakitCekimModal() {
+    document.getElementById('nc-tutar').value = '';
+    document.getElementById('nc-not').value = '';
+    const t = new Date();
+    document.getElementById('nc-tarih').value = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    nakitCekimOnizle();
+    document.getElementById('nakit-cekim-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('nc-tutar').focus(), 100);
+}
+
+function closeNakitCekimModal() {
+    document.getElementById('nakit-cekim-modal').style.display = 'none';
+}
+
+function nakitCekimOnizle() {
+    const hesap = document.getElementById('nc-hesap').value;
+    const tutar = parseNumberSmart(document.getElementById('nc-tutar').value) || 0;
+    const hucre = hesap === 'ŞİRKET' ? 'E22' : 'E21';
+    document.getElementById('nc-onizleme').textContent = tutar > 0
+        ? `${hesap} nakit (VIOPKONTRATLAR ${hucre}) ${formatNumber(tutar)} TL azalacak`
+        : `Kaynak: VIOPKONTRATLAR ${hucre}`;
+}
+
+async function saveNakitCekim() {
+    const hesap = document.getElementById('nc-hesap').value;
+    const tutar = Math.round(parseNumberSmart(document.getElementById('nc-tutar').value) || 0);
+    const tarihIso = document.getElementById('nc-tarih').value;          // YYYY-AA-GG
+    const not = document.getElementById('nc-not').value.trim();
+    if (!(tutar > 0)) { alert('Geçerli bir tutar girin!'); return; }
+    if (!tarihIso) { alert('Tarih seçin!'); return; }
+    const p = tarihIso.split('-');
+    const tarih = p[2] + '.' + p[1] + '.' + p[0];
+    if (!confirm(`${hesap} hesabından ${formatNumber(tutar)} TL nakit çekim kaydedilsin mi?\nTarih: ${tarih}`)) return;
+
+    const btn = document.getElementById('nc-kaydet-btn');
+    btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+    try {
+        const url = `${APPS_SCRIPT_URL}?action=nakitCekimEkle&key=${encodeURIComponent(VERI_ERISIM_ANAHTARI)}` +
+            `&hesap=${encodeURIComponent(hesap)}&tutar=${tutar}&tarih=${encodeURIComponent(tarih)}` +
+            `&not=${encodeURIComponent(not)}&_=${Date.now()}`;
+        const result = await (await fetch(url, { method: 'GET', cache: 'no-store' })).json();
+        if (result.status === 'success') {
+            alert(`✅ ${result.id} kaydedildi\n${hesap} nakit: ₺${formatNumber(result.once)} → ₺${formatNumber(result.sonra)}`);
+            closeNakitCekimModal();
+            setTimeout(() => loadAllData(), 1000);
+        } else {
+            alert('❌ Hata: ' + result.message);
+        }
+    } catch (error) {
+        alert('❌ Kaydetme hatası: ' + error.message);
+    } finally {
+        btn.disabled = false; btn.textContent = 'Kaydet';
+    }
+}
+// ==================== PORTFÖY DEĞİŞİMİ + NAKİT ÇEKİM BİTİŞ ====================
 
 function updateOzetRiskRatio() {
     // Element kontrolleri kaldırıldı - sadece hesaplama yapıyoruz

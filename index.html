@@ -16385,9 +16385,11 @@ function renderPozisyonlarSekmesi() {
         // basliginin da bulunmasini (bu mini tabloya ozgu, daha spesifik bir imza) sart
         // kosuyoruz; birden fazla eslesme olursa sayfanin EN ALTTAKI (en guncel) tablosu
         // tercih edilir.
-        function toplamKZ(liste) {
+        // (09.11.2026) Hesap artık parametreyle geliyor. Eskiden listedeki ilk kontrattan bakılıyordu;
+        // ŞİRKET'te pozisyon yokken liste boş kalınca ŞAHSİ sanılıp ŞAHSİ'nin K/Z'si gösteriliyordu.
+        function toplamKZ(liste, hesapAdi) {
             var ozetData = window.ozetSheetData;
-            var isSirket = liste.length > 0 && (liste[0].hesap.indexOf('SIRKET') !== -1 || liste[0].hesap.indexOf('ŞİRKET') !== -1);
+            var isSirket = hesapAdi ? (hesapAdi === 'ŞİRKET') : (liste.length > 0 && (liste[0].hesap.indexOf('SIRKET') !== -1 || liste[0].hesap.indexOf('ŞİRKET') !== -1));
             var hedefEtiket = isSirket ? 'ŞİRKET' : 'ŞAHSİ';
 
             if (ozetData && ozetData.length > 0) {
@@ -16450,7 +16452,7 @@ function renderPozisyonlarSekmesi() {
         html += '<div style="background:rgba(255,255,255,0.06);border-radius:15px;padding:18px;border:1px solid rgba(255,255,255,0.2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">' +
             '<div style="flex:1;text-align:center;">' +
                 '<div style="font-size:11px;color:#cbd5e1;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">K/Z</div>' +
-                '<div style="font-size:18px;font-weight:700;">' + toplamKZ(sirketKontratlar) + '</div>' +
+                '<div style="font-size:18px;font-weight:700;">' + toplamKZ(sirketKontratlar, 'ŞİRKET') + '</div>' +
             '</div>' +
             btnSirket +
         '</div>';
@@ -16464,7 +16466,7 @@ function renderPozisyonlarSekmesi() {
         html += '<div style="background:rgba(255,255,255,0.06);border-radius:15px;padding:18px;border:1px solid rgba(255,255,255,0.2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">' +
             '<div style="flex:1;text-align:center;">' +
                 '<div style="font-size:11px;color:#cbd5e1;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">K/Z</div>' +
-                '<div style="font-size:18px;font-weight:700;">' + toplamKZ(sahsiKontratlar) + '</div>' +
+                '<div style="font-size:18px;font-weight:700;">' + toplamKZ(sahsiKontratlar, 'ŞAHSİ') + '</div>' +
             '</div>' +
             btnSahsi +
         '</div>';

@@ -10726,6 +10726,10 @@ function grafikNoktalariAyikla(analizMetni) {
             const kv = parca.split('=');
             if (kv.length === 2) alanlar[kv[0].trim()] = kv[1].trim();
         });
+        // (09.11.2026) "Son kapanış / son mum / güncel fiyat" noktaları atlanır: analiz piyasa açıkken
+        // yapıldıysa bu, KAPANMAMIŞ mumun o anki fiyatıdır — seviye değil, grafikte yanıltıcı.
+        // Eski (Sheet'te kayıtlı) analizler de bu filtreyle düzelir.
+        if (/son\s*kapan|son\s*mum|g[üu]ncel\s*fiyat|anl[ıi]k\s*fiyat/i.test(String(alanlar.etiket || ''))) return;
         if (alanlar.tarih && alanlar.fiyat && /^\d{4}-\d{2}-\d{2}$/.test(alanlar.tarih)) {
             const fiyatNum = parseFloat(String(alanlar.fiyat).replace(',', '.'));
             if (!isNaN(fiyatNum)) {

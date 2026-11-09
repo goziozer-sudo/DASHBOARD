@@ -10826,150 +10826,93 @@ function noktalariBirlestir(noktalar) {
 
 // Ayıklanan seviyelerden TradingView Pine Script (v5) indikatör kodu üretir.
 // Kullanıcı bunu TradingView'in Pine Editor'üne yapıştırıp "Grafiğe Ekle" der.
+// (09.11.2026 yeniden tasarlandı — Gökhan'ın isteğiyle ASELS seviye script'i stilinde)
+// Destek / direnç / stop / hedef artık hline + fiyat ekseni rozeti DEĞİL:
+//  - her seviye, analizdeki en erken tarihten grafiğin sağına kadar uzanan bir line.new() çizgisi,
+//  - Order Block bir box.new() bölgesi,
+//  - etiketler seviyenin DİKEY ORTASINDA, son barın offBars kadar sağında AYNI SÜTUNDA (sağa yanaşık),
+//  - etiket yazı boyutu kullanıcı ayarı (varsayılan "Büyük" — eski size.small okunmuyordu).
+// Fiyatça birbirine %1,5'ten yakın seviyeler (ör. Direnç 2 ≈ Hedef) TEK etikette birleştirilir
+// (eski rozet birleştirme kuralının aynısı) — büyük yazıyla etiketlerin üst üste binmemesi için.
+// Tarihli noktalar (GRAFIK_NOKTALAR) bloğu DEĞİŞMEDİ; yalnız yazı boyutu aynı ayara bağlandı.
 function pineScriptOlustur(ticker, tarih, v, noktalar) {
-    // NOT: bu başlık TradingView tarafından sağdaki fiyat ekseni rozetlerinin ("Destek 1/2" vb.)
-    // ÖNÜNE otomatik olarak eklenir (display=display.price_scale plot'larının native davranışı).
-    // Eskiden "XAGUSD Gemini Analiz 13.09.2026 17:33:" gibi uzun bir önek her rozette tekrar edip
-    // okumayı zorlaştırıyordu — kısaltmak için SADECE ticker kullanılır (tarih/saat kaldırıldı).
     const baslik = ticker.replace(/"/g, "'");
     let s = '//@version=5\n';
-    s += 'indicator("' + baslik + '", overlay=true, max_lines_count=50, max_boxes_count=10, max_labels_count=50)\n\n';
+    s += 'indicator("' + baslik + '", overlay=true, max_lines_count=50, max_boxes_count=10, max_labels_count=60)\n\n';
 
-    // Etiket kutuları eskiden GERÇEK fiyata (dip/tepe seviyesine) BİREBİR sabitleniyordu —
-    // Pine'ın kendi minik offseti dışında hiçbir boşluk yoktu, bu yüzden hareketli bir bölgede
-    // komşu mumlar kutunun ÜZERİNE/İÇİNE biniyor, metin okunaksız hale geliyordu. Çözüm: her
-    // etiket, gerçek fiyattan bir miktar UZAKLIKTA (dip için aşağı, tepe için yukarı) çizilir —
-    // metinde YİNE GERÇEK fiyat yazar (doğruluk kaybı yok), sadece kutunun EKRANDAKİ Y konumu
-    // mumlardan görsel olarak ayrışsın diye kaydırılır.
-    // 1. DENEME: sadece 1x ATR(14) — Pine'daki etiket kutusunun kendi boyu SABİT PİKSEL
-    // cinsindendir (fiyat ölçeğine göre değil); geniş bir fiyat aralığında (ör. 56-72$) aynı $
-    // tutarı ekranda çok az piksel karşılığı geliyordu, kutu hâlâ mumlara değiyordu.
-    // 2. DENEME: ATR(14) × 2.5 ile fiyatın %1.5'i arasından BÜYÜK OLANI — bu SAATLİK'te iyi
-    // görünüyordu ama GÜNLÜK'te FELAKETE yol açtı: Günlük mumların gerçek aralığı (dolayısıyla
-    // ATR14) Saatlik'e göre ÇOK daha büyüktür (aynı script, günde 1 mum yerine ~24 mum görüyor
-    // Saatlik'te — her mumun kendi aralığı küçük). ATR × 2.5 Günlük'te dev bir sayıya (birkaç
-    // dolar) dönüşüp etiketleri fiyat panelinden tamamen dışarı, hacim grafiğinin içine kadar itti.
-    // ÇÖZÜM (şimdiki): ATR TAMAMEN ÇIKARILDI. SADECE güncel fiyatın SABİT bir YÜZDESİ (%1.5)
-    // kullanılıyor — bu oran, zaman dilimi Saatlik mi Günlük mü olduğuna göre ÇILGINCA büyüyüp
-    // küçülmez (ATR'nin aksine), her iki zaman diliminde de AYNI mantıklı büyüklükte kalır.
-    s += '// Etiketlerin mumların üstüne binmemesi için dikey boşluk payı — GÜNCEL FİYATIN SABİT\n';
-    s += '// bir YÜZDESİ (ATR DEĞİL: ATR, Saatlik/Günlük arasında çok farklı büyüklükte olduğu için\n';
-    s += '// Günlük\'te aşırı büyüyüp etiketleri panelden dışarı fırlatıyordu — bkz. yukarıdaki NOT)\n';
+    s += '// Ayarlar\n';
+    s += 'offBars = input.int(12, "Etiketlerin sağa uzaklığı (bar)", minval=1)\n';
+    s += 'yaziBoyu = input.string("Büyük", "Etiket yazı boyutu", options=["Küçük", "Normal", "Büyük", "Çok büyük"])\n';
+    s += 'etiketBoyu = yaziBoyu == "Küçük" ? size.small : yaziBoyu == "Normal" ? size.normal : yaziBoyu == "Büyük" ? size.large : size.huge\n\n';
+
+    // Tarihli noktaların kademelendirme ofseti (aşağıdaki nokta bloğu kullanıyor — değişmedi)
     s += 'atrOfset = close * 0.015\n\n';
 
-    function hlineSatiri(deger, etiket, renk, stil) {
-        if (deger === undefined || isNaN(deger)) return '';
-        return 'hline(' + deger + ', "' + etiket + '", color=' + renk + ', linestyle=' + (stil || 'hline.style_dashed') + ', linewidth=1)\n';
+    // Çizgilerin sol başlangıcı: analizdeki EN ERKEN tarih (nokta veya Order Block); yoksa son 60 bar
+    var tarihler = (noktalar || []).map(function(n) { return n.tarih; })
+        .concat(v.obTarih ? [v.obTarih] : [])
+        .filter(function(t) { return /^\d{4}-\d{2}-\d{2}$/.test(String(t)); })
+        .sort();
+    if (tarihler.length > 0) {
+        var p0 = tarihler[0].split('-');
+        s += 'baslangicT = timestamp(' + parseInt(p0[0], 10) + ', ' + parseInt(p0[1], 10) + ', ' + parseInt(p0[2], 10) + ', 0, 0)\n';
+    } else {
+        s += 'baslangicT = time - 60 * timeframe.in_seconds() * 1000\n';
     }
 
-    s += '// Destek / Direnç seviyeleri\n';
-    s += hlineSatiri(v.destek1, 'Destek 1', 'color.new(color.lime, 0)');
-    s += hlineSatiri(v.destek2, 'Destek 2', 'color.new(color.lime, 40)');
-    s += hlineSatiri(v.direnc1, 'Direnç 1', 'color.new(color.red, 0)');
-    s += hlineSatiri(v.direnc2, 'Direnç 2', 'color.new(color.red, 40)');
+    s += '\n// Yardımcılar — etiket seviyenin dikey ortasında, sağda sabit sütunda\n';
+    s += 'sagX() =>\n';
+    s += '    time + offBars * timeframe.in_seconds() * 1000\n';
+    s += 'etiketCiz(float fiyat, string metin, color renk) =>\n';
+    s += '    label.new(sagX(), fiyat, metin, xloc=xloc.bar_time, yloc=yloc.price, style=label.style_label_left, color=renk, textcolor=color.white, size=etiketBoyu, textalign=text.align_left)\n';
+    s += 'cizgiCiz(float fiyat, string metin, color renk, string stil) =>\n';
+    s += '    line.new(baslangicT, fiyat, sagX(), fiyat, xloc=xloc.bar_time, color=renk, style=stil, width=2)\n';
+    s += '    etiketCiz(fiyat, metin, renk)\n';
+    s += 'bolgeCiz(float ust, float alt, string metin, color renk, int solT) =>\n';
+    s += '    box.new(solT, ust, sagX(), alt, xloc=xloc.bar_time, border_color=renk, border_width=1, bgcolor=color.new(renk, 85))\n';
+    s += '    etiketCiz((ust + alt) / 2.0, metin, renk)\n\n';
 
-    if (v.obAlt !== undefined && v.obUst !== undefined) {
-        s += '\n// Order Block bölgesi (Smart Money Concepts)\n';
-        if (v.obTarih) {
-            // Kutu bir kere oluşturulur (var), ilgili tarihe denk gelen GÜNDEKİ mumlar
-            // arasından kutunun sol kenarı, o günün GERÇEK EKSTREMUM mumuna (gerçek en
-            // düşük low'u ya da gerçek en yüksek high'ı — hangisi obAlt hedef seviyesine
-            // daha yakınsa O) sabitlenir; sağ kenar her mumda güncellenerek kutu bugüne
-            // kadar uzamaya devam eder. Tamamen bar_index tabanlı — zoom'da kaymaz.
-            // GEÇMİŞ 3 DENEME:
-            // 1) sadece takvim gününe bakıp o günün İLK mumuna sabitleme — günlükte sorun
-            //    yok, SAATLİK'te (günde ~24 mum) kutu günün başına (00:00) oturuyordu.
-            // 2) "obAlt hedef fiyatına EN YAKIN mum"u arama (high/low farkı minimize) —
-            //    bu da hatalıydı: Gemini'nin verdiği fiyat günün gerçek ekstremumuna birebir
-            //    denk gelmeyebilir (yuvarlama/yaklaşık değer); bu durumda "sayıca en yakın"
-            //    mum, günün asıl order-block mumu OLMAYABİLİR.
-            // ÇÖZÜM (şimdiki): gün içinde GERÇEK en düşük low'u VE GERÇEK en yüksek high'ı
-            // ayrı ayrı takip edilir; hangisi obAlt hedefine daha yakınsa (yani seviye bir
-            // DİP mi ZİRVE mi anlatıyorsa) kutu o GERÇEK ekstremum mumuna yerleşir — tahmini
-            // "yakınlık" değil, günün gerçek dip/zirve mumu. Günlük grafikte davranış
-            // değişmez (zaten tek bar var).
-            s += 'var box obKutu = box.new(na, na, na, na, bgcolor=color.new(color.orange, 88), border_color=color.new(color.orange, 40), text="Order Block")\n';
-            s += 'var bool obCizildi = false\n';
-            s += 'var float obGunMinDusuk = na\n';
-            s += 'var int obGunMinDusukBar = na\n';
-            s += 'var float obGunMaxYuksek = na\n';
-            s += 'var int obGunMaxYuksekBar = na\n';
-            s += 'if ' + pineTarihKosulu(v.obTarih) + '\n';
-            s += '    if na(obGunMinDusuk) or low < obGunMinDusuk\n';
-            s += '        obGunMinDusuk := low\n';
-            s += '        obGunMinDusukBar := bar_index\n';
-            s += '    if na(obGunMaxYuksek) or high > obGunMaxYuksek\n';
-            s += '        obGunMaxYuksek := high\n';
-            s += '        obGunMaxYuksekBar := bar_index\n';
-            s += '    obCizildi := true\n';
-            s += '    obHedefBar = math.abs(obGunMinDusuk - ' + v.obAlt + ') <= math.abs(obGunMaxYuksek - ' + v.obAlt + ') ? obGunMinDusukBar : obGunMaxYuksekBar\n';
-            s += '    box.set_left(obKutu, obHedefBar)\n';
-            s += '    box.set_top(obKutu, ' + v.obUst + ')\n';
-            s += '    box.set_bottom(obKutu, ' + v.obAlt + ')\n';
-            s += 'if obCizildi\n';
-            s += '    box.set_right(obKutu, bar_index)\n';
-        } else {
-            // Tarih yoksa (eski analiz formatı) — tüm grafik genişliğinde yatay çizgilerle göster.
-            s += 'obAltCizgi = hline(' + v.obAlt + ', "OB Alt", color=color.new(color.orange, 30), linestyle=hline.style_dotted, linewidth=1)\n';
-            s += 'obUstCizgi = hline(' + v.obUst + ', "OB Üst", color=color.new(color.orange, 30), linestyle=hline.style_dotted, linewidth=1)\n';
-            s += 'fill(obAltCizgi, obUstCizgi, color=color.new(color.orange, 85))\n';
-        }
-    }
-
-    s += '\n// Stop-Loss / Hedef\n';
-    s += hlineSatiri(v.stop, 'Stop-Loss', 'color.new(color.red, 0)', 'hline.style_solid');
-    s += hlineSatiri(v.hedef, 'Hedef', 'color.new(color.teal, 0)', 'hline.style_solid');
-
-    // Seviye etiketleri — GERÇEK ÇÖZÜM: label.new()/line.new() ile çizilen nesneler SADECE
-    // grafiğin kendi çizim alanının (pane) İÇİNDE görünebilir; TradingView'ın en sağındaki dar
-    // "son değer" şeridi (YKBNK / ho:100 / ho:200 kutucuklarının göründüğü yer — çizim alanının
-    // GERÇEKTEN DIŞI) Pine'ın çizim nesnelerine (label/line/box) tamamen kapalıdır. O şeride SADECE
-    // TradingView'ın kendisi, bir plot() serisinin "son değer etiketi" özelliğiyle yazı koyabilir.
-    // Bu yüzden önceki label.new() denemesi ya mumların üstüne biniyordu ya da (bar_index+N görünür
-    // alanın dışına taştığında) hiç görünmüyordu ("isimler kayboldu").
-    // Çözüm: her seviye için display=display.price_scale ile bir plot() eklenir. Bu, PANE İÇİNE
-    // HİÇBİR ŞEY ÇİZMEZ (çizgi/etiket yok) — sadece sağdaki fiyat eksenine, TAM istenen "isim: değer"
-    // kutucuğunu, tıpkı YKBNK/ho:100/ho:200 gibi native olarak ekler. Konum, biçim ve çakışmama
-    // (üst üste binmeme) TradingView'ın kendi ekseni tarafından yönetilir.
     var seviyeler = [
-        { ad: 'D1', deger: v.destek1, renk: 'color.new(color.lime, 0)' },
-        { ad: 'D2', deger: v.destek2, renk: 'color.new(color.lime, 40)' },
-        { ad: 'R1', deger: v.direnc1, renk: 'color.new(color.red, 0)' },
-        { ad: 'R2', deger: v.direnc2, renk: 'color.new(color.red, 40)' },
-        { ad: 'Stop-Loss', deger: v.stop, renk: 'color.new(color.red, 0)' },
-        { ad: 'Hedef', deger: v.hedef, renk: 'color.new(color.teal, 0)' }
+        { ad: 'DESTEK 1', deger: v.destek1, renk: 'color.new(#43a047, 0)', stil: 'line.style_solid' },
+        { ad: 'DESTEK 2', deger: v.destek2, renk: 'color.new(#2e7d32, 0)', stil: 'line.style_solid' },
+        { ad: 'DİRENÇ 1', deger: v.direnc1, renk: 'color.new(#e53935, 0)', stil: 'line.style_solid' },
+        { ad: 'DİRENÇ 2', deger: v.direnc2, renk: 'color.new(#b71c1c, 0)', stil: 'line.style_solid' },
+        { ad: 'STOP', deger: v.stop, renk: 'color.new(#ff6f00, 0)', stil: 'line.style_dashed' },
+        { ad: 'HEDEF', deger: v.hedef, renk: 'color.new(#00897b, 0)', stil: 'line.style_dotted' }
     ].filter(function(sv) { return sv.deger !== undefined && !isNaN(sv.deger); });
 
-    if (seviyeler.length > 0) {
-        // Seviyeleri BİRLEŞTİR: eskiden SADECE fiyat TAM AYNI ise birleşiyordu (ör. Direnç 2 ==
-        // Hedef). SORUN: Destek 1 (63.74) ile Destek 2 (63.36) gibi tam eşit olmayan ama
-        // YAKIN (%0.6 fark) seviyeler ayrı ayrı plot() ediliyordu — sağdaki fiyat ekseni dar
-        // bir alanda bu iki native "price_scale" rozeti VE TradingView'ın kendi güncel fiyat/
-        // günlük değişim balonlarıyla üst üste binip okunaksız bir yığın oluşturuyordu (bkz.
-        // ekran görüntüsü: "Destek 1"/"Destek 2" rozetleri birbirine ve fiyat balonuna girmiş).
-        // ÇÖZÜM: noktalar için kullanılan "yakınsa birleştir" mantığının aynısı burada da
-        // uygulanır — fiyatça birbirine YAKIN (yüzdesel eşik) seviyeler TEK bir rozette
-        // birleştirilir, böylece eksende daha az rozet yarışır.
-        var yakinlikYuzdesi = 0.015; // %1.5 — atrOfset ile aynı konvansiyon
-        var gruplanmis = [];
-        seviyeler.forEach(function(sv) {
-            var mevcut = gruplanmis.filter(function(g) {
-                var esik = Math.max(Math.abs(g.deger) * yakinlikYuzdesi, 1e-6);
-                return Math.abs(g.deger - sv.deger) <= esik;
-            })[0];
-            if (mevcut) {
-                mevcut.ad += ' / ' + sv.ad;
-                mevcut.degerler.push(sv.deger);
-                mevcut.deger = mevcut.degerler.reduce(function(a, b) { return a + b; }, 0) / mevcut.degerler.length;
-            } else {
-                gruplanmis.push({ ad: sv.ad, deger: sv.deger, degerler: [sv.deger], renk: sv.renk });
-            }
-        });
+    // Yakın seviyeleri TEK etikette birleştir (eski rozet kuralıyla aynı %1,5 eşik)
+    var yakinlikYuzdesi = 0.015;
+    var gruplanmis = [];
+    seviyeler.forEach(function(sv) {
+        var mevcut = gruplanmis.filter(function(g) {
+            var esik = Math.max(Math.abs(g.deger) * yakinlikYuzdesi, 1e-6);
+            return Math.abs(g.deger - sv.deger) <= esik;
+        })[0];
+        if (mevcut) {
+            mevcut.uyeler.push(sv);
+            mevcut.deger = mevcut.uyeler.reduce(function(a, m) { return a + m.deger; }, 0) / mevcut.uyeler.length;
+        } else {
+            gruplanmis.push({ deger: sv.deger, uyeler: [sv], renk: sv.renk, stil: sv.stil });
+        }
+    });
 
-        s += '\n// Seviye etiketleri — grafiğin İÇİNE değil, sağdaki FİYAT EKSENİNE (chart dışına)\n';
-        s += '// native TradingView "son değer" etiketi olarak yazılır (display=display.price_scale)\n';
+    var obVar = (v.obAlt !== undefined && v.obUst !== undefined && !isNaN(v.obAlt) && !isNaN(v.obUst));
+    if (gruplanmis.length > 0 || obVar) {
+        s += '// Seviyeler — yalnız son barda, bir kez çizilir\n';
+        s += 'if barstate.islast\n';
+        if (obVar) {
+            var obUst = Math.max(v.obAlt, v.obUst), obAlt = Math.min(v.obAlt, v.obUst);
+            var obSol = 'baslangicT';
+            if (v.obTarih && /^\d{4}-\d{2}-\d{2}$/.test(String(v.obTarih))) {
+                var po = String(v.obTarih).split('-');
+                obSol = 'timestamp(' + parseInt(po[0], 10) + ', ' + parseInt(po[1], 10) + ', ' + parseInt(po[2], 10) + ', 0, 0)';
+            }
+            s += '    bolgeCiz(' + obUst + ', ' + obAlt + ', "ORDER BLOCK · ' + obAlt + ' – ' + obUst + '", color.new(color.orange, 0), ' + obSol + ')\n';
+        }
         gruplanmis.forEach(function(g) {
-            s += 'plot(' + g.deger + ', title="' + g.ad + '", color=' + g.renk + ', linewidth=1, display=display.price_scale)\n';
+            var metin = g.uyeler.map(function(m) { return m.ad + ' · ' + m.deger; }).join('  |  ').replace(/"/g, "'");
+            s += '    cizgiCiz(' + (Math.round(g.deger * 10000) / 10000) + ', "' + metin + '", ' + g.renk + ', ' + g.stil + ')\n';
         });
     }
 
@@ -11103,7 +11046,7 @@ function pineScriptOlustur(ticker, tarih, v, noktalar) {
             const kademeCarpani = kademe - 1;
             const ofsetIfadesi = kademeCarpani === 0 ? null : (kademeCarpani === 1 ? 'atrOfset' : ('atrOfset * ' + kademeCarpani));
             s += '        ' + etiketYAdi + ' = ' + n.fiyat + (ofsetIfadesi ? (dipMi ? (' - ' + ofsetIfadesi) : (' + ' + ofsetIfadesi)) : '') + '\n';
-            s += '        ' + labelAdi + ' := label.new(' + hedefBarAdi + ', ' + etiketYAdi + ', text="' + etiketTemiz + '", style=' + (dipMi ? 'label.style_label_down' : 'label.style_label_up') + ', color=color.new(color.blue, 20), textcolor=color.white, size=size.small)\n';
+            s += '        ' + labelAdi + ' := label.new(' + hedefBarAdi + ', ' + etiketYAdi + ', text="' + etiketTemiz + '", style=' + (dipMi ? 'label.style_label_down' : 'label.style_label_up') + ', color=color.new(color.blue, 20), textcolor=color.white, size=etiketBoyu)\n';
             s += '    else\n';
             s += '        label.set_x(' + labelAdi + ', ' + hedefBarAdi + ')\n';
         });

@@ -10844,6 +10844,10 @@ function pineScriptOlustur(ticker, tarih, v, noktalar) {
     s += 'offBars = input.int(12, "Etiketlerin sağa uzaklığı (bar)", minval=1)\n';
     s += 'yaziBoyu = input.string("Büyük", "Etiket yazı boyutu", options=["Küçük", "Normal", "Büyük", "Çok büyük"])\n';
     s += 'etiketBoyu = yaziBoyu == "Küçük" ? size.small : yaziBoyu == "Normal" ? size.normal : yaziBoyu == "Büyük" ? size.large : size.huge\n\n';
+    // (09.11.2026) Tarihli noktalar (mavi etiketler) büyük yazıyla mumları kapatıyordu.
+    // Varsayılan: mumun ucunda küçük bir üçgen; yazı yalnız fareyle üzerine gelince (tooltip).
+    s += 'noktaGoster = input.string("İşaret (yazı üzerine gelince)", "Tarihli noktalar", options=["İşaret (yazı üzerine gelince)", "İşaret + küçük yazı", "Gizle"])\n';
+    s += 'noktaYazili = noktaGoster == "İşaret + küçük yazı"\n\n';
 
     // Tarihli noktaların kademelendirme ofseti (aşağıdaki nokta bloğu kullanıyor — değişmedi)
     s += 'atrOfset = close * 0.015\n\n';
@@ -11032,7 +11036,7 @@ function pineScriptOlustur(ticker, tarih, v, noktalar) {
             s += '        ' + maxAdi + ' := high\n';
             s += '        ' + maxBarAdi + ' := bar_index\n';
             s += '    ' + hedefBarAdi + ' = ' + barSecimKosulu + ' ? ' + minBarAdi + ' : ' + maxBarAdi + '\n';
-            s += '    if not ' + kilitAdi + '\n';
+            s += '    if not ' + kilitAdi + ' and noktaGoster != "Gizle"\n';
             s += '        ' + kilitAdi + ' := true\n';
             // ÖNEMLİ DÜZELTME: eskiden İZOLE (çakışma riski olmayan) noktalar da atrOfset kadar
             // GERÇEK fiyattan uzağa itiliyordu — bu, ok'un ucunun (label'ın gerçek çapa noktası)
@@ -11046,9 +11050,12 @@ function pineScriptOlustur(ticker, tarih, v, noktalar) {
             const kademeCarpani = kademe - 1;
             const ofsetIfadesi = kademeCarpani === 0 ? null : (kademeCarpani === 1 ? 'atrOfset' : ('atrOfset * ' + kademeCarpani));
             s += '        ' + etiketYAdi + ' = ' + n.fiyat + (ofsetIfadesi ? (dipMi ? (' - ' + ofsetIfadesi) : (' + ' + ofsetIfadesi)) : '') + '\n';
-            s += '        ' + labelAdi + ' := label.new(' + hedefBarAdi + ', ' + etiketYAdi + ', text="' + etiketTemiz + '", style=' + (dipMi ? 'label.style_label_down' : 'label.style_label_up') + ', color=color.new(color.blue, 20), textcolor=color.white, size=etiketBoyu)\n';
+            // İşaret modunda: dip için mumun altında yukarı üçgen, tepe için üstünde aşağı üçgen; metin tooltip'te.
+            // Yazılı modda: eski kutu, ama KÜÇÜK yazı ve yarı saydam zemin (mumlar arkadan görünsün).
+            s += '        ' + labelAdi + ' := label.new(' + hedefBarAdi + ', ' + etiketYAdi + ', text=noktaYazili ? "' + etiketTemiz + '" : "", tooltip="' + etiketTemiz + '", yloc=' + (dipMi ? 'yloc.belowbar' : 'yloc.abovebar') + ', style=noktaYazili ? ' + (dipMi ? 'label.style_label_up' : 'label.style_label_down') + ' : ' + (dipMi ? 'label.style_triangleup' : 'label.style_triangledown') + ', color=color.new(color.blue, noktaYazili ? 55 : 0), textcolor=color.white, size=size.small)\n';
             s += '    else\n';
-            s += '        label.set_x(' + labelAdi + ', ' + hedefBarAdi + ')\n';
+            s += '        if not na(' + labelAdi + ')\n';
+            s += '            label.set_x(' + labelAdi + ', ' + hedefBarAdi + ')\n';
         });
     }
 

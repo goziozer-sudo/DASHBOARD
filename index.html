@@ -10295,7 +10295,7 @@ function teknikAnalizGirisPaneliAc() {
     kart.style.cssText = 'position:fixed; top:' + ust + 'px; left:' + sol + 'px; width:' + genislik + 'px; max-width:92vw; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.45); z-index:' + (100000 + gecmisKartSayaci) + '; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;';
 
     var baslikCubugu = document.createElement('div');
-    baslikCubugu.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; cursor:grab; background:rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.12); user-select:none;';
+    baslikCubugu.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; cursor:grab; background:rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.12); user-select:none; touch-action:none;';
     baslikCubugu.innerHTML = '<span style="font-size:11px; font-weight:700; color:#FAF884; flex:1;">🕯️ Teknik Analiz</span>' +
         '<span id="sabit-analiz-ayar-dugmesi" title="Sabit analiz liste ayarları" style="cursor:pointer; flex-shrink:0; width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:10.5px; margin-right:4px;">⚙️</span>' +
         '<span style="cursor:pointer; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">✕</span>';
@@ -12338,6 +12338,13 @@ function gecmisKartBolumToggle(baslikEl) {
     var acikMi = icerik.style.display !== 'none';
     icerik.style.display = acikMi ? 'none' : 'block';
     baslikEl.textContent = (acikMi ? '▼ ' : '▲ ') + baslikEl.textContent.slice(2);
+    // (11.11.2026) Bölüm açılınca kart büyüyüp ekranın altına taşarsa, kartı ekrana sığacak kadar yukarı çek.
+    var kart = baslikEl.closest('.yuzenKartGovde');
+    kart = kart ? kart.parentElement : null;
+    if (kart && kart.style.position === 'fixed') {
+        var r = kart.getBoundingClientRect();
+        if (r.bottom > window.innerHeight - 8) kart.style.top = Math.max(8, window.innerHeight - r.height - 8) + 'px';
+    }
 }
 
 // Yeni kartların yerleşimi için takip edilen "sıradaki boş nokta" — her yeni kart bir öncekinin
@@ -12370,7 +12377,7 @@ function gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml) {
 
     // Üst çubuk — ticker + tarih başlığı (sürükleme tutamacı) + ✕ kapat butonu.
     var baslikCubugu = document.createElement('div');
-    baslikCubugu.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; cursor:grab; background:rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.12); user-select:none;';
+    baslikCubugu.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; cursor:grab; background:rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.12); user-select:none; touch-action:none;';
     baslikCubugu.innerHTML = '<span style="font-size:11px; font-weight:700; color:#FAF884; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📜 ' + kayit.ticker + ' — ' + kayit.zaman + '</span>' +
         '<span style="cursor:pointer; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;">✕</span>';
 
@@ -12394,6 +12401,9 @@ function gecmisKartAc(kayit, anaHtml, skorHtml, detayHtml) {
     document.body.appendChild(kart);
     // Gerçek yükseklik DOM'a eklendikten sonra ölçülüyor — bir sonraki kart HEMEN BUNUN ALTINA
     // açılsın diye kullanılıyor (içerik uzunluğuna göre kart boyu değişebiliyor).
+    // (11.11.2026) Mobil düzeltme: kart ekranın altına taşacaksa, ekrana sığacak şekilde yukarı çek.
+    var sigarUst = Math.max(8, Math.min(ust, window.innerHeight - kart.offsetHeight - 8));
+    if (sigarUst !== ust) { ust = sigarUst; kart.style.top = ust + 'px'; }
     gecmisYerlesimUst = ust + kart.offsetHeight + 14;
 
     // Kapatma (✕)

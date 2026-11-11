@@ -12645,8 +12645,27 @@ function gunlukAnalizAnahtar_(k) { return String(k.ticker || '').toUpperCase() +
             if (kayit && !gunlukAnalizGoruldu_(kayit)) hazirKayitlar.push(kayit);
         });
 
+        // (11.11.2026) Tüm cihazlarda tek sefer: sunucuya sor; başka cihazda/girişte zaten
+        // gösterilmiş olanları ele. Sunucuya ulaşılamazsa eski (cihaz içi) davranışa düşer.
+        let gosterilecek = hazirKayitlar;
         if (hazirKayitlar.length > 0) {
-            gunlukHazirAnalizler = hazirKayitlar;
+            try {
+                const anahtarlar = hazirKayitlar.map(gunlukAnalizAnahtar_).join(',');
+                const gUrl = APPS_SCRIPT_URL + '?action=autoAnalizGorulduIsaretle&anahtarlar=' + encodeURIComponent(anahtarlar) + '&_=' + Date.now();
+                const gRes = await fetch(gUrl, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+                if (gRes.ok) {
+                    const gJson = await gRes.json();
+                    if (gJson.status === 'success' && Array.isArray(gJson.yeni)) {
+                        gosterilecek = hazirKayitlar.filter(function (k) { return gJson.yeni.indexOf(gunlukAnalizAnahtar_(k)) !== -1; });
+                        gunlukAnalizGorulduKaydet_(hazirKayitlar.filter(function (k) { return gosterilecek.indexOf(k) === -1; }));
+                    }
+                }
+            } catch (gErr) {
+                console.log('AUTO görüldü kontrolü yapılamadı, cihaz içi kayıtla devam:', gErr);
+            }
+        }
+        if (gosterilecek.length > 0) {
+            gunlukHazirAnalizler = gosterilecek;
             teknikAnalizButonuYanipSondurBaslat();
         }
     } catch (e) {

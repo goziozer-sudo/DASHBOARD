@@ -2097,9 +2097,31 @@ function sifreKontrol() {
             </div>
         </div>
 
+        <style>
+            /* (13.11.2026) Pozisyon giriş/kapanış nedeni */
+            .rd-kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: baseline; }
+            .rd-kv > span { color: #cbd5e1; }
+            .rd-kv > span::after { content: " :"; }
+            .rd-kv > b { color: #ffffff; font-weight: 600; }
+            .rd-blok { border: 1px dashed rgba(250, 248, 132, 0.55); border-radius: 10px; padding: 12px; margin-bottom: 20px; display: grid; gap: 10px; }
+            .rd-baslik { text-align: center; font-size: 13px; color: #cbd5e1; font-weight: 600; }
+            .rd-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+            .rd-chips.rd-esit .rd-chip { flex: 1; text-align: center; }
+            .rd-chip { background: #3b62a8; color: #fff; border: 1px solid transparent; border-radius: 999px; padding: 6px 11px; font-size: 12px; cursor: pointer; }
+            .rd-chip.secili { background: #10b981; border-color: rgba(255,255,255,0.3); }
+            .rd-chip:focus-visible { outline: 2px solid #FAF884; outline-offset: 1px; }
+            .rd-etiket { font-size: 13px; color: #cbd5e1; }
+            .rd-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; box-sizing: border-box; }
+            .rd-satir { display: grid; grid-template-columns: 130px 1fr; gap: 8px; align-items: center; font-size: 13px; color: #cbd5e1; }
+            .rd-bilgi { font-size: 12.5px; }
+            .rd-ro { font-size: 13px; color: #cbd5e1; }
+            .rd-ro b { color: #fff; }
+            .rd-hata { color: #ef4444; }
+        </style>
+
         <!-- KONTRAT KAPAT POPUP -->
         <div id="closeContractModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); pointer-events: auto;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(30, 60, 114, 0.98) 0%, rgba(42, 82, 152, 0.98) 100%); backdrop-filter: blur(12px); border-radius: 16px; padding: 24px; width: 420px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 2px #FAF884;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(30, 60, 114, 0.98) 0%, rgba(42, 82, 152, 0.98) 100%); backdrop-filter: blur(12px); border-radius: 16px; padding: 24px; width: 420px; max-width: 92vw; max-height: 92vh; overflow-y: auto; box-sizing: border-box; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 2px #FAF884;">
                 
                 <button onclick="closeCloseContractModal()" style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #FAF884 0%, #f59e0b 100%); border: none; color: #1e3a8a; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(250, 248, 132, 0.3);">✕</button>
                 
@@ -2109,15 +2131,10 @@ function sifreKontrol() {
                     </h3>
                 </div>
                 
-                <div style="background: rgba(255, 255, 255, 0.1); padding: 14px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.15);">
-                    <div style="text-align: center; margin-bottom: 12px;">
-                        <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 6px;">Kontrat</div>
-                        <div id="close-contract-name" style="font-size: 18px; font-weight: bold; color: #FAF884; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">-</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 6px;">Adet</div>
-                        <div id="close-contract-adet" style="font-size: 16px; font-weight: 600; color: #4ade80;">-</div>
-                    </div>
+                <div class="rd-kv" style="background: rgba(255, 255, 255, 0.1); padding: 12px 14px; border-radius: 10px; margin-bottom: 18px; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 14px;">
+                    <span>Kontrat Kapat</span><b id="close-contract-hesap">-</b>
+                    <span>Kontrat Adı</span><b id="close-contract-name" style="color: #FAF884;">-</b>
+                    <span>Pozisyon</span><b><span id="close-contract-pozisyon">-</span> <span id="close-contract-adet" style="color: #4ade80;">-</span> adet</b>
                 </div>
                 
                 <div style="margin-bottom: 20px;">
@@ -2127,8 +2144,41 @@ function sifreKontrol() {
                 </div>
                 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-size: 14px; color: #ffffff; margin-bottom: 8px; font-weight: 500;">Kapatma Fiyatı (₺)</label>
+                    <label id="close-contract-price-label" style="display: block; font-size: 14px; color: #ffffff; margin-bottom: 8px; font-weight: 500;">Kapanış Fiyatı</label>
                     <input type="number" id="close-contract-price" placeholder="Örnek: 42.50" step="0.01" style="width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; color: white; font-size: 15px; box-sizing: border-box; transition: all 0.3s;" onfocus="this.style.borderColor='#FAF884'; this.style.background='rgba(255, 255, 255, 0.2)';" onblur="this.style.borderColor='rgba(255, 255, 255, 0.2)'; this.style.background='rgba(255, 255, 255, 0.15)';" />
+                </div>
+                
+                <div class="rd-blok">
+                    <div class="rd-baslik">Pozisyon Kapatma Nedeni:</div>
+                    <div class="rd-chips" id="close-neden-chips">
+                        <button type="button" class="rd-chip">Hedefe ulaştı</button>
+                        <button type="button" class="rd-chip">Stop oldu</button>
+                        <button type="button" class="rd-chip">Zararı kestim (plan dışı)</button>
+                        <button type="button" class="rd-chip">Kârı erken korudum</button>
+                        <button type="button" class="rd-chip">Sinyal tersine döndü</button>
+                        <button type="button" class="rd-chip">Haber / olay riski</button>
+                        <button type="button" class="rd-chip">Nakit ihtiyacı</button>
+                        <button type="button" class="rd-chip">Stres / uyku</button>
+                        <button type="button" class="rd-chip">Vade / rollover</button>
+                        <button type="button" class="rd-chip">Yönü çevirdim</button>
+                        <button type="button" class="rd-chip">Diğer</button>
+                    </div>
+                    <div class="rd-baslik">Ruh hali</div>
+                    <div class="rd-chips rd-esit" id="close-ruh-chips">
+                        <button type="button" class="rd-chip">Sakin</button>
+                        <button type="button" class="rd-chip">Kararsız</button>
+                        <button type="button" class="rd-chip">Stresli</button>
+                        <button type="button" class="rd-chip">Fomo</button>
+                    </div>
+                    <label for="close-not" class="rd-etiket">Not</label>
+                    <input type="text" id="close-not" maxlength="200" class="rd-input" placeholder="ör. 50 desteğine geldi, yarısını aldım" />
+                    <div class="rd-kv rd-bilgi">
+                        <span>Gerçekleşen K/Z</span><b id="close-bilgi-kz">-</b>
+                        <span>Son Gemini kararı</span><b id="close-bilgi-gemini">-</b>
+                        <span>Son TV sinyali</span><b id="close-bilgi-tv">-</b>
+                        <span>Planlanan Stop</span><b id="close-bilgi-stop">-</b>
+                        <span>Planlanan Hedef</span><b id="close-bilgi-hedef">-</b>
+                    </div>
                 </div>
                 
                 <div style="display: flex; gap: 12px;">
@@ -2188,7 +2238,7 @@ function sifreKontrol() {
 
         <!-- YENİ KONTRAT EKLE POPUP -->
         <div id="yeni-kontrat-modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); pointer-events: auto;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 30px; width: 500px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 15px; padding: 30px; width: 500px; max-width: 90%; max-height: 92vh; overflow-y: auto; box-sizing: border-box; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
                 
                 <!-- Kapatma Butonu -->
                 <button onclick="closeYeniKontratModal()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: all 0.3s;">✕</button>
@@ -2242,6 +2292,30 @@ function sifreKontrol() {
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; font-size: 14px; color: #cbd5e1; margin-bottom: 8px;" id="maliyet-label">Maliyet (₺) *</label>
                         <input type="text" id="maliyet-input" placeholder="Örnek: 2.450,50" required onchange="maliyetParaBirimiGuncelle()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; box-sizing: border-box;" />
+                    </div>
+                    
+                    <div class="rd-blok" style="margin-bottom: 20px;">
+                        <div class="rd-baslik">Pozisyon Giriş Nedeni:</div>
+                        <div class="rd-chips" id="yeni-giris-chips">
+                            <button type="button" class="rd-chip">Gemini analizi</button>
+                            <button type="button" class="rd-chip">TV sinyali</button>
+                            <button type="button" class="rd-chip">Erken uyarı</button>
+                            <button type="button" class="rd-chip">Kendi grafik okumam</button>
+                            <button type="button" class="rd-chip">Haber / makro</button>
+                            <button type="button" class="rd-chip">Takvim (cuma, vade…)</button>
+                            <button type="button" class="rd-chip">Fomo</button>
+                            <button type="button" class="rd-chip">Diğer</button>
+                        </div>
+                        <div class="rd-baslik">Ruh hali</div>
+                        <div class="rd-chips rd-esit" id="yeni-ruh-chips">
+                            <button type="button" class="rd-chip">Sakin</button>
+                            <button type="button" class="rd-chip">Kararsız</button>
+                            <button type="button" class="rd-chip">Stresli</button>
+                            <button type="button" class="rd-chip">Fomo</button>
+                        </div>
+                        <div class="rd-satir"><label for="plan-stop-input">Planlanan Stop</label><input type="text" id="plan-stop-input" class="rd-input" placeholder="Örnek: 55,69" /></div>
+                        <div class="rd-satir"><label for="plan-hedef-input">Planlanan Hedef</label><input type="text" id="plan-hedef-input" class="rd-input" placeholder="Örnek: 49,80" /></div>
+                        <div class="rd-ro">RİSK / ÖDÜL ORANI : <b id="plan-ro">-</b></div>
                     </div>
                     
                     <!-- Butonlar -->
@@ -9962,6 +10036,86 @@ let currentContractTotalAdet = 0; // Toplam adet sakla
 let currentContractHesap = null; // HESAP bilgisi için yeni global değişken
 let currentContractSatirNo = null; // SATIR numarası için yeni global değişken
 
+// ==================== (13.11.2026) GİRİŞ/KAPANIŞ NEDENİ YARDIMCILARI ====================
+function rdChipKur(kapId) {
+    const kap = document.getElementById(kapId);
+    if (!kap || kap.dataset.kuruldu) return;
+    kap.dataset.kuruldu = '1';
+    kap.addEventListener('click', function (e) {
+        const b = e.target.closest('.rd-chip');
+        if (!b) return;
+        kap.querySelectorAll('.rd-chip').forEach(c => c.classList.remove('secili'));
+        b.classList.add('secili');
+    });
+}
+function rdChipSecili(kapId) {
+    const b = document.querySelector('#' + kapId + ' .rd-chip.secili');
+    return b ? b.textContent.trim() : '';
+}
+function rdChipSifirla(kapId) {
+    document.querySelectorAll('#' + kapId + ' .rd-chip').forEach(c => c.classList.remove('secili'));
+}
+// Sunucudaki maliyet okuma kuralıyla AYNI: noktalar silinir, virgül ondalık.
+function rdSayi(s) {
+    s = String(s == null ? '' : s).trim();
+    if (!s) return NaN;
+    return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+}
+function rdParaYaz(x, usd) {
+    const t = Math.abs(x).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (x >= 0 ? '+' : '−') + t + (usd ? ' $' : ' ₺');
+}
+function rdFiyatYaz(x) {
+    if (x === '' || x == null || isNaN(Number(x))) return '-';
+    return Number(x).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+
+let kapanisOnBilgi = null;
+
+async function kapanisOnBilgiYukle(satirNo) {
+    kapanisOnBilgi = null;
+    ['kz', 'gemini', 'tv', 'stop', 'hedef'].forEach(k => {
+        document.getElementById('close-bilgi-' + k).textContent = k === 'kz' ? '-' : '…';
+    });
+    const fiyatInput = document.getElementById('close-contract-price');
+    const adetInput = document.getElementById('close-contract-adet-input');
+    if (!fiyatInput.dataset.kzDinle) {
+        fiyatInput.dataset.kzDinle = '1';
+        fiyatInput.addEventListener('input', kapanisKzGuncelle);
+        adetInput.addEventListener('input', kapanisKzGuncelle);
+    }
+    try {
+        const r = await fetch(APPS_SCRIPT_URL + '?action=kapanisOnBilgi&satirNo=' + encodeURIComponent(satirNo) + '&_=' + Date.now(), { redirect: 'follow' });
+        const d = await r.json();
+        if (d.status !== 'success') throw new Error(d.message || 'ön bilgi alınamadı');
+        if (String(satirNo) !== String(currentContractSatirNo)) return; // bu arada başka popup açıldıysa
+        kapanisOnBilgi = d;
+        document.getElementById('close-contract-pozisyon').textContent = d.pozisyon || '-';
+        document.getElementById('close-contract-price-label').textContent = 'Kapanış Fiyatı (' + (d.usd ? '$' : '₺') + ')';
+        document.getElementById('close-bilgi-gemini').textContent = d.gemini || '-';
+        document.getElementById('close-bilgi-tv').textContent = d.tv || '-';
+        document.getElementById('close-bilgi-stop').textContent = rdFiyatYaz(d.planStop);
+        document.getElementById('close-bilgi-hedef').textContent = rdFiyatYaz(d.planHedef);
+        kapanisKzGuncelle();
+    } catch (err) {
+        console.warn('Kapanış ön bilgisi alınamadı:', err);
+        document.getElementById('close-contract-pozisyon').textContent = '-';
+        ['gemini', 'tv', 'stop', 'hedef'].forEach(k => document.getElementById('close-bilgi-' + k).textContent = '-');
+    }
+}
+
+function kapanisKzGuncelle() {
+    const el = document.getElementById('close-bilgi-kz');
+    const d = kapanisOnBilgi;
+    const fiyat = parseFloat(document.getElementById('close-contract-price').value);
+    const adet = parseInt(document.getElementById('close-contract-adet-input').value, 10);
+    if (!d || !fiyat || !adet || !d.maliyet || !d.carpan) { el.textContent = '-'; el.style.color = ''; return; }
+    const fark = d.pozisyon === 'SHORT' ? (d.maliyet - fiyat) : (fiyat - d.maliyet);
+    const kz = fark * adet * d.carpan;
+    el.textContent = rdParaYaz(kz, d.usd);
+    el.style.color = kz >= 0 ? '#4ade80' : '#f87171';
+}
+
 function showCloseContractPopup(kontratAdi, kontratAdet, kontratHesap, satirNo) {
     currentContractToClose = kontratAdi;
     currentContractTotalAdet = parseInt(kontratAdet) || 0;
@@ -9970,6 +10124,13 @@ function showCloseContractPopup(kontratAdi, kontratAdet, kontratHesap, satirNo) 
     
     document.getElementById('close-contract-name').textContent = kontratAdi;
     document.getElementById('close-contract-adet').textContent = kontratAdet || '-';
+    // (13.11.2026) Hesap, neden/ruh hali/not ve ön bilgi
+    document.getElementById('close-contract-hesap').textContent = kontratHesap || '-';
+    document.getElementById('close-contract-pozisyon').textContent = '…';
+    rdChipKur('close-neden-chips'); rdChipKur('close-ruh-chips');
+    rdChipSifirla('close-neden-chips'); rdChipSifirla('close-ruh-chips');
+    document.getElementById('close-not').value = '';
+    kapanisOnBilgiYukle(satirNo);
     document.getElementById('close-contract-total-adet').textContent = kontratAdet || '-';
     document.getElementById('close-contract-adet-input').value = kontratAdet || '';
     document.getElementById('close-contract-adet-input').max = kontratAdet || 999999;
@@ -10044,6 +10205,15 @@ async function submitCloseContract() {
         return;
     }
     
+    // (13.11.2026) Kapatma nedeni zorunlu
+    const kapatmaNedeni = rdChipSecili('close-neden-chips');
+    if (!kapatmaNedeni) {
+        statusDiv.innerHTML = '<span style="color: #ef4444;">❌ Pozisyon kapatma nedenini seçin!</span>';
+        return;
+    }
+    const kapanisRuhHali = rdChipSecili('close-ruh-chips');
+    const kapanisNot = document.getElementById('close-not').value.trim();
+    
     submitBtn.disabled = true;
     submitBtn.textContent = 'Kapatılıyor...';
     statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ İşlem yapılıyor...</span>';
@@ -10055,7 +10225,10 @@ async function submitCloseContract() {
             '&hesap=' + encodeURIComponent(currentContractHesap) +
             '&satirNo=' + currentContractSatirNo +
             '&kapatmaFiyati=' + kapatmaFiyati +
-            '&kapatilacakAdet=' + kapatilacakAdet;
+            '&kapatilacakAdet=' + kapatilacakAdet +
+            '&kapatmaNedeni=' + encodeURIComponent(kapatmaNedeni) +
+            '&kapanisRuhHali=' + encodeURIComponent(kapanisRuhHali) +
+            '&kapanisNot=' + encodeURIComponent(kapanisNot);
         
         console.log('📤 Kontrat kapatma isteği gönderiliyor:', {
             kontratAdi: currentContractToClose,
@@ -12730,6 +12903,12 @@ async function openYeniKontratModal(hesapTipi) {
 document.getElementById('yeni-kontrat-form').reset();
 document.getElementById('hesap-input').value = hesapTipi;
 document.getElementById('yeni-kontrat-status').innerHTML = '';
+// (13.11.2026) giriş nedeni / ruh hali / plan
+rdChipKur('yeni-giris-chips'); rdChipKur('yeni-ruh-chips');
+rdChipSifirla('yeni-giris-chips'); rdChipSifirla('yeni-ruh-chips');
+yeniPlanDinleyicileriKur();
+yeniPlanStopElle = false;
+yeniPlanGuncelle();
 
 // Kontrat listesini yükle
 await loadKontratListesi();
@@ -12861,6 +13040,37 @@ async function loadKontratListesi() {
     }
 }
 
+// (13.11.2026) Yeni pozisyon planı: stop varsayılanı maliyetin %5'i (LONG altı / SHORT üstü),
+// elle değiştirilince bir daha otomatik doldurulmaz. R/Ö = |hedef − maliyet| / |maliyet − stop|.
+let yeniPlanStopElle = false;
+function yeniPlanDinleyicileriKur() {
+    const stopIn = document.getElementById('plan-stop-input');
+    if (stopIn.dataset.kuruldu) return;
+    stopIn.dataset.kuruldu = '1';
+    stopIn.addEventListener('input', function () { yeniPlanStopElle = this.value.trim() !== ''; yeniPlanGuncelle(); });
+    document.getElementById('plan-hedef-input').addEventListener('input', yeniPlanGuncelle);
+    document.getElementById('maliyet-input').addEventListener('input', yeniPlanGuncelle);
+    document.getElementById('pozisyon-select').addEventListener('change', yeniPlanGuncelle);
+}
+function yeniPlanGuncelle() {
+    const maliyet = rdSayi(document.getElementById('maliyet-input').value);
+    const poz = document.getElementById('pozisyon-select').value;
+    const stopIn = document.getElementById('plan-stop-input');
+    if (!yeniPlanStopElle) {
+        stopIn.value = (maliyet > 0 && poz)
+            ? (poz === 'SHORT' ? maliyet * 1.05 : maliyet * 0.95).toFixed(maliyet < 100 ? 3 : 2).replace('.', ',')
+            : '';
+    }
+    const stop = rdSayi(stopIn.value);
+    const hedef = rdSayi(document.getElementById('plan-hedef-input').value);
+    const el = document.getElementById('plan-ro');
+    if (maliyet > 0 && stop > 0 && hedef > 0 && Math.abs(maliyet - stop) > 0) {
+        el.textContent = (Math.abs(hedef - maliyet) / Math.abs(maliyet - stop)).toFixed(2).replace('.', ',');
+    } else {
+        el.textContent = '-';
+    }
+}
+
 // Form Gönder
 async function submitYeniKontrat() {
     const statusDiv = document.getElementById('yeni-kontrat-status');
@@ -12879,6 +13089,16 @@ async function submitYeniKontrat() {
         return;
     }
     
+    // (13.11.2026) Giriş nedeni zorunlu; stop/hedef sayıya çevrilip gönderilir
+    const girisNedeni = rdChipSecili('yeni-giris-chips');
+    if (!girisNedeni) {
+        statusDiv.innerHTML = '<span style="color: #ef4444;">❌ Pozisyon giriş nedenini seçin!</span>';
+        return;
+    }
+    const girisRuhHali = rdChipSecili('yeni-ruh-chips');
+    const planStop = rdSayi(document.getElementById('plan-stop-input').value);
+    const planHedef = rdSayi(document.getElementById('plan-hedef-input').value);
+    
     submitBtn.disabled = true;
     submitBtn.textContent = 'Kaydediliyor...';
     statusDiv.innerHTML = '<span style="color: #FAF884;">⏳ İşlem yapılıyor...</span>';
@@ -12890,7 +13110,11 @@ async function submitYeniKontrat() {
             '&hesap=' + encodeURIComponent(hesap) +
             '&pozisyon=' + encodeURIComponent(pozisyon) +
             '&adet=' + encodeURIComponent(adet) +
-            '&maliyet=' + encodeURIComponent(maliyet);
+            '&maliyet=' + encodeURIComponent(maliyet) +
+            '&girisNedeni=' + encodeURIComponent(girisNedeni) +
+            '&girisRuhHali=' + encodeURIComponent(girisRuhHali) +
+            '&planStop=' + (isNaN(planStop) ? '' : planStop) +
+            '&planHedef=' + (isNaN(planHedef) ? '' : planHedef);
         
         console.log('📤 Yeni kontrat:', kontratAdi, hesap, pozisyon, adet, maliyet);
         console.log('🔗 URL:', url);
@@ -12951,7 +13175,7 @@ function maliyetParaBirimiGuncelle() {
     if (kontrat.includes('XAUUSD') || kontrat.includes('XAGUSD') || 
         kontrat.includes('XPTUSD') || kontrat.includes('XPDUSD')) {
         label.textContent = 'Maliyet ($) *';
-        input.placeholder = 'Örnek: 2450.50';
+        input.placeholder = 'Örnek: 2450,50';
     } else {
         label.textContent = 'Maliyet (₺) *';
         input.placeholder = 'Örnek: 2.450,50';

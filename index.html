@@ -2117,6 +2117,47 @@ function sifreKontrol() {
             .rd-ro { font-size: 13px; color: #cbd5e1; }
             .rd-ro b { color: #fff; }
             .rd-hata { color: #ef4444; }
+
+            /* (13.11.2026) Yeni Kontrat Ekle ve "+" Kontrat Ekle popup'ları — Kontrat Kapat ile AYNI stil */
+            #yeni-kontrat-modal > div, #addToContractModal > div {
+                background: linear-gradient(135deg, rgba(30, 60, 114, 0.98) 0%, rgba(42, 82, 152, 0.98) 100%) !important;
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                border-radius: 16px !important; padding: 24px !important;
+                width: 420px !important; max-width: 92vw !important; max-height: 92vh; overflow-y: auto; box-sizing: border-box;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 2px #FAF884 !important;
+            }
+            #yeni-kontrat-modal > div > button:first-child, #addToContractModal > div > button:first-child {
+                background: linear-gradient(135deg, #FAF884 0%, #f59e0b 100%) !important; border: none !important;
+                color: #1e3a8a !important; box-shadow: 0 4px 12px rgba(250, 248, 132, 0.3); z-index: 2;
+            }
+            #yeni-kontrat-modal h2, #addToContractModal h2 {
+                background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
+                padding: 12px; font-size: 18px !important; font-weight: 600; margin: 0 0 20px 0 !important;
+                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            }
+            #yeni-kontrat-modal label, #addToContractModal label {
+                color: #ffffff !important; font-size: 14px !important; font-weight: 500;
+            }
+            #yeni-kontrat-modal .rd-satir label { color: #cbd5e1 !important; font-size: 13px !important; font-weight: 400; }
+            #yeni-kontrat-modal input:not(.rd-input), #yeni-kontrat-modal select, #addToContractModal input {
+                padding: 14px !important; background: rgba(255, 255, 255, 0.15) !important;
+                border: 2px solid rgba(255, 255, 255, 0.2) !important; border-radius: 10px !important;
+                color: #ffffff !important; font-size: 15px !important; transition: all 0.3s;
+            }
+            #yeni-kontrat-modal input:not(.rd-input):focus, #yeni-kontrat-modal select:focus, #addToContractModal input:focus {
+                border-color: #FAF884 !important; background: rgba(255, 255, 255, 0.2) !important; outline: none;
+            }
+            #yeni-kontrat-modal #hesap-input { color: #cbd5e1 !important; background: rgba(255, 255, 255, 0.08) !important; }
+            #yeni-kontrat-modal button[type="button"][onclick="closeYeniKontratModal()"],
+            #addToContractModal > div > div > button[onclick="closeAddToContractModal()"] {
+                flex: 1; padding: 14px !important; border-radius: 10px !important; font-size: 15px !important; font-weight: 600;
+                background: rgba(255, 255, 255, 0.15) !important; border: 2px solid rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;
+            }
+            #yeni-kontrat-modal button[type="submit"], #addToContractModal button[onclick="submitAddToContract()"] {
+                flex: 1; padding: 14px !important; border-radius: 10px !important; font-size: 15px !important; font-weight: bold !important;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #ffffff !important; border: none !important;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            }
         </style>
 
         <!-- KONTRAT KAPAT POPUP -->
@@ -14019,6 +14060,14 @@ document.addEventListener('keydown', (e) => {
     } else if (viopSirketNakitModal.style.display === 'flex' && e.key === 'Escape') {
         closeViopSirketNakitModal();
     }
+    
+    // VİOP ŞAHSİ NAKİT (13.11.2026 — ŞİRKET ile aynı yöntem)
+    const viopSahsiNakitModal = document.getElementById('viop-sahsi-nakit-modal');
+    if (viopSahsiNakitModal && viopSahsiNakitModal.style.display === 'flex' && e.key === 'Enter') {
+        saveViopSahsiNakit();
+    } else if (viopSahsiNakitModal && viopSahsiNakitModal.style.display === 'flex' && e.key === 'Escape') {
+        closeViopSahsiNakitModal();
+    }
 });
 
 // ==================== ANADOLU HAYAT EMEKLİLİK FONKSİYONLARI BİTİŞ ====================
@@ -14030,6 +14079,7 @@ function openViopSirketNakitModal() {
     const input = document.getElementById('viop-sirket-nakit-input');
     input.value = '';
     document.getElementById('sirket-hesap-sonuc').style.display = 'none';
+    window._sirketHesaplananNakit = undefined; // (13.11.2026) önceki açılıştan kalan değer kaydedilmesin
 
     // Mevcut toplam ve nakit değerlerini al
     // ÖNCEDEN: "Toplam Hesap" kutusunun DOM'daki (formatlanmış) metni, hep Türkçe format
@@ -14174,6 +14224,7 @@ function openViopSahsiNakitModal() {
     const input = document.getElementById('viop-sahsi-nakit-input');
     input.value = '';
     document.getElementById('sahsi-hesap-sonuc').style.display = 'none';
+    window._sahsiHesaplananNakit = undefined; // (13.11.2026) önceki açılıştan kalan değer kaydedilmesin
 
     // Bkz. openViopSirketNakitModal() içindeki açıklama — aynı $ / ₺ format karışıklığına karşı
     // önce HAM sayı (window.viopSahsiToplamHesapRaw), yoksa DOM metni yedek olarak kullanılıyor.
@@ -14206,17 +14257,7 @@ function openViopSahsiNakitModal() {
         input.select();
     }, 100);
     
-    // ESC tuşu ile kapat
-    document.addEventListener('keydown', function escHandler(e) {
-        if (e.key === 'Escape') {
-            closeViopSahsiNakitModal();
-            document.removeEventListener('keydown', escHandler);
-        }
-        if (e.key === 'Enter') {
-            saveViopSahsiNakit();
-            document.removeEventListener('keydown', escHandler);
-        }
-    });
+    // (13.11.2026) Enter/Esc artık sayfadaki ortak keydown dinleyicisinde (ŞİRKET ile aynı).
 }
 
 function closeViopSahsiNakitModal() {

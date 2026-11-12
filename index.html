@@ -4163,6 +4163,13 @@ function setupEventListeners() {
             } else if (tabName === 'analiz-grafikler') {
                 initGfsKalemSecici();
                 renderGfsKarsilastirma();
+            } else if (tabName === 'detay-analiz') {
+                // (12.11.2026) Sinyaller artık her dakika arka planda çekilmiyor; sekmeye girince çek.
+                loadSignals();
+            } else if (tabName === 'radar') {
+                // (12.11.2026) RADAR sekmesine girince anında güncelle.
+                radarSonYuklemeMs = Date.now();
+                loadRadarData();
             } else if (tabName !== 'sinyaller' && viopData.length === 0) {
                 console.log('⚡ Diğer veriler lazy loading ile yükleniyor...');
                 loadAllData();
@@ -4346,14 +4353,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Load all data
+// (12.11.2026) Yenileme planı: ÖZET'in kullandığı 10 sayfa her yenilemede; Sinyaller yalnız
+// Sinyaller/Detay Analiz sekmesi açıkken; RADAR, RADAR sekmesindeyken her yenilemede, değilse
+// 10 dakikada bir (yeni Radar sinyali bildirimi kaybolmasın diye). Sayfa arka plandayken
+// otomatik yenileme durur (startAutoRefresh + visibilitychange).
+var radarSonYuklemeMs = 0;
+var sonTamYenilemeMs = 0;
+function aktifSekmeAdi_() {
+    const b = document.querySelector('.tab-btn.active');
+    return (b && b.dataset && b.dataset.tab) ? b.dataset.tab : 'ozet';
+}
+
 async function loadAllData() {
     // showLoading(true); // Otomatik yenileme sırasında loading ekranı gösterme
     hideError();
+    sonTamYenilemeMs = Date.now();
+    const aktifSekme = aktifSekmeAdi_();
+    const ekIsler = [];
+    if (aktifSekme === 'sinyaller' || aktifSekme === 'detay-analiz') ekIsler.push(loadSignals());
+    if (aktifSekme === 'radar' || Date.now() - radarSonYuklemeMs >= 10 * 60 * 1000) {
+        radarSonYuklemeMs = Date.now();
+        ekIsler.push(loadRadarData());
+    }
     
     // Refresh button kaldırıldı
     
     try {
-        await Promise.all([
+        await Promise.all(ekIsler.concat([
             loadViopData(),
             loadBudgetData(),
             loadNakitData(),
@@ -4363,10 +4389,9 @@ async function loadAllData() {
             loadFonData(),
             loadFonDataSahsi(),
             loadOzetSheetData(),
-            loadSahsiSheetData(),
-            loadSignals(),  // ✅ SİNYALLER YÜKLENSİN!
-            loadRadarData()  // (31.10.2026 eklendi) RADAR sekmesi verisi
-        ]);
+            loadSahsiSheetData()
+            // (12.11.2026) loadSignals ve loadRadarData yukarıdaki ekIsler'e taşındı.
+        ]));
         
         updateLastUpdateTime();
     } catch (error) {
@@ -7856,9 +7881,21 @@ function startAutoRefresh() {
     // mobil veri/pil tüketimi için 3 dakikaya çıkarılmıştı, ama daha sık güncelleme tercih edildi.
     // Not: Apps Script çağrı sıklığı da 3 katına çıkıyor — ileride bir kota hatası görülürse ilk
     // bakılacak yer burası.
-    refreshIntervalId = setInterval(loadAllData, 60 * 1000);
+    // (12.11.2026) Sayfa arka plandayken (başka sekme, telefon kilitli) yenileme yapılmaz.
+    refreshIntervalId = setInterval(function () {
+        if (document.hidden) return;
+        loadAllData();
+    }, 60 * 1000);
     console.log('Auto-refresh started: 60 seconds (1 dakika)');
 }
+
+// (12.11.2026) Dashboard'a geri dönülünce (arka plandan ön plana) son yenilemeden 60 sn+
+// geçtiyse hemen bir kez yenile.
+document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && Date.now() - sonTamYenilemeMs >= 60 * 1000) {
+        loadAllData();
+    }
+});
 
 // ==================== ÖZET SEKMESİ FONKSİYONLARI ====================
 
@@ -11489,8 +11526,8 @@ async function ruKontrol_() {
         console.log('Pozisyon riski kontrolü yapılamadı:', e);
     }
 }
-setTimeout(ruKontrol_, 4000);
-setInterval(ruKontrol_, 5 * 60 * 1000);
+// (12.11.2026) Buradaki setTimeout/setInterval kaldırıldı: ruKontrol_ aşağıda yeniden tanımlanıyor
+// ve zamanlayıcı orada da kuruluyordu → kontrol 5 dakikada İKİ kez çalışıyordu.
  var ruGosterilen = {};
 function ruEsc_(s) {
     return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

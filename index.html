@@ -11584,10 +11584,27 @@ function kvYon_(m) {
     if (m.indexOf('LONG') !== -1 || m.indexOf('AL') === 0) return 'LONG';
     return '';
 }
-function kvIkonYeri_(ticker, baslik, ref) {
-    var y = kvYon_(baslik);
+// (13.11.2026) Karar BEKLE/TUT gibi yönsüzse üçgen artık KAYBOLMUYOR: 4. parametre (analiz sonucu)
+// verilirse yön önce AÇIK POZİSYONDAN (pozisyonYonuMetin, yoksa adet işareti), o da yoksa TREND
+// YÖN TEYİDİNDEN (BEARISH→SHORT, BULLISH→LONG) alınır; açıklama metni de buna göre yazılır.
+function kvYedekYon_(r) {
+    if (!r) return null;
+    var pz = r.mevcutPozisyonlar || [];
+    for (var i = 0; i < pz.length; i++) {
+        var m = pz[i] && pz[i].pozisyonYonuMetin;
+        var y = (m === 'LONG' || m === 'SHORT') ? m : (pz[i] && typeof pz[i].adet === 'number' ? (pz[i].adet < 0 ? 'SHORT' : 'LONG') : '');
+        if (y) return { yon: y, onek: 'Açık ' + y + ' pozisyon' };
+    }
+    var t = (r.teknikSkor && r.teknikSkor.trend && r.teknikSkor.trend.yonTeyidi) || '';
+    if (t === 'BEARISH') return { yon: 'SHORT', onek: 'Trend aşağı (SHORT)' };
+    if (t === 'BULLISH') return { yon: 'LONG', onek: 'Trend yukarı (LONG)' };
+    return null;
+}
+function kvIkonYeri_(ticker, baslik, ref, sonuc) {
+    var y = kvYon_(baslik), onek = '';
+    if (!y) { var yd = kvYedekYon_(sonuc); if (yd) { y = yd.yon; onek = yd.onek; } }
     if (!y || !ticker) return '';
-    return '<span class="kv-ikon-yer" data-ticker="' + kvEsc_(ticker) + '" data-yon="' + y + '" data-ref="' + kvEsc_(ref || '') + '" style="display:inline-flex; align-items:center; margin-left:8px;"></span>';
+    return '<span class="kv-ikon-yer" data-ticker="' + kvEsc_(ticker) + '" data-yon="' + y + '" data-onek="' + kvEsc_(onek) + '" data-ref="' + kvEsc_(ref || '') + '" style="display:inline-flex; align-items:center; margin-left:8px;"></span>';
 }
 function kvStilEkle_() {
     if (document.getElementById('kv-stil')) return;
@@ -11657,6 +11674,7 @@ function kvPopAc_(ikon) {
 async function kvIkonDoldur_(el) {
     el.setAttribute('data-dolu', '1');
     var yon = el.getAttribute('data-yon');
+    var onek = el.getAttribute('data-onek') || ('Karar ' + yon); // (13.11.2026) yönsüz kararda pozisyon/trend yönü
     var url = APPS_SCRIPT_URL + '?action=tvSonSinyaller&ticker=' + encodeURIComponent(el.getAttribute('data-ticker') || '') + '&ref=' + encodeURIComponent(el.getAttribute('data-ref') || '') + '&_=' + Date.now();
     try {
         var resp = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
@@ -11674,15 +11692,15 @@ async function kvIkonDoldur_(el) {
         if (tersTeyit.length) {
             tip = 'kirmizi'; ana = tersTeyit[tersTeyit.length - 1];
             baslik = '⚠️ Çoklu zaman dilimi çelişkisi';
-            aciklama = 'Karar ' + yon + ' yönünde, ama ' + ana.tf + ' tarafında ters yönde teyitli sinyal var:';
+            aciklama = onek + ' yönünde, ama ' + ana.tf + ' tarafında ters yönde teyitli sinyal var:';
         } else if (tersHepsi.length) {
             tip = 'sari'; ana = tersHepsi[tersHepsi.length - 1];
             baslik = 'ℹ️ Kısa vadeli ters sinyal';
-            aciklama = 'Karar ' + yon + ' yönünde; kısa vadede ters yönde sinyal var (4H/8H teyidi yok):';
+            aciklama = onek + ' yönünde; kısa vadede ters yönde sinyal var (4H/8H teyidi yok):';
         } else if (ayni.length) {
             tip = 'yesil'; ana = ayniTeyit.length ? ayniTeyit[ayniTeyit.length - 1] : ayni[ayni.length - 1];
-            baslik = '✅ Kısa vade kararla aynı yönde';
-            aciklama = 'Karar ' + yon + ' yönünde; kısa vadeli sinyaller de aynı yönde:';
+            baslik = '✅ Kısa vade ' + (el.getAttribute('data-onek') ? 'pozisyon/trendle' : 'kararla') + ' aynı yönde';
+            aciklama = onek + ' yönünde; kısa vadeli sinyaller de aynı yönde:';
         } else {
             return;
         }
@@ -12166,7 +12184,7 @@ function sonucVeYonlendirmeBolumuOlustur(result, ticker, tarihMetniOverride) {
     // kolayca eklenebilir.
     var topRowHtml = '<div style="display:flex; align-items:center;">' +
         (rozetHtml ? '<span style="margin-right:8px;">' + rozetHtml + '</span>' : '') +
-        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' + kvIkonYeri_(ticker, baslikMetni, tarihMetniOverride) +
+        '<span style="font-size:17px; font-weight:800; color:' + renk.metin + ';">' + baslikMetni + '</span>' + kvIkonYeri_(ticker, baslikMetni, tarihMetniOverride, result) +
     '</div>';
     return '<div style="margin-bottom:10px; background:' + renk.arkaplan + '; border:1.5px solid ' + renk.kenar + '; border-radius:12px; padding:14px 16px;">' +
         topRowHtml +
@@ -13288,6 +13306,8 @@ function taGoster(idx) {
             '<span class="tk">' + taEsc_(k.ticker) + '</span>' +
             (yon ? '<span class="ta-yon ' + yonSinif + '">' + taEsc_(yon) + '</span>' : '') +
             '<span class="ta-karar ' + taKararSinif_(karar) + '">' + taEsc_(karar) + '</span>' +
+            // (13.11.2026) Kısa vade üçgeni (TradingView son sinyalleri) — kartlardaki ile aynı; MutationObserver (kvTara_) doldurur.
+            ((typeof kvIkonYeri_ === 'function') ? kvIkonYeri_(k.ticker, karar, k.zaman, k) : '') +
             (acikPoz ? '<span class="ta-acikpoz">● açık poz var</span>' : '') +
             '<span class="fiyat">' + (isNaN(fiyat) ? '' : fmt(fiyat)) + '</span>' +
             '<span class="z">' + taEsc_(k.zaman) + (kaynak ? ' · ' + kaynak : '') + '</span>' +

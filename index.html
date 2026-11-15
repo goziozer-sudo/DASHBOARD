@@ -2043,9 +2043,9 @@ function sifreKontrol() {
                 <button onclick="closeNakitDetailModal()" style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #FAF884 0%, #f59e0b 100%); border: none; color: #1e3a8a; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 12px rgba(250, 248, 132, 0.3);">✕</button>
                 
                 <!-- Başlık -->
-                <div style="text-align: center; margin-bottom: 18px; padding: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">
-                        <i class="fas fa-money-bill-wave" style="font-size: 20px; color: #FAF884;"></i> Nakit Detay (TOPLAM BÜTÇE)
+                <div style="text-align: center; margin-bottom: 12px; padding: 4px 40px;">
+                    <h3 style="color: #ffffff; font-size: 16px; font-weight: 600; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-money-bill-wave" style="font-size: 16px; color: #FAF884;"></i> NAKİT
                     </h3>
                 </div>
                 
@@ -2057,12 +2057,6 @@ function sifreKontrol() {
                     </div>
                 </div>
                 
-                <!-- Kaydet Butonu -->
-                <div style="margin-top: 15px; text-align: center;">
-                    <button onclick="saveNakitData()" style="background: #FAF884; color: #1e3a8a; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s; width: 100%;">
-                        💾 Kaydet
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -14872,8 +14866,8 @@ function openNakitDetailModal() {
         content.innerHTML = '<p style="text-align: center; color: #f87171;">⚠️ BUDGET verisi yüklenmedi!</p>';
         return;
     }
-    const st = 'width: 100%; box-sizing: border-box; padding: 8px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 13px;';
-    const lb = 'display: block; font-size: 11px; color: #cbd5e1; letter-spacing: .05em; margin: 0 0 4px;';
+    const st = 'width: 100%; box-sizing: border-box; padding: 4px 8px; height: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 12px; line-height: 1.2; outline-color: #FAF884;';
+    const lb = 'display: block; font-size: 10px; color: #cbd5e1; letter-spacing: .05em; margin: 0 0 2px; line-height: 1.2;';
     let hesapOpt = '';
     for (let s = NAKIT_ILK_SATIR; s <= NAKIT_SON_SATIR; s++) {
         const ad = (budgetData[s - 1] && budgetData[s - 1][0]) || ('Satır ' + s);
@@ -14881,9 +14875,12 @@ function openNakitDetailModal() {
     }
     const pbOpt = [2, 3, 4].map(c => `<option value="${c}" style="background:#1e3a8a;"${c === 3 ? ' selected' : ''}>${NAKIT_PB[c].ad}</option>`).join('');
     content.innerHTML = `
-        <div style="margin-bottom: 10px;"><span style="${lb}">HESAP</span><select id="nakit-hesap" onchange="nakitSecimDegisti_()" style="${st} font-weight: 600;">${hesapOpt}</select></div>
-        <div style="margin-bottom: 10px;"><span style="${lb}">PARA BİRİMİ</span><select id="nakit-pb" onchange="nakitSecimDegisti_()" style="${st} font-weight: 600;">${pbOpt}</select></div>
-        <div style="margin-bottom: 4px;"><span style="${lb}">TUTAR</span><input id="nakit-tutar" type="text" inputmode="numeric" oninput="nakitTutarFormat_(this)" style="${st} text-align: right; font-size: 15px;"></div>
+        <div style="margin-bottom: 6px;"><span style="${lb}">HESAPLAR</span><select id="nakit-hesap" onchange="nakitSecimDegisti_()" style="${st} font-weight: 600;">${hesapOpt}</select></div>
+        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+            <div style="flex: 0 0 38%;"><span style="${lb}">PARA BİRİMİ</span><select id="nakit-pb" onchange="nakitSecimDegisti_()" style="${st} height: 26px; padding: 2px 6px; font-size: 11px; font-weight: 600;">${pbOpt}</select></div>
+            <div style="flex: 1; min-width: 0;"><span style="${lb} text-align: right;">TUTAR</span><input id="nakit-tutar" type="text" inputmode="numeric" oninput="nakitTutarFormat_(this)" style="${st} height: 26px; padding: 2px 8px; font-size: 12px; text-align: right;"></div>
+        </div>
+        <div style="text-align: right;"><button onclick="saveNakitData()" style="height: 26px; padding: 0 14px; background: #FAF884; color: #1e3a8a; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">💾 Kaydet</button></div>
         <div id="nakit-ozet-tablo" style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 6px;"></div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">
             <span>Toplam</span><b id="nakit-toplam" style="color: #FAF884; font-size: 16px;"></b>
@@ -14916,9 +14913,11 @@ function nakitOzetCiz_() {
         const sec = s === nakitSecSatir;
         const bg = sec ? 'background: rgba(250,248,132,0.12);' : 'background: transparent;';
         const ad = (budgetData[s - 1] && budgetData[s - 1][0]) || ('Satır ' + s);
-        html += `<tr onclick="document.getElementById('nakit-hesap').value='${s}'; nakitSecimDegisti_();" style="cursor: pointer;">
-            <td style="${td} ${bg} text-align: left; color: ${sec ? '#FAF884' : '#fff'};">${ad}</td>` +
-            [2, 3, 4].map(c => { const n = nakitDeger_(s, c); return `<td style="${td} ${bg} color: ${n ? '#fff' : '#94a3b8'};">${n ? nakitFmt_(n) : '–'}</td>`; }).join('') + '</tr>';
+        const secPb = parseInt(document.getElementById('nakit-pb').value, 10);
+        html += `<tr style="cursor: pointer;">
+            <td onclick="nakitHucreSec_(${s}, 0)" style="${td} ${bg} text-align: left; color: ${sec ? '#FAF884' : '#fff'};">${ad}</td>` +
+            [2, 3, 4].map(c => { const n = nakitDeger_(s, c); const hs = sec && c === secPb;
+                return `<td onclick="nakitHucreSec_(${s}, ${c})" style="${td} ${bg} color: ${hs ? '#FAF884' : (n ? '#fff' : '#94a3b8')}; ${hs ? 'font-weight: 700; outline: 1px solid #FAF884; outline-offset: -2px; border-radius: 4px;' : ''}">${n ? nakitFmt_(n) : '–'}</td>`; }).join('') + '</tr>';
     }
     document.getElementById('nakit-ozet-tablo').innerHTML = html + '</table>';
     // Toplam = TOPLAM BÜTÇE C15 (sheet'in kendi kur hesabı)
@@ -14928,6 +14927,14 @@ function nakitOzetCiz_() {
 
 function closeNakitDetailModal() {
     document.getElementById('nakitDetailModal').style.display = 'none';
+}
+
+// Tablodan hücre seçimi: hesap adı → yalnız hesap; tutar hücresi → hesap + o sütunun para birimi
+function nakitHucreSec_(satir, sutun) {
+    document.getElementById('nakit-hesap').value = String(satir);
+    if (sutun) document.getElementById('nakit-pb').value = String(sutun);
+    nakitSecimDegisti_();
+    if (sutun) document.getElementById('nakit-tutar').focus();
 }
 
 async function saveNakitData() {

@@ -2037,7 +2037,7 @@ function sifreKontrol() {
 
         <!-- NAKİT DETAY MODAL -->
         <div id="nakitDetailModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); pointer-events: auto;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(30, 60, 114, 0.98) 0%, rgba(42, 82, 152, 0.98) 100%); backdrop-filter: blur(12px); border-radius: 16px; padding: 24px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 2px #FAF884;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(30, 60, 114, 0.98) 0%, rgba(42, 82, 152, 0.98) 100%); backdrop-filter: blur(12px); border-radius: 16px; padding: 24px; width: 90%; max-width: 340px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 2px #FAF884;">
                 
                 <!-- Kapat Butonu -->
                 <button onclick="closeNakitDetailModal()" style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #FAF884 0%, #f59e0b 100%); border: none; color: #1e3a8a; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 12px rgba(250, 248, 132, 0.3);">✕</button>
@@ -14850,118 +14850,103 @@ async function saveUsdHedef() {
 
 // ==================== NAKİT GÜNCELLE MODAL FONKSİYONLARI ====================
 
+// ==================== NAKİT DETAY (15.11.2026 v10) ====================
+// TOPLAM BÜTÇE A8:D14 → hesap (satır 8-14) × para birimi (B=TL, C=USD, D=EUR).
+// budgetData[i] = sheet satırı i+1 (parseCSV boş satırları korur) → satır 8 = index 7.
+// Kaydet: tek hücre yazar (action=updateNakitHucre&satir=8..14&sutun=2..4&deger=N).
+const NAKIT_ILK_SATIR = 8, NAKIT_SON_SATIR = 14;
+const NAKIT_PB = { 2: { ad: '₺ TL', s: '₺' }, 3: { ad: '$ USD', s: '$' }, 4: { ad: '€ EUR', s: '€' } };
+let nakitSecSatir = NAKIT_ILK_SATIR;
+
+function nakitDeger_(satir, sutun) {           // sutun: 2=B,3=C,4=D (1 tabanlı)
+    const r = budgetData && budgetData[satir - 1];
+    return r ? (parseNumberSmart(r[sutun - 1]) || 0) : 0;
+}
+function nakitFmt_(n) { return Math.round(n).toLocaleString('tr-TR'); }
+
 function openNakitDetailModal() {
-    console.log('💰 Nakit Detay Modal açılıyor...');
-    
     const modal = document.getElementById('nakitDetailModal');
     const content = document.getElementById('nakit-modal-content');
-    
-    // Modal'ı göster
     modal.style.display = 'flex';
-    
-    // Loading göster
-    content.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #94a3b8;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
-            <p style="margin-top: 10px;">Yükleniyor...</p>
-        </div>
-    `;
-    
-    // TOPLAM BÜTÇE A8-A14 ve C8-C14 verilerini oku (C15 TOPLAM atlanıyor)
-    if (budgetData && budgetData.length >= 14) {
-        let html = '<div style="display: grid; gap: 12px;">';
-        
-        // A8-A14: Satır 8-14 (index 6-12) - İndex 1 kayık olduğu için 6'dan başlıyor
-        for (let i = 6; i <= 12; i++) {
-            const label = budgetData[i] ? budgetData[i][0] : `Satır ${i+2}`; // A sütunu (index 0)
-            const value = budgetData[i] ? (budgetData[i][2] || '0') : '0'; // C sütunu (index 2)
-            // USD formatını temizle: $18.200 → 18200
-            const cleanValue = String(value).replace(/[^0-9]/g, ''); // $ ve nokta kaldır
-            const valueNum = parseInt(cleanValue) || 0;
-            
-            html += `
-                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <label style="flex: 1; font-weight: 500; color: #e2e8f0;">${label || '-'}:</label>
-                    <input 
-                        id="nakit-input-${i}" 
-                        type="text" 
-                        value="${Math.round(valueNum)}" 
-                        onkeyup="formatNakitInput(this)" 
-                        style="width: 150px; padding: 8px 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: #fff; font-size: 13px; text-align: right;"
-                    />
-                </div>
-            `;
-        }
-        
-        html += '</div>';
-        content.innerHTML = html;
-    } else {
+    if (!budgetData || budgetData.length < NAKIT_SON_SATIR) {
         content.innerHTML = '<p style="text-align: center; color: #f87171;">⚠️ BUDGET verisi yüklenmedi!</p>';
+        return;
     }
+    const st = 'width: 100%; box-sizing: border-box; padding: 8px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 13px;';
+    const lb = 'display: block; font-size: 11px; color: #cbd5e1; letter-spacing: .05em; margin: 0 0 4px;';
+    let hesapOpt = '';
+    for (let s = NAKIT_ILK_SATIR; s <= NAKIT_SON_SATIR; s++) {
+        const ad = (budgetData[s - 1] && budgetData[s - 1][0]) || ('Satır ' + s);
+        hesapOpt += `<option value="${s}" style="background:#1e3a8a;"${s === nakitSecSatir ? ' selected' : ''}>${ad}</option>`;
+    }
+    const pbOpt = [2, 3, 4].map(c => `<option value="${c}" style="background:#1e3a8a;"${c === 3 ? ' selected' : ''}>${NAKIT_PB[c].ad}</option>`).join('');
+    content.innerHTML = `
+        <div style="margin-bottom: 10px;"><span style="${lb}">HESAP</span><select id="nakit-hesap" onchange="nakitSecimDegisti_()" style="${st} font-weight: 600;">${hesapOpt}</select></div>
+        <div style="margin-bottom: 10px;"><span style="${lb}">PARA BİRİMİ</span><select id="nakit-pb" onchange="nakitSecimDegisti_()" style="${st} font-weight: 600;">${pbOpt}</select></div>
+        <div style="margin-bottom: 4px;"><span style="${lb}">TUTAR</span><input id="nakit-tutar" type="text" inputmode="numeric" oninput="nakitTutarFormat_(this)" style="${st} text-align: right; font-size: 15px;"></div>
+        <div id="nakit-ozet-tablo" style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 6px;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">
+            <span>Toplam</span><b id="nakit-toplam" style="color: #FAF884; font-size: 16px;"></b>
+        </div>`;
+    nakitSecimDegisti_();
+}
+
+function nakitSecimDegisti_() {
+    nakitSecSatir = parseInt(document.getElementById('nakit-hesap').value, 10);
+    const sutun = parseInt(document.getElementById('nakit-pb').value, 10);
+    const n = nakitDeger_(nakitSecSatir, sutun);
+    const inp = document.getElementById('nakit-tutar');
+    inp.value = n ? NAKIT_PB[sutun].s + ' ' + nakitFmt_(n) : '';
+    inp.placeholder = NAKIT_PB[sutun].s + ' 0';
+    nakitOzetCiz_();
+}
+
+function nakitTutarFormat_(inp) {
+    const sutun = parseInt(document.getElementById('nakit-pb').value, 10);
+    const n = parseInt(inp.value.replace(/[^0-9]/g, ''), 10) || 0;
+    inp.value = n ? NAKIT_PB[sutun].s + ' ' + nakitFmt_(n) : '';
+}
+
+function nakitOzetCiz_() {
+    const th = 'font-size: 10px; color: #cbd5e1; font-weight: 600; text-align: right; padding: 4px; background: transparent; border: none;';
+    const td = 'padding: 5px 4px; text-align: right; white-space: nowrap; border: none;';
+    let html = `<table style="width: 100%; min-width: 0; border-collapse: collapse; font-size: 12px; margin: 0;"><tr>
+        <th style="${th} text-align: left;">HESAP</th><th style="${th}">₺</th><th style="${th}">$</th><th style="${th}">€</th></tr>`;
+    for (let s = NAKIT_ILK_SATIR; s <= NAKIT_SON_SATIR; s++) {
+        const sec = s === nakitSecSatir;
+        const bg = sec ? 'background: rgba(250,248,132,0.12);' : 'background: transparent;';
+        const ad = (budgetData[s - 1] && budgetData[s - 1][0]) || ('Satır ' + s);
+        html += `<tr onclick="document.getElementById('nakit-hesap').value='${s}'; nakitSecimDegisti_();" style="cursor: pointer;">
+            <td style="${td} ${bg} text-align: left; color: ${sec ? '#FAF884' : '#fff'};">${ad}</td>` +
+            [2, 3, 4].map(c => { const n = nakitDeger_(s, c); return `<td style="${td} ${bg} color: ${n ? '#fff' : '#94a3b8'};">${n ? nakitFmt_(n) : '–'}</td>`; }).join('') + '</tr>';
+    }
+    document.getElementById('nakit-ozet-tablo').innerHTML = html + '</table>';
+    // Toplam = TOPLAM BÜTÇE C15 (sheet'in kendi kur hesabı)
+    const t = budgetData[14] ? parseNumberSmart(budgetData[14][2]) : 0;
+    document.getElementById('nakit-toplam').textContent = '₺' + nakitFmt_(t);
 }
 
 function closeNakitDetailModal() {
-    const modal = document.getElementById('nakitDetailModal');
-    modal.style.display = 'none';
+    document.getElementById('nakitDetailModal').style.display = 'none';
 }
 
-// Input formatı (binlik ayırıcı ekle - virgül kullan)
-function formatNakitInput(input) {
-    let value = input.value.replace(/[^0-9]/g, ''); // Sadece rakamlar
-    if (value) {
-        // Manuel format: 1234567 → 1,234,567
-        const num = parseInt(value);
-        input.value = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-}
-
-// Nakit değerlerini kaydet (TOPLAM BÜTÇE C8-C14'e yaz)
 async function saveNakitData() {
-    console.log('💾 Nakit verileri kaydediliyor...');
-    
-    // C8-C14 (7 input) değerlerini topla (index 6-12)
-    const values = [];
-    for (let i = 6; i <= 12; i++) {  // 6-12 (7 değer)
-        const input = document.getElementById(`nakit-input-${i}`);
-        if (!input) continue;
-        
-        const valueStr = input.value.replace(/[^0-9]/g, ''); // Nokta/virgül kaldır
-        const valueNum = parseInt(valueStr) || 0;
-        values.push(valueNum);
-    }
-    
-    console.log('📊 Kaydedilecek değerler (C8-C14):', values);
-    
-    if (values.length !== 7) {  // 7 değer olmalı
-        alert('⚠️ Tüm alanlar doldurulmalı!');
-        return;
-    }
-    
+    const satir = parseInt(document.getElementById('nakit-hesap').value, 10);
+    const sutun = parseInt(document.getElementById('nakit-pb').value, 10);
+    const deger = parseInt(document.getElementById('nakit-tutar').value.replace(/[^0-9]/g, ''), 10) || 0;
+    if (!(satir >= NAKIT_ILK_SATIR && satir <= NAKIT_SON_SATIR) || !NAKIT_PB[sutun]) return;
     try {
-        // Apps Script Web App üzerinden Google Sheets'e yaz
-        const response = await fetch(
-            `${APPS_SCRIPT_URL}?action=updateNakitBulk&values=${values.join(',')}`,
-            {
-                method: 'GET'
-            }
-        );
-        
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=updateNakitHucre&satir=${satir}&sutun=${sutun}&deger=${deger}&_=${Date.now()}`, { method: 'GET', cache: 'no-store' });
         const result = await response.json();
-        
-        console.log('📥 Sunucu yanıtı:', result);
-        
-        if (result.status === 'success') {
-            alert('✅ Nakit detayları başarıyla güncellendi!\n\n💾 ' + values.length + ' hücre güncellendi.');
-            closeNakitDetailModal();
-            
-            // Sayfayı yenile
-            setTimeout(() => {
-                loadNakitData().then(() => updateOzetTotalNakit());
-            }, 1500);
-        } else {
-            alert('❌ Hata: ' + result.message);
+        if (result.status !== 'success') { alert('❌ Hata: ' + result.message); return; }
+        await loadBudgetData();          // tablo + C15 toplam tazelenir
+        await loadOzetSheetData();       // ÖZET Nakit (OZET!Z2 = TOPLAM BÜTÇE C15)
+        updateOzetTotalNakit();
+        if (document.getElementById('nakit-hesap')) {
+            document.getElementById('nakit-hesap').value = String(satir);
+            document.getElementById('nakit-pb').value = String(sutun);
+            nakitSecimDegisti_();
         }
-        
     } catch (error) {
         console.error('❌ Nakit kaydetme hatası:', error);
         alert('❌ Kaydetme sırasında bir hata oluştu!\n\n' + error.message);

@@ -3695,6 +3695,9 @@ function sifreKontrol() {
             #teknik-analiz-tab .ta-kz{font-size:10.5px;color:#b4c3e3;margin-bottom:6px}
             #teknik-analiz-tab .ta-kkarar{padding:6px 8px;border-radius:6px;background:rgba(250,248,132,.08);border:1px solid rgba(250,248,132,.3);margin-bottom:6px;font-size:12.5px}
             #teknik-analiz-tab .ta-kkarar b{color:#FAF884}
+            #teknik-analiz-tab .ta-kkarar{text-align:center}
+            #teknik-analiz-tab .ta-kart .ta-sebep .ta-kv{width:100%;table-layout:fixed}
+            #teknik-analiz-tab .ta-kart .ta-sebep .ta-kv th,#teknik-analiz-tab .ta-kart .ta-sebep .ta-kv td{text-align:left;padding-left:0;padding-right:6px}
             #teknik-analiz-tab .ta-kart .ta-kv{width:auto;font-size:11.5px}
             #teknik-analiz-tab .ta-kart .ta-kv th{font-size:9.5px;padding:0 0 4px 12px}
             #teknik-analiz-tab .ta-kart .ta-kv td{padding:3px 0 3px 12px}
@@ -3703,10 +3706,19 @@ function sifreKontrol() {
             #teknik-analiz-tab .ta-kart .ta-mini td:first-child{padding-left:0}
             #teknik-analiz-tab .ta-kart .ta-mini .uzun{white-space:normal;display:inline-block;text-align:left;font-weight:400}
             #teknik-analiz-tab .ta-kart .ta-mini td:has(.uzun){white-space:normal;text-align:left}
-            #teknik-analiz-tab .ta-bolum{margin-top:6px;border-top:1px solid rgba(255,255,255,.16);padding-top:5px}
+            #teknik-analiz-tab .ta-bolum{margin-top:4px;border-top:1px solid rgba(255,255,255,.16);padding-top:4px}
+            #teknik-analiz-tab .ta-ozs{display:grid;grid-template-columns:92px repeat(4,minmax(0,1fr));gap:0 6px;align-items:center}
+            #teknik-analiz-tab .ta-ozs .ad{margin:0}
+            #teknik-analiz-tab .ta-ozs .h{min-width:0;line-height:1.15}
+            #teknik-analiz-tab .ta-ozs .h i{display:block;font-style:normal;font-size:9.5px;color:#b4c3e3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #teknik-analiz-tab .ta-ozs .h b{display:block;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #teknik-analiz-tab .ta-ozs .h b small{font-size:9.5px;font-weight:600;color:#b4c3e3;margin-left:3px}
+            #teknik-analiz-tab .ta-ozs .h b.iyi{color:#4ade80} #teknik-analiz-tab .ta-ozs .h b.kotu{color:#f87171}
+            #teknik-analiz-tab .ta-ozs .uz{grid-column:2 / -1;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#eef3ff}
+            #teknik-analiz-tab .ta-bolum[open] .ta-ozs .h,#teknik-analiz-tab .ta-bolum[open] .ta-ozs .uz{visibility:hidden}
             #teknik-analiz-tab .ta-bolum summary{cursor:pointer;list-style:none;display:block}
             #teknik-analiz-tab .ta-bolum summary::-webkit-details-marker{display:none}
-            #teknik-analiz-tab .ta-bolum .ad{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#b4c3e3;display:block;margin-bottom:2px}
+            #teknik-analiz-tab .ta-bolum .ad{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#b4c3e3;white-space:nowrap}
             #teknik-analiz-tab .ta-bolum .ad::before{content:'▸ ';color:#FAF884}
             #teknik-analiz-tab .ta-bolum[open] .ad::before{content:'▾ '}
             #teknik-analiz-tab .ta-bolum[open] summary .ta-mini{display:none}
@@ -3722,7 +3734,7 @@ function sifreKontrol() {
                 #teknik-analiz-tab .ta-ust small{display:none}
             }
             </style>
-            <div class="ta-ust"><button type="button" class="ta-lbtn" id="ta-lbtn" onclick="taListeAcKapat_()">☰ Analizler ▾</button><small>Kart: başlıktan sürükle · sağ alt köşeden boyutlandır · — küçült / + aç · ✕ kapat · en fazla 3</small></div>
+            <div class="ta-ust"><button type="button" class="ta-lbtn" id="ta-lbtn" onclick="taListeAcKapat_()">☰ Analizler ▾</button></div>
             <div class="ta-duzen" id="ta-duzen">
                 <aside class="ta-panel" aria-label="Analiz seç">
                     <div class="ta-h2" style="display:flex; justify-content:space-between; align-items:center;">Yeni analiz<span onclick="sabitAnalizAyarPaneliAcKapat(document.getElementById('ta-ayar-yeri'))" title="Sabit analiz liste ayarları" style="cursor:pointer; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.14); display:inline-flex; align-items:center; justify-content:center; font-size:11px; text-transform:none;">⚙️</span></div>
@@ -13288,8 +13300,14 @@ function taMini_(satirlar) {
     }).join('') + '</tbody></table>';
 }
 
-function taBolum_(ad, mini, ic) {
-    return '<details class="ta-bolum"><summary><span class="ad">' + ad + '</span>' + (mini || '') + '</summary><div class="ic">' + ic + '</div></details>';
+// Kapalı özet: [bölüm adı | 4 sabit sütun] — her hücre küçük etiket + değer; tüm bölümlerde aynı hizada.
+function taOzetHucre_(hucreler) {
+    return hucreler.slice(0, 4).map(function (h) {
+        return '<span class="h"><i>' + h[0] + '</i><b' + (h[2] ? ' class="' + h[2] + '"' : '') + '>' + ((h[1] === undefined || h[1] === null || h[1] === '') ? '—' : h[1]) + '</b></span>';
+    }).join('');
+}
+function taBolum_(ad, ozetHtml, ic) {
+    return '<details class="ta-bolum"><summary><div class="ta-ozs"><span class="ad">' + ad + '</span>' + (ozetHtml || '') + '</div></summary><div class="ic">' + ic + '</div></details>';
 }
 
 function taGoster(idx) {
@@ -13355,7 +13373,7 @@ function taGoster(idx) {
 
     var ys = k.yapisalSeviyeler || {};
     var gv = (typeof grafikVerileriAyikla === 'function') ? grafikVerileriAyikla(k.analiz) : null;
-    var seviye = [['Hedef', fmt(ys.hedefOnerisi)], ['Stop', fmt(ys.stopOnerisi)]];
+    var seviye = [['Hedef', fmt(ys.hedefOnerisi), 'iyi'], ['Stop', fmt(ys.stopOnerisi), 'kotu']];
     if (typeof ys.girisFiyati === 'number' && typeof icraPlaniGosterilsinMi_ === 'function' && icraPlaniGosterilsinMi_(k.pozisyonBazliKararEtiketi)) seviye.push(['Giriş', fmt(ys.girisFiyati)]);
     if (gv && typeof gv.destek1 === 'number') seviye.push(['Destek', fmt(gv.destek1)]);
     if (gv && typeof gv.direnc1 === 'number') seviye.push(['Direnç', fmt(gv.direnc1)]);
@@ -13409,11 +13427,11 @@ function taGoster(idx) {
         '<div class="ta-kgovde">' +
             '<div class="ta-kz">' + taEsc_(k.zaman) + (kaynak ? ' · ' + kaynak : '') + (acikPoz ? ' · ● açık poz var' : '') + '</div>' +
             '<div class="ta-kkarar"><b>Karar: ' + taEsc_(karar) + '</b></div>' +
-            (sebep.length ? taTablo_(sebep, ['Sebep', 'Durum', 'Değer']) : '') +
-            taBolum_('Seviyeler', taMini_(seviye), taTablo_(seviye, ['Seviye', 'Fiyat'])) +
-            taBolum_('Göstergeler', taMini_(gosterge.map(function (r) { return [r[0], r[1]]; })), taTablo_(gosterge, ['Gösterge', 'Değer', 'Durum'])) +
-            (riskSatir.length ? taBolum_('Risk / Ödül', taMini_(riskMini), taTablo_(riskSatir, ['Kriter', 'Değer', 'Durum', 'Puan'])) : '') +
-            (senIc ? taBolum_('Senaryolar', taMini_(senMini), senIc) : '') +
+            (sebep.length ? '<div class="ta-sebep">' + taTablo_(sebep, ['Sebep', 'Durum', 'Değer']) + '</div>' : '') +
+            taBolum_('Seviyeler', taOzetHucre_(seviye), taTablo_(seviye, ['Seviye', 'Fiyat'])) +
+            taBolum_('Göstergeler', taOzetHucre_(gosterge.map(function (r) { return [r[0].replace(' skoru', '').replace(' (14)', ''), r[1]]; })), taTablo_(gosterge, ['Gösterge', 'Değer', 'Durum'])) +
+            (riskSatir.length ? taBolum_('Risk / Ödül', taOzetHucre_(riskMini.map(function (r) { return [r[0], r[1]]; })), taTablo_(riskSatir, ['Kriter', 'Değer', 'Durum', 'Puan'])) : '') +
+            (senIc ? taBolum_('Senaryolar', '<span class="uz">' + (anaS ? 'Ana: ' + taEsc_(anaS) : (gecersizlik || '')) + '</span>', senIc) : '') +
             (detayHtml ? taBolum_('Detaylı analiz', '', '<div class="ta-detay">' + detayHtml + '</div>') : '') +
         '</div>';
 

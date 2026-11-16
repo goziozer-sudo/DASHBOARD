@@ -8389,8 +8389,8 @@ function updateOzetHedefCard() {
         }
         
         // Row 7 (index 6) - H7, J7: HEDEF (COİNLER satırı)
-        if (budgetData[6]) {
-            const row7 = budgetData[6];
+        if (budgetData[7]) {
+            const row7 = budgetData[7];
             if (row7[7]) {
                 let usdRaw = row7[7].toString().replace(/"/g, '').trim();
                 usdRaw = usdRaw.replace(/[₺$€]/g, '').replace(/\./g, '').replace(/,/g, '');
@@ -8475,8 +8475,8 @@ function updateHedefCard(mevcutUSD, mevcutEUR, budgetData) {
     let hedefEUR = 0;
     
     // Row 7 (COİNLER) = index 6 (0-based indexing)
-    if (budgetData && budgetData.length > 6 && budgetData[6]) {
-        const row7 = budgetData[6];
+    if (budgetData && budgetData.length > 7 && budgetData[7]) {
+        const row7 = budgetData[7];
         console.log('   Row 7 (COİNLER) bulundu, uzunluk:', row7.length);
         console.log('   Row 7 içerik:', row7);
         

@@ -3677,7 +3677,7 @@ function sifreKontrol() {
             #teknik-analiz-tab .ta-sahne{position:relative;height:780px;overflow:hidden;padding:0}
             #teknik-analiz-tab .ta-tepsi{position:absolute;left:0;right:0;bottom:0;height:50px;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.16);pointer-events:none}
             #teknik-analiz-tab .ta-sahne .ta-bos{position:absolute;inset:0 0 50px 0}
-            #teknik-analiz-tab .ta-kart{position:absolute;width:360px;min-width:280px;max-width:640px;min-height:120px;display:flex;flex-direction:column;background:linear-gradient(135deg,rgba(30,60,114,.98) 0%,rgba(42,82,152,.98) 100%);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.16);overflow:hidden;resize:both;color:#eef3ff}
+            #teknik-analiz-tab .ta-kart{position:absolute;width:360px;min-width:280px;max-width:640px;min-height:120px;display:flex;flex-direction:column;background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.16);overflow:hidden;resize:both;color:#eef3ff}
             #teknik-analiz-tab .ta-kart.on{box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 2px #FAF884}
             #teknik-analiz-tab .ta-kart.min{width:auto!important;height:auto!important;min-width:0;min-height:0;resize:none}
             #teknik-analiz-tab .ta-kart.min .ta-kgovde{display:none}
@@ -3739,6 +3739,7 @@ function sifreKontrol() {
             #teknik-analiz-tab .ta-bolum[open] .ad::before{content:'▾ '}
             #teknik-analiz-tab .ta-bolum[open] summary .ta-mini{display:none}
             #teknik-analiz-tab .ta-bolum .ic{margin-top:4px}
+            #teknik-analiz-tab .ta-kart .ta-skor > div{margin-top:0!important}
             #teknik-analiz-tab .ta-kart .ta-senaryo{font-size:12px;margin-bottom:4px}
             #teknik-analiz-tab .ta-kart .ta-senaryo b{font-size:12px;text-transform:none;letter-spacing:0}
             #teknik-analiz-tab .ta-kart .ta-detay{font-size:12px}
@@ -13182,8 +13183,9 @@ function taTablo_(satirlar, bas) {
         '</tr></thead><tbody>' +
         satirlar.map(function (r) {
             var c = r[n] || '';
-            var hucreler = r.slice(1, n).map(function (v) {
-                return '<td class="' + c + '">' + ((v === undefined || v === null || v === '') ? '—' : v) + '</td>';
+            // (v15) Renk yalnız son sütunda (Durum); Değer sütunu beyaz kalır.
+            var hucreler = r.slice(1, n).map(function (v, i) {
+                return '<td class="' + (i === n - 2 ? c : '') + '">' + ((v === undefined || v === null || v === '') ? '—' : v) + '</td>';
             }).join('');
             return '<tr><td>' + r[0] + '</td>' + hucreler + '</tr>';
         }).join('') +
@@ -13441,6 +13443,9 @@ function taGoster(idx) {
         '</div>';
     }
 
+    // (v15) Trend / İşlem Skoru — Pozisyonlar kartıyla aynı fonksiyon (teknikSkorBolumuOlustur)
+    var skorHtml = (k.teknikSkor && typeof teknikSkorBolumuOlustur === 'function') ? teknikSkorBolumuOlustur(k.teknikSkor) : '';
+
     var detayHtml = (typeof tumDetayHtmlOlustur === 'function') ? tumDetayHtmlOlustur(k, k.ticker, k.zaman) : '';
     detayHtml = detayHtml.replace(/#fbbf24/gi, '#FAF884').replace(/rgba\(251,\s*191,\s*36/g, 'rgba(250,248,132');
 
@@ -13463,9 +13468,11 @@ function taGoster(idx) {
             serit +
             (sebep.length ? '<div class="ta-sebep">' + taTablo_(sebep, ['Sebep', 'Değer', 'Durum']) + '</div>' : '') +
             '<div class="ta-detaylar">' +
-            (seviye.length ? taBolum_('Seviyeler', taOzetHucre_(seviye), taTablo_(seviye, ['Seviye', 'Fiyat'])) : '') +
-            (riskSatir.length ? taBolum_('Risk / Ödül', '', taTablo_(riskSatir, ['Kriter', 'Değer', 'Durum', 'Puan'])) : '') +
+            // (v15) Sıra: Senaryolar → Trend / İşlem Skoru → Seviyeler → Detaylı analiz (Risk / Ödül bölümü kaldırıldı).
             (senIc ? taBolum_('Senaryolar', '<span class="uz">' + (anaS ? 'Ana: ' + taEsc_(anaS) : (gecersizlik || '')) + '</span>', senIc) : '') +
+            // (v15) Pozisyonlar analiz kartındaki Trend / İşlem Skoru kutuları, Senaryolar'ın hemen altında (açılır-kapanır).
+            (skorHtml ? taBolum_('Trend / İşlem Skoru', '', '<div class="ta-skor">' + skorHtml + '</div>') : '') +
+            (seviye.length ? taBolum_('Seviyeler', taOzetHucre_(seviye), taTablo_(seviye, ['Seviye', 'Fiyat'])) : '') +
             (detayHtml ? taBolum_('Detaylı analiz', '', '<div class="ta-detay">' + detayHtml + '</div>') : '') +
             '</div>' +
             '<div class="ta-kz">' + taEsc_(k.zaman) + (acikPoz ? ' · <span class="ta-pozyazi">● açık poz var<span class="ta-ipucu">' + taEsc_(pozBilgi) + '</span></span>' : '') + '</div>' +

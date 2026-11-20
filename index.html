@@ -297,6 +297,14 @@ header h1 i {
 #ozet-tab .card:hover, #ozet-tab .card:focus-within { z-index: 30; }
 #ozet-tab .card-content .pd-satir { position: relative; text-align: left; width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: baseline; font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.12); font-variant-numeric: tabular-nums; outline: none; margin: 0; }
 #ozet-tab .card-content .pd-satir .pd-yuzde { font-size: 17px; }
+#ozet-tab .card-content .pd-anlik { text-align: center; position: relative; border: 1px solid rgba(148,163,184,0.35); border-radius: 10px; padding: 6px 12px 12px; background: rgba(255,255,255,0.03); }
+#ozet-tab .card-content .pd-anlik .pd-anlik-saat { position: absolute; top: 6px; right: 10px; font-size: 11px; line-height: 18px; font-weight: 400; color: #cbd5e1; font-variant-numeric: tabular-nums; display: inline-block; animation: pdYanipSon 1s ease-in-out infinite; }
+@keyframes pdYanipSon { 0%, 45% { opacity: 1; } 55%, 90% { opacity: 0.2; } 100% { opacity: 1; } }
+#ozet-tab .card-content .pd-anlik .pd-anlik-baslik { font-size: 13px; line-height: 18px; font-weight: 400; color: #cbd5e1; text-transform: uppercase; }
+#ozet-tab .card-content .pd-anlik .pd-anlik-yuzde { font-size: 34px; font-weight: 700; line-height: 1.15; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+#ozet-tab .card-content .pd-anlik.pd-var { cursor: help; }
+#ozet-tab .card-content .pd-anlik.pd-var .pd-anlik-yuzde { text-decoration: underline dotted rgba(255,255,255,0.35); text-underline-offset: 6px; }
+#ozet-tab .card-content .pd-anlik.pd-var:hover .pd-balon, #ozet-tab .card-content .pd-anlik.pd-var:focus .pd-balon { display: block; }
 #ozet-tab .card-content .pd-satir.pd-var { cursor: help; }
 #ozet-tab .card-content .pd-satir.pd-var .pd-yuzde { border-bottom: 1px dotted rgba(255,255,255,0.35); }
 #ozet-tab .card-content .pd-nokta { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; margin-left: 6px; vertical-align: middle; }
@@ -1989,6 +1997,8 @@ function sifreKontrol() {
                             <div id="ozet-weekly-change">-</div>
                             <div id="ozet-monthly-change">-</div>
                         </div>
+                        <!-- (v17) ANLIK DEĞİŞİM: son GFs kaydı ↔ şimdi (DASHBOARD 2. satır, Toplam Bütçe) -->
+                        <div id="ozet-anlik-change" style="margin-top: 86px;">-</div>
                     </div>
                 </div>
                 
@@ -4781,7 +4791,8 @@ async function loadGFsData() {
         // limit=60: sadece son 60 satır + başlık okunuyor (günlük/haftalık/aylık değişim
         // hesapları en fazla 31 satır geriye bakıyor, +buffer); 2405 satırın tamamını okumak
         // gereksiz yere yavaşlatıyordu — bkz. fetchSheetCSV() ve backend'deki "limit" desteği.
-        await loadNakitHareketData(); // Nakit çekim kayıtları (07.11.2026) — PORTFÖY DEĞİŞİMİ ayrıştırması için
+        // (v17) DASHBOARD 2. satır (anlık değerler) — Özet > Portföy Değişimi > ANLIK DEĞİŞİM için; paralel okunur
+        await Promise.all([loadNakitHareketData(), loadDashboardAnlikSatir()]); // Nakit çekim kayıtları (07.11.2026) — PORTFÖY DEĞİŞİMİ ayrıştırması için
         const csvText = await fetchSheetCSV('GFs', 60);
         console.log('GFs CSV received, length:', csvText.length);
         
@@ -8220,6 +8231,9 @@ function renderOzetTab() {
     
     // 5. Aylık Değişim
     updateOzetMonthlyChange();
+
+    // 5b. (v17) Anlık Değişim (son GFs kaydı ↔ DASHBOARD 2. satır)
+    updateOzetAnlikChange();
     
     // 6. Toplam Risk Oranı (KALDIRILDI)
     // updateOzetRiskRatio();
@@ -8604,6 +8618,16 @@ function updateOzetTotalNakit() {
 // İşlem Karı = Toplam − Nakit Çıkış  →  (Bugün − Önce + Çekim) / Önce
 window.nakitHareketData = [];
 
+// (v17) DASHBOARD sayfası 2. satır = anlık değerler (GFs ile aynı sütun düzeni; U = index 20 Toplam Bütçe)
+async function loadDashboardAnlikSatir() {
+    try {
+        const satirlar = parseCSV(await fetchSheetCSV('DASHBOARD'));
+        window.dashboardAnlikSatir = (satirlar && satirlar.length > 1) ? satirlar[1] : null;
+    } catch (err) {
+        console.log('ℹ️ DASHBOARD okunamadı, Anlık Değişim gösterilmeyecek:', err.message);
+    }
+}
+
 async function loadNakitHareketData() {
     try {
         const csvText = await fetchSheetCSV('NAKIT_HAREKET');
@@ -8656,6 +8680,38 @@ function portfoyDegisimHTML(baslik, onceDeger, bugunDeger, cekim) {
         </div></div>`;
 }
 
+// (v17) Anlık Değişim — son GFs kaydı (Toplam Bütçe, U) ↔ şimdi (DASHBOARD 2. satır, U = index 20).
+// Nakit çıkışı: son GFs tarihinden SONRA, bugüne kadar NAKIT_HAREKET'teki aktif çekimler.
+function updateOzetAnlikChange() {
+    const element = document.getElementById('ozet-anlik-change');
+    if (!element || !gfsData || gfsData.length < 2 || !window.dashboardAnlikSatir) return;
+    const sonRow = gfsData[gfsData.length - 1];
+    const once = parseNumberSmart(sonRow[20]) || 0;
+    const simdi = parseNumberSmart(window.dashboardAnlikSatir[20]) || 0;
+    if (!(once > 0) || !(simdi > 0)) { element.innerHTML = ''; return; }
+    const bugunStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const cekim = nakitCikisToplami(sonRow[1], bugunStr);
+    const toplamPct = (simdi - once) / once * 100, nakitPct = -cekim / once * 100, islemPct = toplamPct - nakitPct;
+    const isaret = v => (v >= 0 ? '+' : '-') + '%', sayi = v => Math.abs(v).toFixed(2).replace('.', ','), renk = v => v >= 0 ? '#4ade80' : '#f87171';
+    const balon = cekim > 0 ? `<div class="pd-balon">
+            <div class="pd-r"><span>İşlem Karı</span><span style="color:${renk(islemPct)};">${isaret(islemPct)}</span><span class="pd-n" style="color:${renk(islemPct)};">${sayi(islemPct)}</span><span></span></div>
+            <div class="pd-r"><span>Nakit Çıkış</span><span style="color:#fbbf24;">${isaret(nakitPct)}</span><span class="pd-n" style="color:#fbbf24;">${sayi(nakitPct)}</span><span>${Math.round(cekim).toLocaleString('tr-TR')} TL</span></div>
+        </div>` : '';
+    element.innerHTML = `<div class="pd-anlik${cekim > 0 ? ' pd-var' : ''}" tabindex="0">
+        <span class="pd-anlik-saat" id="pd-anlik-saat">${anlikSaatMetni()}</span>
+        <div class="pd-anlik-baslik">Anlık Değişim${cekim > 0 ? '<i class="pd-nokta"></i>' : ''}</div>
+        <div class="pd-anlik-yuzde" style="color:${renk(toplamPct)};">${isaret(toplamPct)}${sayi(toplamPct)}</div>
+${balon}</div>`;
+    if (!window._pdAnlikSaatTimer) {
+        window._pdAnlikSaatTimer = setInterval(() => {
+            const el = document.getElementById('pd-anlik-saat');
+            if (el) { el.textContent = anlikSaatMetni(); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
+        }, 1000);
+    }
+}
+function anlikSaatMetni() {
+    return new Date().toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
 // 2. Günlük Değişim
 function updateOzetDailyChange() {
     const element = document.getElementById('ozet-daily-change');

@@ -298,8 +298,8 @@ header h1 i {
 #ozet-tab .card-content .pd-satir { position: relative; text-align: left; width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: baseline; font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.12); font-variant-numeric: tabular-nums; outline: none; margin: 0; }
 #ozet-tab .card-content .pd-satir .pd-yuzde { font-size: 17px; }
 #ozet-tab .card-content .pd-anlik { text-align: center; position: relative; border: 1px solid rgba(148,163,184,0.35); border-radius: 10px; padding: 6px 12px 12px; background: rgba(255,255,255,0.03); }
-#ozet-tab .card-content .pd-anlik .pd-anlik-saat { position: absolute; top: 6px; right: 10px; font-size: 11px; line-height: 18px; font-weight: 400; color: #cbd5e1; font-variant-numeric: tabular-nums; display: inline-block; animation: pdYanipSon 1s ease-in-out infinite; }
-@keyframes pdYanipSon { 0%, 45% { opacity: 1; } 55%, 90% { opacity: 0.2; } 100% { opacity: 1; } }
+#ozet-tab .card-content .pd-anlik .pd-anlik-saat { position: absolute; top: 6px; right: 10px; font-size: 11px; line-height: 18px; font-weight: 400; color: #cbd5e1; font-variant-numeric: tabular-nums; display: inline-block; animation: pdDimmer 2s ease-in-out infinite; }
+@keyframes pdDimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 #ozet-tab .card-content .pd-anlik .pd-anlik-baslik { font-size: 13px; line-height: 18px; font-weight: 400; color: #cbd5e1; text-transform: uppercase; }
 #ozet-tab .card-content .pd-anlik .pd-anlik-yuzde { font-size: 34px; font-weight: 700; line-height: 1.15; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
 #ozet-tab .card-content .pd-anlik.pd-var { cursor: help; }
@@ -8623,6 +8623,7 @@ async function loadDashboardAnlikSatir() {
     try {
         const satirlar = parseCSV(await fetchSheetCSV('DASHBOARD'));
         window.dashboardAnlikSatir = (satirlar && satirlar.length > 1) ? satirlar[1] : null;
+        if (window.dashboardAnlikSatir) window.dashboardAnlikZaman = new Date(); // (v18) son başarılı okuma anı
     } catch (err) {
         console.log('ℹ️ DASHBOARD okunamadı, Anlık Değişim gösterilmeyecek:', err.message);
     }
@@ -8698,19 +8699,14 @@ function updateOzetAnlikChange() {
             <div class="pd-r"><span>Nakit Çıkış</span><span style="color:#fbbf24;">${isaret(nakitPct)}</span><span class="pd-n" style="color:#fbbf24;">${sayi(nakitPct)}</span><span>${Math.round(cekim).toLocaleString('tr-TR')} TL</span></div>
         </div>` : '';
     element.innerHTML = `<div class="pd-anlik${cekim > 0 ? ' pd-var' : ''}" tabindex="0">
-        <span class="pd-anlik-saat" id="pd-anlik-saat">${anlikSaatMetni()}</span>
+        <span class="pd-anlik-saat" id="pd-anlik-saat" title="Son güncelleme">${anlikSaatMetni()}</span>
         <div class="pd-anlik-baslik">Anlık Değişim${cekim > 0 ? '<i class="pd-nokta"></i>' : ''}</div>
         <div class="pd-anlik-yuzde" style="color:${renk(toplamPct)};">${isaret(toplamPct)}${sayi(toplamPct)}</div>
 ${balon}</div>`;
-    if (!window._pdAnlikSaatTimer) {
-        window._pdAnlikSaatTimer = setInterval(() => {
-            const el = document.getElementById('pd-anlik-saat');
-            if (el) { el.textContent = anlikSaatMetni(); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
-        }, 1000);
-    }
 }
+// (v18) Saat = DASHBOARD'un son başarıyla okunduğu an; bir sonraki yenilemeye kadar sabit kalır.
 function anlikSaatMetni() {
-    return new Date().toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return (window.dashboardAnlikZaman || new Date()).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 // 2. Günlük Değişim
 function updateOzetDailyChange() {

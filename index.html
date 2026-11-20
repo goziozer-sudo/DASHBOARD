@@ -7990,7 +7990,7 @@ if (window.ResizeObserver) {
     });
 }
 function ozbYuzde(pay, toplam) {
-    return toplam > 0 ? (pay / toplam * 100).toFixed(1) + '%' : '';
+    return toplam > 0 ? '%' + (pay / toplam * 100).toFixed(1).replace('.', ',') : '';
 }
 
 // Ticker’a göre ondalık basamak (XAG: 1, XAU: 0, aksi: 2)

@@ -3720,6 +3720,56 @@ function sifreKontrol() {
             
             #teknik-analiz-tab .ta-kgovde{padding:8px 10px 10px;font-size:12px;overflow-y:auto;overscroll-behavior:contain;flex:1 1 auto;min-height:0}
             #teknik-analiz-tab .ta-kz{font-size:12px;color:#b4c3e3;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.12);text-align:right}
+        /* (v20 · 20.11.2026) Ortak sade analiz kartı — Teknik Analiz sekmesi + yüzen kartlar */
+        .ak-kart{font-size:12px;color:#eef3ff;line-height:1.4}
+        .ak-kart .ak-bas{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+        .ak-kart .ak-fiyat{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+        .ak-kart .ak-karar{font-weight:800;font-size:11.5px;padding:2px 10px;border-radius:999px}
+        .ak-kart .k-sat{background:rgba(248,113,113,.18);color:#f87171}
+        .ak-kart .k-tut{background:rgba(250,248,132,.16);color:#FAF884}
+        .ak-kart .k-al{background:rgba(74,222,128,.16);color:#4ade80}
+        .ak-kart .iyi{color:#6ee7b7}.ak-kart .kotu{color:#fca5a5}.ak-kart .orta{color:#FAF884}
+        .ak-kart .ak-poz{display:flex;align-items:baseline;gap:8px;white-space:nowrap;background:rgba(16,185,129,.16);border-radius:8px;padding:7px 10px;margin-bottom:6px;flex-wrap:wrap}
+        .ak-kart .ak-poz b{color:#6ee7b7}
+        .ak-kart .ak-poz .ak-kz{margin-left:auto;font-weight:700}
+        .ak-kart .ak-mes{color:#cbd5e1;font-size:11px;border-left:1px solid rgba(255,255,255,.25);padding-left:8px;cursor:help}
+        .ak-kart .ak-uc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 0}
+        .ak-kart .ak-iki{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .ak-kart .ak-h{background:rgba(0,0,0,.16);border-radius:8px;padding:6px 8px;min-width:0}
+        .ak-kart .ak-h i{display:block;font-style:normal;color:#cbd5e1;font-size:11px}
+        .ak-kart .ak-h b{display:block;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ak-kart .ak-iki .ak-h{cursor:help}
+        .ak-kart .ak-uyari{color:#FAF884!important;cursor:help}
+        .ak-kart .ak-cubuk{height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin-top:4px}
+        .ak-kart .ak-cubuk i{display:block;height:100%;border-radius:2px}
+        .ak-kart .ak-detay{margin-top:8px;border-top:1px solid rgba(255,255,255,.12);padding-top:6px}
+        .ak-kart .ak-detay > summary{cursor:pointer;color:#cbd5e1;list-style:none;user-select:none}
+        .ak-kart .ak-detay > summary::-webkit-details-marker{display:none}
+        .ak-kart .ak-detay > summary::after{content:' ▼'}
+        .ak-kart .ak-detay[open] > summary::after{content:' ▲'}
+        .ak-kart .ak-cer{border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:8px 10px;margin-top:8px;background:rgba(0,0,0,.14)}
+        .ak-kart .ak-cer h4{margin:0 0 6px;font-size:11px;font-weight:600;color:#cbd5e1;text-transform:uppercase;letter-spacing:.04em}
+        .ak-kart .ak-cer.ak-efekt{border:0;border-left:3px solid #93c5fd;background:rgba(255,255,255,.08);box-shadow:0 2px 6px rgba(0,0,0,.18);border-radius:8px}
+        .ak-kart .ak-yorum{background:rgba(255,255,255,.05)}
+        .ak-kart .ak-y{margin:3px 0;line-height:1.5;color:#e2e8f0}
+        .ak-kart .ak-y.m{padding-left:12px;position:relative}
+        .ak-kart .ak-y.m::before{content:'•';position:absolute;left:1px;color:#FAF884}
+        .ak-kart .ak-y.g{margin-left:12px}
+        .ak-kart .ak-snr{background:rgba(255,255,255,.08);border-left:3px solid;border-radius:8px;padding:8px 10px;margin-top:8px;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+        .ak-kart .ak-snr b{display:block;color:#cbd5e1;font-size:12px;margin-bottom:3px}
+        .ak-kart .ak-snr div{line-height:1.5;color:#fff}
+        .ak-kart table.ak-tb{width:100%;min-width:0!important;max-width:100%;table-layout:auto;border-collapse:collapse;margin:0;font-size:12px;background:none}
+        .ak-kart table.ak-tb td{padding:3px 0;border:0;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;color:#eef3ff;background:none}
+        .ak-kart table.ak-tb td:nth-child(2){text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .ak-kart table.ak-tb td:nth-child(3){text-align:right;padding-left:8px;white-space:nowrap}
+        .ak-kart table.ak-tb tr.bs td{color:#94a3b8;font-size:11px;font-weight:400}
+        .ak-kart table.ak-tb tr.kotu td{color:#fca5a5;font-weight:700}
+        .ak-kart table.ak-tb tr.iyi td{color:#6ee7b7}
+        .ak-kart table.ak-tb tr.fyt td{color:#FAF884;font-weight:700}
+        .ak-kart table.ak-tb td.iyi{color:#6ee7b7}.ak-kart table.ak-tb td.kotu{color:#fca5a5}
+        .ak-kart .ak-cipler{display:flex;flex-wrap:wrap;gap:6px}
+        .ak-kart .ak-cip{background:rgba(0,0,0,.2);border-radius:12px;padding:3px 9px;font-size:11px}
+        .ak-kart .ak-pine{margin-top:8px}
             #teknik-analiz-tab .ta-kkarar{padding:6px 8px;border-radius:6px;background:rgba(250,248,132,.08);border:1px solid rgba(250,248,132,.3);margin-bottom:6px;font-size:12.5px}
             #teknik-analiz-tab .ta-kkarar b{color:#FAF884}
             #teknik-analiz-tab .ta-kkarar{text-align:center}
@@ -7990,7 +8040,7 @@ if (window.ResizeObserver) {
     });
 }
 function ozbYuzde(pay, toplam) {
-    return toplam > 0 ? '%' + (pay / toplam * 100).toFixed(1).replace('.', ',') : '';
+    return toplam > 0 ? (pay / toplam * 100).toFixed(1) + '%' : '';
 }
 
 // Ticker’a göre ondalık basamak (XAG: 1, XAU: 0, aksi: 2)
@@ -12741,12 +12791,11 @@ async function submitTeknikAnaliz() {
         // AYNEN eskisi gibi (sonucVeYonlendirmeBolumuOlustur/teknikSkorBolumuOlustur); detayHtml artık
         // ortak tumDetayHtmlOlustur() yardımcısından geliyor — Tüm Detay'ın altına Süreklilik Notu +
         // Backtest Özeti + Ham Veri'yi de (hepsi direkt açık) ekliyor, Gökhan'ın isteğiyle.
-        var anaHtml = sonucVeYonlendirmeBolumuOlustur(result, result.ticker || ticker);
-        var skorHtml = teknikSkorBolumuOlustur(result.teknikSkor);
-        var detayHtml = tumDetayHtmlOlustur(result, result.ticker || ticker, '');
         var simdiZaman = new Date();
         var zamanStr = simdiZaman.toLocaleDateString('tr-TR') + ' ' + simdiZaman.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
-        gecmisKartAc({ ticker: result.ticker || ticker, zaman: zamanStr }, anaHtml, skorHtml, detayHtml);
+        // (v20) Ortak sade kart (Teknik Analiz sekmesiyle aynı içerik)
+        result.ticker = result.ticker || ticker; result.zaman = zamanStr;
+        gecmisKartAc({ ticker: result.ticker, zaman: zamanStr }, analizKartIcerik_(result, { baslikSatiri: true }), '', '');
         teknikAnalizRozetGuncelle('hazir');
 
     } catch (error) {
@@ -13036,7 +13085,12 @@ function gecmisKayitKartAc(kayit) {
     // sonucVeYonlendirmeBolumuOlustur() kullanılır; 3. parametre (kayit.zaman) verildiği için
     // kart BUGÜNÜN değil O ANALİZİN tarihini gösterir — güncel pozisyonla karıştırılmaz.
     var anaHtml, skorHtml;
+    // (v20) Pozisyon anlık görüntüsü olan (yeni) kayıtlar ortak sade kartla açılır; eski kayıtlar eskisi gibi.
     if (kayit.piyasaSinyali !== undefined || kayit.pozisyonBazliKararEtiketi) {
+        gecmisKartAc(kayit, analizKartIcerik_(kayit, { baslikSatiri: true }), '', '');
+        return;
+    }
+    if (false) {
         anaHtml = sonucVeYonlendirmeBolumuOlustur(kayit, kayit.ticker, kayit.zaman);
         skorHtml = teknikSkorBolumuOlustur(kayit.teknikSkor);
     } else {
@@ -13096,12 +13150,11 @@ function pozisyonDanAnalizYap(kontratAdi, btn) {
                 setTimeout(btnEskiHaleGetir, 2000);
                 return;
             }
-            var anaHtml = sonucVeYonlendirmeBolumuOlustur(result, result.ticker || temelTicker);
-            var skorHtml = teknikSkorBolumuOlustur(result.teknikSkor);
-            var detayHtml = tumDetayHtmlOlustur(result, result.ticker || temelTicker, '');
             var simdi = new Date();
             var zamanStr = simdi.toLocaleDateString('tr-TR') + ' ' + simdi.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
-            gecmisKartAc({ ticker: result.ticker || temelTicker, zaman: zamanStr }, anaHtml, skorHtml, detayHtml);
+            // (v20) Ortak sade kart
+            result.ticker = result.ticker || temelTicker; result.zaman = zamanStr;
+            gecmisKartAc({ ticker: result.ticker, zaman: zamanStr }, analizKartIcerik_(result, { baslikSatiri: true }), '', '');
             btnEskiHaleGetir();
         })
         .catch(function(err) {
@@ -13423,6 +13476,210 @@ function taBolum_(ad, ozetHtml, ic) {
     return '<details class="ta-bolum"><summary><div class="ta-ozs"><span class="ad">' + ad + '</span>' + (ozetHtml || '') + '</div></summary><div class="ic">' + ic + '</div></details>';
 }
 
+// ==================== (v20 · 20.11.2026) ORTAK ANALİZ KARTI İÇERİĞİ ====================
+// Gökhan'ın onayladığı sade kart (mockup: analiz_karti_sade_mockup.png). Teknik Analiz sekmesi
+// (taGoster) ve yüzen kart (gecmisKartAc: Pozisyonlar 🕯️ / Analiz Et paneli / Geçmiş Analizler)
+// ARTIK AYNI içeriği kullanır. Yeni hesaplama YOK — yalnız mevcut alanlar (yapisalSeviyeler,
+// teknikSkor, mevcutPozisyonlar, GRAFIK_VERILERI) ve Gemini metni yeniden dizilir.
+// Gemini metninden okunamayan bir gösterge/makro değeri varsa o satır HİÇ gösterilmez (tahmin yok).
+function akSayi_(v, od) {
+    if (typeof v !== 'number' || isNaN(v)) return '—';
+    return v.toLocaleString('tr-TR', { minimumFractionDigits: od, maximumFractionDigits: od });
+}
+function akMetinSayi_(s) {
+    var t = String(s).replace(',', '.'), n = parseFloat(t);
+    if (isNaN(n)) return String(s);
+    var od = (t.split('.')[1] || '').length;
+    return n.toLocaleString('tr-TR', { minimumFractionDigits: od, maximumFractionDigits: od }).replace('-', '−');
+}
+function akYuzde_(x) { return (x >= 0 ? '+' : '−') + '%' + Math.abs(x).toFixed(2).replace('.', ','); }
+function akYakala_(metin, re) { var m = String(metin || '').match(re); return m ? m[1] : null; }
+
+// Gemini metnini bölümlere ayırır: { '1': [satırlar], '2': [...], '4': [...], '5': [...], 'POZ': [...], ozet: '...' }
+function akBolumler_(metin) {
+    var sonuc = { ozet: '' };
+    var aktif = null, noktaBlok = false;
+    String(metin || '').replace(/\r/g, '').split('\n').forEach(function (ham) {
+        var line = ham.trim();
+        if (!line) return;
+        if (/^GRAFIK_NOKTALAR_BASLA/i.test(line)) { noktaBlok = true; return; }
+        if (/^GRAFIK_NOKTALAR_BITIS/i.test(line)) { noktaBlok = false; return; }
+        if (noktaBlok || /^GRAFIK_VERILERI:/i.test(line) || /^-{3,}$/.test(line)) return;
+        var oz = line.match(/^📊?\s*GENEL ÖZET:?\s*(.*)$/i);
+        if (oz) { sonuc.ozet = oz[1].trim(); aktif = 'OZET'; return; }
+        if (aktif === 'OZET') { if (!sonuc.ozet) sonuc.ozet = line; return; }
+        var bm = line.match(/^#*\s*(\d+)\.\s*(.+)$/);
+        if (bm) { aktif = bm[1]; sonuc[aktif] = []; return; }
+        if (/^#*\s*POZİSYON DEĞERLENDİRMESİ\s*$/i.test(line)) { aktif = 'POZ'; sonuc.POZ = []; return; }
+        if (/^👉/.test(line)) return;                       // bölüm kararları (TUT tekrarları) gösterilmez
+        if (aktif && sonuc[aktif]) sonuc[aktif].push({ girintili: /^\s{2,}[-•]/.test(ham), metin: line });
+    });
+    return sonuc;
+}
+
+function akBolumHtml_(baslik, satirlar) {
+    if (!satirlar || !satirlar.length) return '';
+    var ic = satirlar.map(function (s) {
+        var t = s.metin.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+        if (typeof tarihleriGuzellestir === 'function') t = tarihleriGuzellestir(t);
+        var madde = /^[-•]/.test(t);
+        if (madde) t = t.replace(/^[-•]\s*/, '');
+        return '<div class="ak-y' + (madde ? ' m' : '') + (s.girintili ? ' g' : '') + '">' + t + '</div>';
+    }).join('');
+    return '<div class="ak-cer ak-yorum"><h4>' + baslik + '</h4>' + ic + '</div>';
+}
+
+// k: analiz nesnesi (canlı sonuç veya arşiv kaydı). secenek.baslikSatiri: yüzen kartta fiyat+karar satırı.
+function analizKartIcerik_(k, secenek) {
+    secenek = secenek || {};
+    var od = (typeof k.fiyatOndalik === 'number') ? k.fiyatOndalik : 2;
+    var f = function (v) { return akSayi_(v, od); };
+    var fiyat = (typeof k.guncelFiyat === 'number') ? k.guncelFiyat : parseFloat(String(k.guncelFiyat).replace(',', '.'));
+    var fiyatVar = !isNaN(fiyat) && fiyat > 0;
+    var uzak = function (v) { return (typeof v === 'number' && fiyatVar) ? (v - fiyat) / fiyat * 100 : null; };
+    var ys = k.yapisalSeviyeler || {};
+    var gv = (typeof grafikVerileriAyikla === 'function') ? (grafikVerileriAyikla(k.analiz) || {}) : {};
+    var ts = k.teknikSkor || {};
+    var trend = ts.trend || null, islem = ts.islem || null;
+    var trendYuzde = (trend && typeof trend.yuzde === 'number') ? trend.yuzde : (isNaN(parseInt(k.guven, 10)) ? null : parseInt(k.guven, 10));
+    var islemYuzde = (islem && typeof islem.yuzde === 'number') ? islem.yuzde : null;
+    var yon = (trend && trend.yonTeyidi) || '';
+    var ayiAna = (yon === 'BEARISH') || (!yon && String(ys.trendYonu || '').toLowerCase() === 'bearish');
+    var stop = (typeof ys.stopOnerisi === 'number') ? ys.stopOnerisi : null;
+    var hedef = (typeof ys.hedefOnerisi === 'number') ? ys.hedefOnerisi : null;
+    var stopUstte = (stop !== null && fiyatVar) ? stop > fiyat : ayiAna;
+    var h = '';
+
+    // --- Ön yüz ---
+    if (secenek.baslikSatiri) {
+        var karar = (typeof taKararMetni_ === 'function') ? taKararMetni_(k) : (k.karar || '-');
+        h += '<div class="ak-bas"><span class="ak-fiyat">' + (fiyatVar ? f(fiyat) : '—') + '</span>' +
+             '<span class="ak-karar ' + ((typeof taKararSinif_ === 'function') ? taKararSinif_(karar) : '') + '">' + taEsc_(karar) + '</span></div>';
+    }
+    (k.mevcutPozisyonlar || []).forEach(function (pz) {
+        var y = (pz.pozisyonYonuMetin === 'LONG' || pz.pozisyonYonuMetin === 'SHORT') ? pz.pozisyonYonuMetin : (pz.adet < 0 ? 'SHORT' : 'LONG');
+        var kz = pz.kz_pct;
+        // sonucVeYonlendirmeBolumuOlustur ile aynı düzeltme: K/Z işareti yöne göre
+        if (y !== (pz.adet < 0 ? 'SHORT' : 'LONG') && typeof pz.maliyet === 'number' && pz.maliyet > 0 && typeof pz.guncel_fiyat === 'number') {
+            kz = parseFloat((((y === 'SHORT') ? (pz.maliyet - pz.guncel_fiyat) : (pz.guncel_fiyat - pz.maliyet)) / pz.maliyet * 100).toFixed(2));
+        }
+        var su = uzak(stop);
+        h += '<div class="ak-poz"><b>' + (pz.hesap && (k.mevcutPozisyonlar || []).length > 1 ? taEsc_(pz.hesap) + ' ' : '') + y + ' ' + Math.abs(pz.adet || 0) + '</b>' +
+             '<span>Maliyet ' + f(pz.maliyet) + '</span>' +
+             (typeof kz === 'number' ? '<span class="ak-kz ' + (kz >= 0 ? 'iyi' : 'kotu') + '">' + (kz >= 0 ? '+' : '−') + '%' + Math.abs(kz).toFixed(1).replace('.', ',') + '</span>' : '<span class="ak-kz"></span>') +
+             (su !== null ? '<span class="ak-mes" title="Fiyatın analiz stopuna (' + f(stop) + ') uzaklığı">Stop %' + Math.abs(su).toFixed(2).replace('.', ',') + '</span>' : '') +
+             '</div>';
+    });
+    var yakinAd = stopUstte ? 'Direnç 1' : 'Destek 1';
+    var yakin = stopUstte ? gv.direnc1 : gv.destek1;
+    h += '<div class="ak-uc">' +
+        '<div class="ak-h"><i>Analiz stopu</i><b>' + f(stop) + '</b></div>' +
+        '<div class="ak-h"><i>' + yakinAd + '</i><b>' + f(yakin) + '</b></div>' +
+        '<div class="ak-h"><i>Hedef</i>' + (hedef !== null ? '<b>' + f(hedef) + '</b>'
+            : '<b class="ak-uyari" title="Fiyat yeni dip/tepede olabilir; yapısal hedef yok.&#10;Hedef olmadan R/Ö hesaplanamıyor, kâr al seviyesi yok.">yok ⚠</b>') + '</div>' +
+    '</div>';
+    var islemBalon = 'İşlem: buradan yeni giriş uygun mu?';
+    if (islem && islem.detay) islem.detay.forEach(function (d) { if (d && typeof d === 'object') islemBalon += '&#10;' + taEsc_(d.kriter) + ' ' + taEsc_(d.deger) + ' · ' + taEsc_(d.yorum) + ' · ' + d.puan + '/' + d.max; });
+    var trSinif = yon === 'BEARISH' ? 'kotu' : (yon === 'BULLISH' ? 'iyi' : 'orta');
+    var trEtiket = yon === 'BEARISH' ? 'Ayı' : (yon === 'BULLISH' ? 'Boğa' : '');
+    var cubuk = function (y, renk) { return '<div class="ak-cubuk"><i style="width:' + Math.max(0, Math.min(100, y || 0)) + '%;background:' + renk + '"></i></div>'; };
+    h += '<div class="ak-iki">' +
+        '<div class="ak-h" title="Trend: piyasanın yönü ve gücü"><i>Trend ⓘ</i><b class="' + trSinif + '">' + (trendYuzde !== null ? '%' + trendYuzde + ' ' + trEtiket : '—') + '</b>' + (trendYuzde !== null ? cubuk(trendYuzde, trSinif === 'kotu' ? '#f87171' : (trSinif === 'iyi' ? '#4ade80' : '#FAF884')) : '') + '</div>' +
+        '<div class="ak-h" title="' + islemBalon + '"><i>İşlem ⓘ</i><b class="' + taYuzdeSinif_(islemYuzde) + '">' + (islemYuzde !== null ? '%' + islemYuzde + ' ' + taYuzdeEtiket_(islemYuzde) : '—') + '</b>' + (islemYuzde !== null ? cubuk(islemYuzde, '#FAF884') : '') + '</div>' +
+    '</div>';
+
+    // --- Detay ---
+    var b = akBolumler_(k.analiz);
+    var d = '';
+    if (b.ozet) {
+        var ozM = b.ozet.match(/^(.*?)(?:\s*[-—]\s*\((.*)\))?\s*$/);
+        var ozKarar = ozM ? ozM[1].trim() : b.ozet;
+        var ozGerekce = (ozM && ozM[2]) ? ozM[2].trim() : '';
+        d += '<div class="ak-cer"><h4>Genel Özet · ' + taEsc_(ozKarar) + '</h4>' + (ozGerekce ? '<div class="ak-y">' + taEsc_(ozGerekce) + '</div>' : '') + '</div>';
+    }
+    var bogaS = (typeof taSenaryoAyikla_ === 'function') ? taSenaryoAyikla_(k.analiz, 'Bo[ğg]a Senaryosu') : '';
+    var ayiS = (typeof taSenaryoAyikla_ === 'function') ? taSenaryoAyikla_(k.analiz, 'Ay[ıi] Senaryosu') : '';
+    var anaS = ayiAna ? ayiS : bogaS, altS = ayiAna ? bogaS : ayiS;
+    var gecS = stop !== null ? f(stop) + (stopUstte ? ' üstü' : ' altı') + ' kapanış (stop) görüşü bozar.' : '';
+    if (anaS || altS || gecS) {
+        d += '<div class="ak-cer"><h4>Senaryolar</h4>' +
+            (anaS ? '<div class="ak-snr" style="border-left-color:#FAF884;margin-top:0"><b>Ana senaryo · ' + (ayiAna ? 'Ayı' : 'Boğa') + '</b><div>' + taEsc_(anaS) + '</div></div>' : '') +
+            (altS ? '<div class="ak-snr" style="border-left-color:#cbd5e1"><b>Alternatif · ' + (ayiAna ? 'Boğa' : 'Ayı') + '</b><div>' + taEsc_(altS) + '</div></div>' : '') +
+            (gecS ? '<div class="ak-snr" style="border-left-color:#f87171"><b>Geçersizlik</b><div>' + gecS + '</div></div>' : '') +
+        '</div>';
+    }
+    // Seviyeler: fiyata göre yukarıdan aşağı
+    var sv = [];
+    if (typeof gv.direnc2 === 'number') sv.push(['Direnç 2', gv.direnc2, '']);
+    if (typeof gv.direnc1 === 'number') sv.push(['Direnç 1', gv.direnc1, '']);
+    if (typeof gv.destek1 === 'number') sv.push(['Destek 1', gv.destek1, '']);
+    if (typeof gv.destek2 === 'number') sv.push(['Destek 2', gv.destek2, '']);
+    if (stop !== null) sv.push(['Analiz stopu', stop, 'kotu']);
+    if (hedef !== null) sv.push(['Hedef', hedef, 'iyi']);
+    if (fiyatVar) sv.push(['Fiyat', fiyat, 'fyt']);
+    sv.sort(function (a, c) { return c[1] - a[1]; });
+    if (sv.length > 1) {
+        d += '<div class="ak-cer ak-efekt"><h4>Seviyeler</h4><table class="ak-tb"><tr class="bs"><td>Seviye</td><td>Fiyat</td><td>Uzaklık</td></tr>' +
+            sv.map(function (r) { var u = uzak(r[1]); return '<tr class="' + r[2] + '"><td>' + r[0] + '</td><td>' + f(r[1]) + '</td><td>' + (r[2] === 'fyt' || u === null ? '—' : akYuzde_(u)) + '</td></tr>'; }).join('') +
+        '</table></div>';
+    }
+    // Göstergeler: Gemini metninden (bulunamayan satır gösterilmez)
+    var m4 = String(k.analiz || '');
+    var sayiRe = '(-?\\d+(?:[.,]\\d+)?)';
+    var g = [];
+    var rsi = akYakala_(m4, new RegExp('RSI\\s?14\\s*(?:değeri|=|:)\\s*' + sayiRe, 'i'));
+    if (rsi !== null) { var rv = parseFloat(rsi.replace(',', '.')); g.push(['RSI 14', akMetinSayi_(rsi), rv < 30 ? 'Aşırı satım' : (rv > 70 ? 'Aşırı alım' : 'Normal'), rv < 30 ? 'iyi' : (rv > 70 ? 'kotu' : '')]); }
+    var adx = akYakala_(m4, new RegExp('ADX\\s?14\\s*(?:değeri|=|:)\\s*' + sayiRe, 'i'));
+    if (adx !== null) { var av = parseFloat(adx.replace(',', '.')); g.push(['ADX 14', akMetinSayi_(adx), av >= 25 ? 'Güçlü trend' : 'Zayıf trend', '']); }
+    var dim = akYakala_(m4, new RegExp('-DI\\s*\\(' + sayiRe + '\\)', 'i')), dip = akYakala_(m4, new RegExp('\\+DI\\s*\\(' + sayiRe + '\\)', 'i'));
+    if (dim !== null && dip !== null) { var dmv = parseFloat(dim.replace(',', '.')), dpv = parseFloat(dip.replace(',', '.')); g.push(['−DI / +DI', akMetinSayi_(dim) + ' / ' + akMetinSayi_(dip), dmv > dpv ? 'Ayı baskın' : 'Boğa baskın', dmv > dpv ? 'kotu' : 'iyi']); }
+    var macd = m4.match(new RegExp('MACD çizgisi\\s*\\(' + sayiRe + '\\)[^()]{0,30}sinyal çizgisinin\\s*\\(' + sayiRe + '\\)', 'i'));
+    if (macd) { var ml = parseFloat(macd[1].replace(',', '.')), ms = parseFloat(macd[2].replace(',', '.')); g.push(['MACD / sinyal', akMetinSayi_(macd[1]) + ' / ' + akMetinSayi_(macd[2]), ml < ms ? 'Sinyalin altında' : 'Sinyalin üstünde', ml < ms ? 'kotu' : 'iyi']); }
+    var hist = akYakala_(m4, new RegExp('histogram[^\\d\\n-]{0,20}\\(?' + sayiRe, 'i'));
+    if (hist !== null) { var hv = parseFloat(hist.replace(',', '.')); g.push(['MACD hist', akMetinSayi_(hist), hv < 0 ? 'Negatif' : 'Pozitif', hv < 0 ? 'kotu' : 'iyi']); }
+    ['20', '50', '200'].forEach(function (p) {
+        var e = akYakala_(m4, new RegExp('EMA' + p + '\\s*\\(' + sayiRe + '\\)', 'i'));
+        if (e !== null && fiyatVar) { var ev = parseFloat(e.replace(',', '.')); g.push(['EMA ' + p, akMetinSayi_(e), ev > fiyat ? 'Fiyatın üstünde' : 'Fiyatın altında', ev > fiyat ? 'kotu' : 'iyi']); }
+    });
+    var atr = akYakala_(m4, new RegExp('ATR\\s?14\\s*(?:değeri|=|:)\\s*' + sayiRe, 'i'));
+    if (atr !== null) g.push(['ATR 14', akMetinSayi_(atr), 'Oynaklık', '']);
+    var ht = k.hacimTeyidi || null;
+    if (ht && typeof ht.rvol === 'number') g.push(['RVOL', ht.rvol.toFixed(2).replace('.', ','), ({ 'GÜÇLÜ': 'Güçlü', 'ZAYIF': 'Zayıf', 'NORMAL': 'Normal', 'VERI_YOK': 'Veri yok' }[ht.durum] || ''), ht.durum === 'ZAYIF' ? 'kotu' : (ht.durum === 'GÜÇLÜ' ? 'iyi' : '')]);
+    var uyBlok = m4.match(/UYUMSUZLUK DOĞRULAMA[^\n]*\n([\s\S]*?)(?:\n\s*\n|$)/i);
+    if (uyBlok) {
+        var tepe = akYakala_(uyBlok[1], /TEPE TARAFI:\s*\**([^*(—\n]+)/i), dipT = akYakala_(uyBlok[1], /DİP TARAFI:\s*\**([^*(—\n]+)/i);
+        if (tepe) g.push(['Uyumsuzluk (tepe)', taEsc_(tepe.replace(/\s*Uyumsuzluğu\s*$/i, '').trim()), 'kod ✓', '']);
+        if (dipT) g.push(['Uyumsuzluk (dip)', taEsc_(dipT.replace(/\s*Uyumsuzluğu\s*$/i, '').trim()), 'kod ✓', '']);
+    }
+    if (g.length) {
+        d += '<div class="ak-cer ak-efekt"><h4>Göstergeler</h4><table class="ak-tb"><tr class="bs"><td>Gösterge</td><td>Değer</td><td>Durum</td></tr>' +
+            g.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td class="' + r[3] + '">' + r[2] + '</td></tr>'; }).join('') +
+        '</table></div>';
+    }
+    // Makro kutucukları
+    var mk = [];
+    var dxy = akYakala_(m4, /DXY[^\d\n]{0,30}?(\d{2,3}[.,]\d+)/i);
+    if (dxy) mk.push(['DXY', akMetinSayi_(dxy)]);
+    var aag = akYakala_(m4, /Altın\/Gümüş Rasyo\w*[^\d\n]{0,30}?(\d{2,3}[.,]\d+)/i);
+    if (aag) mk.push(['Au/Ag', akMetinSayi_(aag)]);
+    var fed = akYakala_(m4, /FED Faiz Oran\w*[^%\d\n]{0,20}%\s*(\d+[.,]\d+)/i);
+    if (fed) mk.push(['FED', '%' + akMetinSayi_(fed)]);
+    var tufe = akYakala_(m4, /TÜFE[^\d\n]{0,15}(\d+[.,]\d+)/i);
+    if (tufe) mk.push(['TÜFE', akMetinSayi_(tufe)]);
+    if (mk.length) d += '<div class="ak-cer"><h4>Makro</h4><div class="ak-cipler">' + mk.map(function (c) { return '<span class="ak-cip">' + c[0] + ' <b>' + c[1] + '</b></span>'; }).join('') + '</div></div>';
+    // Gemini yorumları — bölüm bölüm (3. bölüm Senaryolar yukarıda; tekrar edilmez)
+    var makroEtiket = akYakala_(m4, /(?:Değerlendirme|Etiket)\**:?\**\s*[🟢🔴🟡⚪]?\s*([A-ZÇĞİÖŞÜ]{4,})/);
+    d += akBolumHtml_('Yapı', b['1']);
+    d += akBolumHtml_('Seviyeler ve likidite', b['2']);
+    d += akBolumHtml_('İndikatörler', b['4']);
+    d += akBolumHtml_('Makro' + (makroEtiket ? ' · ' + makroEtiket.charAt(0) + makroEtiket.slice(1).toLocaleLowerCase('tr-TR') : ''), (b['5'] || []).filter(function (s) { return !/^(?:\*\*)?(?:Değerlendirme|Etiket)/i.test(s.metin); }));
+    d += akBolumHtml_('Pozisyon', b.POZ);
+    if (typeof pineScriptBolumuOlustur === 'function') d += '<div class="ak-pine">' + pineScriptBolumuOlustur(k.analiz, k.ticker, k.zaman || '') + '</div>';
+
+    h += '<details class="ak-detay"><summary>Detay</summary>' + d + '</details>';
+    return '<div class="ak-kart">' + h + '</div>';
+}
+
 function taGoster(idx) {
     var k = taKayitlar[idx];
     var sahne = document.getElementById('ta-detay');
@@ -13559,16 +13816,7 @@ function taGoster(idx) {
             '<button type="button" class="ta-kdug kapat" title="Kapat">✕</button>' +
         '</div>' +
         '<div class="ta-kgovde">' +
-            serit +
-            (sebep.length ? '<div class="ta-sebep">' + taTablo_(sebep, ['Sebep', 'Değer', 'Durum']) + '</div>' : '') +
-            '<div class="ta-detaylar">' +
-            // (v15) Sıra: Senaryolar → Trend / İşlem Skoru → Seviyeler → Detaylı analiz (Risk / Ödül bölümü kaldırıldı).
-            (senIc ? taBolum_('Senaryolar', '<span class="uz">' + (anaS ? 'Ana: ' + taEsc_(anaS) : (gecersizlik || '')) + '</span>', senIc) : '') +
-            // (v15) Pozisyonlar analiz kartındaki Trend / İşlem Skoru kutuları, Senaryolar'ın hemen altında (açılır-kapanır).
-            (skorHtml ? taBolum_('Trend / İşlem Skoru', '', '<div class="ta-skor">' + skorHtml + '</div>') : '') +
-            (seviye.length ? taBolum_('Seviyeler', taOzetHucre_(seviye), taTablo_(seviye, ['Seviye', 'Fiyat'])) : '') +
-            (detayHtml ? taBolum_('Detaylı analiz', '', '<div class="ta-detay">' + detayHtml + '</div>') : '') +
-            '</div>' +
+            analizKartIcerik_(k) + // (v20) ortak sade kart
             '<div class="ta-kz">' + taEsc_(k.zaman) + (acikPoz ? ' · <span class="ta-pozyazi">● açık poz var<span class="ta-ipucu">' + taEsc_(pozBilgi) + '</span></span>' : '') + '</div>' +
         '</div>';
 

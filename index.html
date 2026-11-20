@@ -297,6 +297,19 @@ header h1 i {
 #ozet-tab .card:hover, #ozet-tab .card:focus-within { z-index: 30; }
 #ozet-tab .card-content .pd-satir { position: relative; text-align: left; width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: baseline; font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.12); font-variant-numeric: tabular-nums; outline: none; margin: 0; }
 #ozet-tab .card-content .pd-satir .pd-yuzde { font-size: 17px; }
+/* (v19) Toplam Portföy kırılımı — sola yaslı isim, hizalı tutar, ayrı yüzde sütunu */
+#ozet-tab .card-content .ozb-satir { display: grid; grid-template-columns: 22px auto 1fr var(--ozb-tutar-w, max-content) 58px; align-items: center; column-gap: 4px; margin: 3px 0; padding: 2px 0; border-radius: 4px; text-align: left; transition: background .2s, box-shadow .2s; }
+#ozet-tab .card-content .ozb-satir span { width: auto; margin: 0; }
+#ozet-tab .card-content .ozb-ikon { text-align: left; }
+#ozet-tab .card-content .ozb-ad { text-align: left; white-space: nowrap; }
+#ozet-tab .card-content .ozb-tutar { grid-column: 4; justify-self: end; text-align: right; color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#ozet-tab .card-content .ozb-pct { grid-column: 5; text-align: right; font-size: 11px; color: #94a3b8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#ozet-tab .card-content .ozb-tikla { cursor: pointer; }
+#ozet-tab .card-content .ozb-baslik { font-size: 11px; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px; padding-bottom: 2px; }
+#ozet-tab .card-content .ozb-baslik .ozb-bas-hesap { grid-column: 1 / 3; text-align: left; }
+#ozet-tab .card-content .ozb-baslik .ozb-tutar-bas { grid-column: 4; text-align: center; }
+#ozet-tab .card-content .ozb-baslik .ozb-pct-bas { grid-column: 5; text-align: right; }
+#ozet-tab .card-content .ozb-tikla:hover { background: rgba(250, 248, 132, 0.05); box-shadow: 0 0 0 1px #FAF884, 0 8px 20px rgba(250, 248, 132, 0.2); }
 #ozet-tab .card-content .pd-anlik { text-align: center; position: relative; border: 1px solid rgba(148,163,184,0.35); border-radius: 10px; padding: 6px 12px 12px; background: rgba(255,255,255,0.03); }
 #ozet-tab .card-content .pd-anlik .pd-anlik-saat { position: absolute; top: 6px; right: 10px; font-size: 11px; line-height: 18px; font-weight: 400; color: #cbd5e1; font-variant-numeric: tabular-nums; display: inline-block; animation: pdDimmer 2s ease-in-out infinite; }
 @keyframes pdDimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -1959,23 +1972,13 @@ function sifreKontrol() {
                         </div>
                         <p id="ozet-total-value" style="font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #fff;">-</p>
                         
-                        <div id="ozet-breakdown" style="font-size: 13px; line-height: 1.8; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin: 3px 0;">
-                                <span style="white-space: nowrap;">🏢 Şirket:</span>
-                                <span id="ozet-sirket-value" style="color: #fff; font-weight: 600; text-align: right; flex: 1; margin-left: 8px;">-</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin: 3px 0;">
-                                <span style="white-space: nowrap;">👤 Şahsi:</span>
-                                <span id="ozet-sahsi-value" style="color: #fff; font-weight: 600; text-align: right; flex: 1; margin-left: 8px;">-</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin: 3px 0;">
-                                <span style="white-space: nowrap;">🛡️ Emeklilik:</span>
-                                <span id="ozet-emeklilik-value" style="color: #fff; font-weight: 600; text-align: right; flex: 1; margin-left: 8px;">-</span>
-                            </div>
-                            <div onclick="openNakitDetailModal()" style="display: flex; justify-content: space-between; align-items: center; margin: 3px 0; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.3s ease; position: relative;" onmouseover="this.style.transform='translateY(-2px)'; this.style.background='rgba(250, 248, 132, 0.05)'; this.style.outline='1px solid #FAF884'; this.style.boxShadow='0 8px 20px rgba(250, 248, 132, 0.2)';" onmouseout="this.style.transform=''; this.style.background='transparent'; this.style.outline=''; this.style.boxShadow='';">
-                                <span style="white-space: nowrap;">💰 Nakit: <i class="fas fa-edit" style="font-size: 9px; opacity: 0.5; margin-left: 4px;"></i></span>
-                                <span id="ozet-total-nakit" style="color: #fff; font-weight: 600; text-align: right; flex: 1; margin-left: 8px;">-</span>
-                            </div>
+                        <!-- (v19) Hesap kırılımı: ikon | isim (sola yaslı) | tutar (birler basamağı hizalı) | yüzde (ayrı sütun) -->
+                        <div id="ozet-breakdown" class="ozb" style="font-size: 13px; line-height: 1.8; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                            <div class="ozb-satir ozb-baslik"><span class="ozb-bas-hesap">Hesaplar</span><span class="ozb-tutar-bas">Tutarlar</span><span class="ozb-pct-bas">Pay</span></div>
+                            <div class="ozb-satir"><span class="ozb-ikon">🏢</span><span class="ozb-ad">Şirket:</span><span id="ozet-sirket-value" class="ozb-tutar">-</span><span id="ozet-sirket-pct" class="ozb-pct"></span></div>
+                            <div class="ozb-satir"><span class="ozb-ikon">👤</span><span class="ozb-ad">Şahsi:</span><span id="ozet-sahsi-value" class="ozb-tutar">-</span><span id="ozet-sahsi-pct" class="ozb-pct"></span></div>
+                            <div class="ozb-satir"><span class="ozb-ikon">🛡️</span><span class="ozb-ad">Emeklilik:</span><span id="ozet-emeklilik-value" class="ozb-tutar">-</span><span id="ozet-emeklilik-pct" class="ozb-pct"></span></div>
+                            <div class="ozb-satir ozb-tikla" onclick="openNakitDetailModal()"><span class="ozb-ikon">💰</span><span class="ozb-ad">Nakit: <i class="fas fa-edit" style="font-size: 9px; opacity: 0.5; margin-left: 4px;"></i></span><span id="ozet-total-nakit" class="ozb-tutar">-</span><span id="ozet-nakit-pct" class="ozb-pct"></span></div>
                         </div>
                     </div>
                 </div>
@@ -7966,6 +7969,30 @@ function formatNumber(num) {
     return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// (v19) Toplam Portföy kartı için kuruşsuz tam sayı (formatNumber'a dokunulmaz; o tüm dashboard'da 2 ondalık)
+function formatTamTL(num) {
+    if (isNaN(num)) return '-';
+    return Math.round(num).toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+}
+// (v19) Tutar sütununu en geniş tutar kadar yap → "Tutarlar" başlığı rakamların ortasına gelir
+function ozbHizala() {
+    const kutu = document.getElementById('ozet-breakdown');
+    if (!kutu || kutu.offsetParent === null) return; // görünmüyorsa ölçme
+    let enGenis = 0; // .ozb-tutar justify-self:end → genişliği içeriği kadar (sekme gizliyken 0 → dokunma)
+    kutu.querySelectorAll('.ozb-tutar').forEach(el => { enGenis = Math.max(enGenis, el.scrollWidth); });
+    if (enGenis > 0) kutu.style.setProperty('--ozb-tutar-w', Math.ceil(enGenis) + 'px');
+}
+// Özet sekmesi gizliyken ölçülemez → kutu görünür olduğunda (boyutu değişince) yeniden hizala
+if (window.ResizeObserver) {
+    window.addEventListener('DOMContentLoaded', () => {
+        const kutu = document.getElementById('ozet-breakdown');
+        if (kutu) new ResizeObserver(() => ozbHizala()).observe(kutu);
+    });
+}
+function ozbYuzde(pay, toplam) {
+    return toplam > 0 ? (pay / toplam * 100).toFixed(1) + '%' : '';
+}
+
 // Ticker’a göre ondalık basamak (XAG: 1, XAU: 0, aksi: 2)
 function formatNumberByTicker(num, ticker) {
     if (isNaN(num)) return '-';
@@ -8142,7 +8169,7 @@ function openNakitModal() {
     // ÖZET sayfasındaki total nakit'i de güncelle
     const ozetTotalNakit = document.getElementById('ozet-total-nakit');
     if (ozetTotalNakit) {
-        ozetTotalNakit.textContent = `₺${formatNumber(totalTL)}`;
+        ozetTotalNakit.textContent = `₺${formatTamTL(totalTL)}`; // (v19) kuruşsuz (bu fonksiyon şu an çağrılmıyor)
     }
     
     // Modal'ı göster
@@ -8279,7 +8306,7 @@ function updateTotalPortfolioValue() {
         console.log('⚠️ OZET Y2 verisi yok, boş kalacak');
     }
     
-    const formattedValue = totalValue > 0 ? `₺${formatNumber(totalValue)}` : '-';
+    const formattedValue = totalValue > 0 ? `₺${formatTamTL(totalValue)}` : '-'; // (v19) kuruşsuz
     
     // Kart içindeki değeri güncelle
     if (element) {
@@ -8348,19 +8375,23 @@ function updateTotalPortfolioValue() {
     
     // Detayları güncelle
     if (sirketElement && totalValue > 0) {
-        const percent = totalValue > 0 ? ((sirketValue / totalValue) * 100).toFixed(1) : 0;
-        sirketElement.innerHTML = `₺${formatNumber(sirketValue)} <span style="font-size: 11px; color: #94a3b8;">(${percent}%)</span>`;
+        sirketElement.textContent = `₺${formatTamTL(sirketValue)}`; // (v19) kuruşsuz, yüzde ayrı sütunda
+        const sirketPct = document.getElementById('ozet-sirket-pct');
+        if (sirketPct) sirketPct.textContent = ozbYuzde(sirketValue, totalValue);
     }
     
     if (sahsiElement && totalValue > 0) {
-        const percent = totalValue > 0 ? ((sahsiValue / totalValue) * 100).toFixed(1) : 0;
-        sahsiElement.innerHTML = `₺${formatNumber(sahsiValue)} <span style="font-size: 11px; color: #94a3b8;">(${percent}%)</span>`;
+        sahsiElement.textContent = `₺${formatTamTL(sahsiValue)}`; // (v19) kuruşsuz, yüzde ayrı sütunda
+        const sahsiPct = document.getElementById('ozet-sahsi-pct');
+        if (sahsiPct) sahsiPct.textContent = ozbYuzde(sahsiValue, totalValue);
     }
     
     if (emeklilikElement && totalValue > 0) {
-        const percent = totalValue > 0 ? ((emeklilikValue / totalValue) * 100).toFixed(1) : 0;
-        emeklilikElement.innerHTML = `₺${formatNumber(emeklilikValue)} <span style="font-size: 11px; color: #94a3b8;">(${percent}%)</span>`;
+        emeklilikElement.textContent = `₺${formatTamTL(emeklilikValue)}`; // (v19) kuruşsuz, yüzde ayrı sütunda
+        const emeklilikPct = document.getElementById('ozet-emeklilik-pct');
+        if (emeklilikPct) emeklilikPct.textContent = ozbYuzde(emeklilikValue, totalValue);
     }
+    ozbHizala();
     
     // BANKA NAKİT - OZET Z2'den çek
     const bankaNakitElement = document.getElementById('ozet-banka-nakit');
@@ -8606,9 +8637,14 @@ function updateOzetTotalNakit() {
     }
     
     // Nakit değeri + (%) formatında göster (diğer satırlarla aynı format)
-    ozetTotalNakitElement.innerHTML = bankaNakit > 0 
-        ? `₺${formatNumber(bankaNakit)} <span style="font-size: 11px; color: #94a3b8;">(${window.ozetSheetData && window.ozetSheetData[1] ? ((bankaNakit / (parseNumberSmart(window.ozetSheetData[1][24]) || 1)) * 100).toFixed(1) : 0}%)</span>` 
-        : '-';
+    // (v19) kuruşsuz tutar; yüzde ayrı sütunda (payda OZET Y2 = TÜM VARLIKLAR, eskisi gibi)
+    ozetTotalNakitElement.textContent = bankaNakit > 0 ? `₺${formatTamTL(bankaNakit)}` : '-';
+    const ozetNakitPct = document.getElementById('ozet-nakit-pct');
+    if (ozetNakitPct) {
+        const tumVarliklar = (window.ozetSheetData && window.ozetSheetData[1]) ? (parseNumberSmart(window.ozetSheetData[1][24]) || 0) : 0;
+        ozetNakitPct.textContent = bankaNakit > 0 ? ozbYuzde(bankaNakit, tumVarliklar) : '';
+    }
+    ozbHizala();
     console.log('✅ ÖZET Total Nakit güncellendi:', bankaNakit);
 }
 
@@ -15336,18 +15372,24 @@ function togglePortfolioVisibility() {
         'ozet-sirket-value',
         'ozet-sahsi-value',
         'ozet-emeklilik-value',
-        'ozet-total-nakit'
+        'ozet-total-nakit',
+        // (v19) yüzdeler ayrı sütunda — onlar da gizlenir
+        'ozet-sirket-pct',
+        'ozet-sahsi-pct',
+        'ozet-emeklilik-pct',
+        'ozet-nakit-pct'
     ];
     
     if (portfolioVisible) {
         // GİZLE - orijinal değerleri kaydet
         elements.forEach(id => {
             const el = document.getElementById(id);
-            if (el && el.textContent !== '-') {
+            if (el && el.textContent !== '-' && el.textContent !== '') {
                 portfolioOriginalValues[id] = el.textContent;
-                el.textContent = '₺ ******';
+                el.textContent = id.endsWith('-pct') ? '' : '₺ ******';
             }
         });
+        ozbHizala(); // (v19)
         
         // İkonu değiştir: kapalı göz
         icon.className = 'fas fa-eye-slash';
@@ -15365,6 +15407,7 @@ function togglePortfolioVisibility() {
                 el.textContent = portfolioOriginalValues[id];
             }
         });
+        ozbHizala(); // (v19)
         
         // İkonu değiştir: açık göz
         icon.className = 'fas fa-eye';
